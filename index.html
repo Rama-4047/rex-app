@@ -185,7 +185,7 @@ window.showSummary=showSummary;
 
 </script>
 
-<!-- ✅ FIREBASE -->
+
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -204,21 +204,45 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// ✅ ALL FUNCTIONS INSIDE MODULE (IMPORTANT)
 
-window.db = db;
-window.addDoc = addDoc;
-window.collection = collection;
-window.updateDoc = updateDoc;
-window.doc = doc
+// SAVE
+window.saveRex = async function(){
 
+ let obj={
+  title:document.getElementById("title").value,
+  cat:document.getElementById("cat").value,
+  before:beforeData,
+  after:afterData,
+  beforeDesc:beforeDesc.value,
+  afterDesc:afterDesc.value,
+  impact:impact.value,
+  takeaway:takeaway.value
+ };
 
-/* ✅ REAL TIME */
+ if(obj.title===""){
+  alert("Enter Title");
+  return;
+ }
+
+ await addDoc(collection(db,"rex"),obj);
+
+ alert("✅ Saved to Cloud");
+}
+
+// LIVE DATA
 onSnapshot(collection(db,"rex"),snapshot=>{
+
  window.rexList=[];
+
  snapshot.forEach(docSnap=>{
-  window.rexList.push({...docSnap.data(),id:docSnap.id});
+  window.rexList.push({
+    ...docSnap.data(),
+    id:docSnap.id
+  });
  });
- window.showSummary();
+
+ showSummary();
 });
 
 </script>
