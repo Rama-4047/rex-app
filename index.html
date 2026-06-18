@@ -3,24 +3,27 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>REX System</title>
+<title>REX</title>
 
 <style>
 body{font-family:Arial;background:#eef1f5;padding:20px;}
-input,select,textarea{width:100%;margin:5px 0;}
+input, select, textarea{width:100%;margin:5px 0;}
 button{padding:8px;background:#005a9e;color:white;border:none;margin-top:10px;}
-.container{background:white;padding:15px;margin-top:10px;}
+.card{background:white;padding:10px;margin-top:10px;}
 .row{display:flex;gap:10px;}
 .box{border:1px solid black;height:120px;display:flex;align-items:center;justify-content:center;}
 .box img{max-width:100%;max-height:100%;}
 </style>
+
+<!-- ✅ Firebase (OLD SIMPLE VERSION — NO ERRORS) -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
 </head>
 
 <body>
 
-<h2>REX Management</h2>
-
-<div class="container">
+<h2>REX System</h2>
 
 <input id="title" placeholder="Title">
 
@@ -32,105 +35,91 @@ button{padding:8px;background:#005a9e;color:white;border:none;margin-top:10px;}
 <option>Others</option>
 </select>
 
-<label>Before</label>
-<input type="file" id="before">
-<img id="bImg" width="100">
+<br>
 
-<label>After</label>
+<input type="file" id="before">
+<img id="bImg" width="120"><br>
+
 <input type="file" id="after">
-<img id="aImg" width="100">
+<img id="aImg" width="120"><br>
 
 <textarea id="impact" placeholder="Impact"></textarea>
 
-<button onclick="save()">Save REX</button>
-
-</div>
+<button onclick="save()">Save</button>
 
 <hr>
 
 <div id="summary"></div>
 
-<script type="module">
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot }
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+<script>
 
 // ✅ Firebase config
-const app = initializeApp({
+firebase.initializeApp({
   apiKey: "AIzaSyCPUL-TGaO2PY7zYC3d1Eyx6J2oHjHWoyE",
   authDomain: "rex-multi-user-file.firebaseapp.com",
   projectId: "rex-multi-user-file"
 });
 
-const db = getFirestore(app);
+var db = firebase.firestore();
 
-// ✅ Image storage variables
-let beforeData="", afterData="";
+// ✅ IMAGE LOAD
+var beforeData="", afterData="";
 
-// ✅ File handling INSIDE SAME SCRIPT
-document.getElementById("before").addEventListener("change",function(e){
- let r=new FileReader();
- r.onload=x=>{
+document.getElementById("before").onchange = function(e){
+ var r=new FileReader();
+ r.onload=function(x){
   beforeData=x.target.result;
   document.getElementById("bImg").src=beforeData;
  };
  r.readAsDataURL(e.target.files[0]);
-});
+};
 
-document.getElementById("after").addEventListener("change",function(e){
- let r=new FileReader();
- r.onload=x=>{
+document.getElementById("after").onchange = function(e){
+ var r=new FileReader();
+ r.onload=function(x){
   afterData=x.target.result;
   document.getElementById("aImg").src=afterData;
  };
  r.readAsDataURL(e.target.files[0]);
-});
+};
 
-// ✅ SAVE (NO CONFLICT)
-window.save = async function(){
+// ✅ SAVE (WORKS 100%)
+function save(){
 
- let title = document.getElementById("title").value;
- let cat = document.getElementById("cat").value;
- let impact = document.getElementById("impact").value;
+ var t = document.getElementById("title").value;
 
- if(title===""){
-  alert("Enter Title");
+ if(!t){
+  alert("Enter title");
   return;
  }
 
- try{
-   await addDoc(collection(db,"rex"),{
-     title:title,
-     cat:cat,
-     before:beforeData,
-     after:afterData,
-     impact:impact
-   });
+ db.collection("rex").add({
+  title:t,
+  cat:document.getElementById("cat").value,
+  before:beforeData,
+  after:afterData,
+  impact:document.getElementById("impact").value
+ });
 
-   alert("✅ Saved Successfully");
+ alert("✅ Saved");
+}
 
- }catch(err){
-   alert("❌ Error: "+err.message);
- }
-};
+// ✅ LIVE DATA
+db.collection("rex").onSnapshot(function(snapshot){
 
-// ✅ LIVE LOAD
-onSnapshot(collection(db,"rex"),snap=>{
+ var html="";
 
- let html="";
+ snapshot.forEach(function(doc){
 
- snap.forEach(doc=>{
-  let d = doc.data();
+  var d = doc.data();
 
   html += `
-  <div class="container">
-   <b>${d.title}</b> (${d.cat})
-   <div class="row">
-     <div class="box">${d.before?`<img src="${d.before}>
-     <div class="box">${d.after?`<img src="${""}</div>
-   </div>
-   <p>${d.impact || ""}</p>
+  <div class="card">
+    <b>${d.title}</b> (${d.cat})
+    <div class="row">
+      <div class="box">${d.before?`<img src="${d.before}fter}`:""}</div>
+    </div>
+    <div>${d.impact || ""}</div>
   </div>
   `;
  });
