@@ -23,12 +23,10 @@ button{padding:10px 15px;background:#005a9e;color:white;border:none;margin:5px;c
 <body>
 
 <h2>REX Management System</h2>
-
 <button onclick="showCreate()">New REX</button>
 <button onclick="showSummary()">Summary</button>
 
 <div id="createPage">
-
 <input id="title" placeholder="REX Title"><br><br>
 
 <select id="cat">
@@ -70,7 +68,6 @@ button{padding:10px 15px;background:#005a9e;color:white;border:none;margin:5px;c
 </div>
 
 <button onclick="saveRex()">Save REX</button>
-
 </div>
 
 <div id="summaryPage" style="display:none"></div>
@@ -108,13 +105,13 @@ function showSummary(){
   <div class='row'>
    <div class='col'>
      <b>BEFORE</b>
-     <div class='box'>${d.before ? `<img src="${d.before}iv>
+     <div class='box'>${d.before ? `<{d.before}` : ""}</div>
      <div class='desc'>${d.beforeDesc}</div>
    </div>
 
    <div class='col'>
      <b>AFTER</b>
-     <div class='box'>${d.after ? `<img src="${d.afterdiv>
+     <div class='box'>${d.after ? `<{d.after}` : ""}</div>
      <div class='desc'>${d.afterDesc}</div>
    </div>
   </div>
@@ -158,7 +155,6 @@ window.showSummary=showSummary;
 
 <!-- ✅ FIREBASE -->
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -175,9 +171,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* ✅ SAVE */
+/* SAVE */
 window.saveRex = async function(){
-
  let obj={
   title:title.value,
   cat:cat.value,
@@ -194,17 +189,20 @@ window.saveRex = async function(){
   return;
  }
 
- if(editIndex===-1){
-   await addDoc(collection(db,"rex"),obj);
- } else {
-   await updateDoc(doc(db,"rex",rexList[editIndex].id),obj);
-   editIndex=-1;
+ try{
+   if(editIndex===-1){
+     await addDoc(collection(db,"rex"),obj);
+   } else {
+     await updateDoc(doc(db,"rex",rexList[editIndex].id),obj);
+     editIndex=-1;
+   }
+   alert("✅ Saved to Cloud");
+ }catch(e){
+   alert("❌ Error saving: " + e.message);
  }
-
- alert("✅ Saved to Cloud");
 };
 
-/* ✅ LIVE SYNC */
+/* LIVE SYNC */
 onSnapshot(collection(db,"rex"),snapshot=>{
  window.rexList=[];
  snapshot.forEach(docSnap=>{
@@ -212,7 +210,6 @@ onSnapshot(collection(db,"rex"),snapshot=>{
  });
  window.showSummary();
 });
-
 </script>
 
 </body>
