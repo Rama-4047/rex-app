@@ -1,6 +1,8 @@
 
 <!DOCTYPE html>
-<html charset="UTF-8"><html>
+<html>
+<head>
+<meta charset="UTF-8">
 <title>REX Management</title>
 
 <style>
@@ -63,9 +65,10 @@ button{
 
 <h2>REX Management System</h2>
 
-<button onclick="showCreate()">New REX</button>
-<button onclick="showSummary()">Summary</button>
+<button id="btnCreate">New REX</button>
+<button id="btnSummary">Summary</button>
 
+<!-- CREATE PAGE -->
 <div id="createPage">
 
 <input id="title" placeholder="REX Title"><br><br>
@@ -79,8 +82,10 @@ button{
 </select>
 
 <div class="template">
+
 <div class="row">
 
+<!-- BEFORE -->
 <div class="col">
 <b>BEFORE</b><br>
 <input type="file" id="beforeFile">
@@ -88,6 +93,7 @@ button{
 <textarea id="beforeDesc" class="desc"></textarea>
 </div>
 
+<!-- AFTER -->
 <div class="col">
 <b>AFTER</b><br>
 <input type="file" id="afterFile">
@@ -108,187 +114,161 @@ button{
 
 </div>
 
-<button onclick="saveRex()">Save REX</button>
+<button id="saveBtn" type="button">Save REX</button>
 
 </div>
 
+<!-- SUMMARY -->
 <div id="summaryPage" style="display:none"></div>
-
-<!-- ✅ FIREBASE CLOUD -->
-<script type="module">
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc, deleteDoc }
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "PUT_YOUR_API_KEY",
-  authDomain: "rex-management.firebaseapp.com",
-  projectId: "rex-management",
-  storageBucket: "rex-management.appspot.com",
-  messagingSenderId: "PUT_SENDER_ID",
-  appId: "PUT_APP_ID"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-window.db = db;
-window.rexList = [];
-
-// ✅ LIVE DATA
-onSnapshot(collection(db, "rex"), (snapshot) => {
-
-  rexList = [];
-
-  snapshot.forEach(docSnap => {
-    rexList.push({
-      ...docSnap.data(),
-      id: docSnap.id
-    });
-  });
-
-  showSummary();
-});
-
-</script>
 
 <script>
 
-var beforeData="", afterData="";
-var editIndex=-1;
+/* GLOBAL DATA */
+var rexList=[];
+var beforeData="";
+var afterData="";
 
-/* IMAGE LOAD */
+/* LOAD IMAGE */
 function loadImage(input,type){
+
+ var f=input.files[0];
+ if(!f) return;
+
  var reader=new FileReader();
+
  reader.onload=function(e){
   if(type==="before"){
     beforeData=e.target.result;
-    beforeImg.src=beforeData;
-    beforeImg.style.display="block";
+    document.getElementById("beforeImg").src=beforeData;
+    document.getElementById("beforeImg").style.display="block";
   }else{
     afterData=e.target.result;
-    afterImg.src=afterData;
-    afterImg.style.display="block";
+    document.getElementById("afterImg").src=afterData;
+    document.getElementById("afterImg").style.display="block";
   }
  };
- reader.readAsDataURL(input.files[0]);
+
+ reader.readAsDataURL(f);
 }
 
-beforeFile.onchange=function(){loadImage(this,"before");};
-afterFile.onchange=function(){loadImage(this,"after");};
+/* SAVE FUNCTION */
+function saveRex(){
 
-/* SAVE */
-async function saveRex(){
+ var title=document.getElementById("title").value;
 
- var obj={
-  title:title.value,
-  cat:cat.value,
-  before:beforeData,
-  after:afterData,
-  beforeDesc:beforeDesc.value,
-  afterDesc:afterDesc.value,
-  impact:impact.value,
-  takeaway:takeaway.value
- };
-
- if(obj.title===""){
+ if(title===""){
   alert("Enter Title");
   return;
  }
 
- if(editIndex===-1){
-   await addDoc(collection(db,"rex"),obj);
- } else {
-   await updateDoc(doc(db,"rex",rexList[editIndex].id),obj);
-   editIndex=-1;
- }
+ var obj={};
+ obj.title=title;
+ obj.cat=document.getElementById("cat").value;
+ obj.before=beforeData;
+ obj.after=afterData;
+ obj.beforeDesc=document.getElementById("beforeDesc").value;
+ obj.afterDesc=document.getElementById("afterDesc").value;
+ obj.impact=document.getElementById("impact").value;
+ obj.takeaway=document.getElementById("takeaway").value;
 
- alert("✅ Saved in Cloud");
- resetForm();
+ rexList.push(obj);
+
+ alert("✅ REX Saved");
+
+ clearForm();
+ showSummary();
 }
 
-/* DELETE */
-async function deleteRex(i){
- await deleteDoc(doc(db,"rex",rexList[i].id));
+/* CLEAR FORM */
+function clearForm(){
+
+ document.getElementById("title").value="";
+ document.getElementById("beforeDesc").value="";
+ document.getElementById("afterDesc").value="";
+ document.getElementById("impact").value="";
+ document.getElementById("takeaway").value="";
+
+ document.getElementById("beforeImg").style.display="none";
+ document.getElementById("afterImg").style.display="none";
+
+ beforeData="";
+ afterData="";
 }
 
-/* RESET */
-function resetForm(){
- title.value=beforeDesc.value=afterDesc.value=impact.value=takeaway.value="";
- beforeImg.style.display="none";
- afterImg.style.display="none";
- beforeData=afterData="";
-}
-
-/* EDIT */
-function editRex(i){
- var d=rexList[i];
- editIndex=i;
-
- title.value=d.title;
- cat.value=d.cat;
- beforeData=d.before;
- afterData=d.after;
-
- beforeImg.src=d.before; beforeImg.style.display="block";
- afterImg.src=d.after; afterImg.style.display="block";
-
- beforeDesc.value=d.beforeDesc;
- afterDesc.value=d.afterDesc;
- impact.value=d.impact;
- takeaway.value=d.takeaway;
-
- showCreate();
-}
-
-/* RENDER */
+/* SHOW SUMMARY */
 function showSummary(){
 
- createPage.style.display="none";
- summaryPage.style.display="block";
+ document.getElementById("createPage").style.display="none";
+ document.getElementById("summaryPage").style.display="block";
 
  var html="";
 
- rexList.forEach((d,i)=>{
+ for(var i=0;i<rexList.length;i++){
 
- html+=`
- <div class="template">
- <b>${d.title}</b> (${d.cat})
- <button onclick="editRex(${i})">Edit</button>
- <button onclick="deleteRex(${i})">Delete</button>
+  var d=rexList[i];
 
- <div class="row">
-   <div class="col">
-     <b>BEFORE</b>
-     <div class="box">${d.before?`<img src="${:""}</div>
-     <div class="desc">${d.beforeDesc}</div>
-   </div>
+  html+="<div class='template'>";
+  html+="<b>"+d.title+"</b> ("+d.cat+")";
 
-   <div class="col">
-     <b>AFTER</b>
-     <div class="box">${d.after?`<img src="${""}</div>
-     <div class="desc">${d.afterDesc}</div>
-   </div>
- </div>
+  html+="<div class='row'>";
 
- <div class="impact">
- <div><b>Impact</b></div>
- <div>${d.impact}</div>
- </div>
+  html+="<div class='col'>";
+  html+="<b>BEFORE</b>";
+  html+="<div class='box'>"+(d.before? "<img src='"+d.before+"'>" : "")+"</div>";
+  html+="<div class='desc'>"+d.beforeDesc+"</div>";
+  html+="</div>";
 
- <div class="takeaway">${d.takeaway}</div>
- </div>`;
- });
+  html+="<div class='col'>";
+  html+="<b>AFTER</b>";
+  html+="<div class='box'>"+(d.after? "<img src='"+d.after+"'>" : "")+"</div>";
+  html+="<div class='desc'>"+d.afterDesc+"</div>";
+  html+="</div>";
 
- summaryPage.innerHTML=html;
+  html+="</div>";
+
+  html+="<div class='impact'>";
+  html+="<div><b>Impact</b></div>";
+  html+="<div>"+d.impact+"</div>";
+  html+="</div>";
+
+  html+="<div class='takeaway'>"+d.takeaway+"</div>";
+
+  html+="</div>";
+ }
+
+ document.getElementById("summaryPage").innerHTML=html;
 }
 
+/* NAV */
 function showCreate(){
- createPage.style.display="block";
- summaryPage.style.display="none";
+ document.getElementById("createPage").style.display="block";
+ document.getElementById("summaryPage").style.display="none";
 }
 
+/* ✅ SAFEST EVENT BINDING */
+document.addEventListener("DOMContentLoaded",function(){
+
+ document.getElementById("beforeFile").onchange=function(){
+  loadImage(this,"before");
+ };
+
+ document.getElementById("afterFile").onchange=function(){
+  loadImage(this,"after");
+ };
+
+ document.getElementById("saveBtn").onclick=function(){
+  saveRex();
+ };
+
+ document.getElementById("btnCreate").onclick=function(){
+  showCreate();
+ };
+
+ document.getElementById("btnSummary").onclick=function(){
+  showSummary();
+ };
+
+});
 </script>
 
 </body>
