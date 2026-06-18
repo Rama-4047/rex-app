@@ -3,19 +3,19 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>REX</title>
+<title>REX Management</title>
 
 <style>
 body{font-family:Arial;background:#eef1f5;padding:20px;}
-input, select, textarea{width:100%;margin:5px 0;}
-button{padding:8px;background:#005a9e;color:white;border:none;margin-top:10px;}
-.card{background:white;padding:10px;margin-top:10px;}
+input,select,textarea{width:100%;margin:6px 0;}
+button{padding:8px;background:#005a9e;color:white;border:none;margin-top:10px;cursor:pointer;}
+.card{background:white;padding:12px;margin-top:10px;border-radius:6px;}
 .row{display:flex;gap:10px;}
 .box{border:1px solid black;height:120px;display:flex;align-items:center;justify-content:center;}
 .box img{max-width:100%;max-height:100%;}
 </style>
 
-<!-- ✅ Firebase (OLD SIMPLE VERSION — NO ERRORS) -->
+<!-- ✅ CORRECT Firebase Scripts -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
@@ -23,7 +23,10 @@ button{padding:8px;background:#005a9e;color:white;border:none;margin-top:10px;}
 
 <body>
 
-<h2>REX System</h2>
+<h2>REX Management</h2>
+
+<!-- FORM -->
+<div class="card">
 
 <input id="title" placeholder="Title">
 
@@ -35,25 +38,28 @@ button{padding:8px;background:#005a9e;color:white;border:none;margin-top:10px;}
 <option>Others</option>
 </select>
 
-<br>
-
+<label>Before</label>
 <input type="file" id="before">
-<img id="bImg" width="120"><br>
+<img id="bImg" width="120">
 
+<label>After</label>
 <input type="file" id="after">
-<img id="aImg" width="120"><br>
+<img id="aImg" width="120">
 
 <textarea id="impact" placeholder="Impact"></textarea>
 
-<button onclick="save()">Save</button>
+<button onclick="save()">Save REX</button>
+
+</div>
 
 <hr>
 
+<!-- SUMMARY -->
 <div id="summary"></div>
 
 <script>
 
-// ✅ Firebase config
+/* ✅ FIREBASE INIT */
 firebase.initializeApp({
   apiKey: "AIzaSyCPUL-TGaO2PY7zYC3d1Eyx6J2oHjHWoyE",
   authDomain: "rex-multi-user-file.firebaseapp.com",
@@ -62,11 +68,11 @@ firebase.initializeApp({
 
 var db = firebase.firestore();
 
-// ✅ IMAGE LOAD
+/* ✅ IMAGE LOAD */
 var beforeData="", afterData="";
 
 document.getElementById("before").onchange = function(e){
- var r=new FileReader();
+ let r=new FileReader();
  r.onload=function(x){
   beforeData=x.target.result;
   document.getElementById("bImg").src=beforeData;
@@ -75,7 +81,7 @@ document.getElementById("before").onchange = function(e){
 };
 
 document.getElementById("after").onchange = function(e){
- var r=new FileReader();
+ let r=new FileReader();
  r.onload=function(x){
   afterData=x.target.result;
   document.getElementById("aImg").src=afterData;
@@ -83,43 +89,43 @@ document.getElementById("after").onchange = function(e){
  r.readAsDataURL(e.target.files[0]);
 };
 
-// ✅ SAVE (WORKS 100%)
+/* ✅ SAVE */
 function save(){
 
- var t = document.getElementById("title").value;
+ let t = document.getElementById("title").value;
 
  if(!t){
-  alert("Enter title");
+  alert("Enter Title");
   return;
  }
 
  db.collection("rex").add({
-  title:t,
-  cat:document.getElementById("cat").value,
-  before:beforeData,
-  after:afterData,
-  impact:document.getElementById("impact").value
+  title: t,
+  cat: document.getElementById("cat").value,
+  before: beforeData,
+  after: afterData,
+  impact: document.getElementById("impact").value
  });
 
  alert("✅ Saved");
 }
 
-// ✅ LIVE DATA
+/* ✅ LIVE DATA */
 db.collection("rex").onSnapshot(function(snapshot){
 
- var html="";
+ let html="";
 
  snapshot.forEach(function(doc){
 
-  var d = doc.data();
+  let d = doc.data();
 
   html += `
   <div class="card">
     <b>${d.title}</b> (${d.cat})
     <div class="row">
-      <div class="box">${d.before?`<img src="${d.before}fter}`:""}</div>
+      <div class="box">${d.before ? `<img src="${d.before}img src="${d.after}iv>
     </div>
-    <div>${d.impact || ""}</div>
+    <p>${d.impact || ""}</p>
   </div>
   `;
  });
