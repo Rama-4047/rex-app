@@ -3,29 +3,21 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>REX Management</title>
+<title>REX</title>
 
 <style>
-body{font-family:Arial;margin:20px;background:#eef1f5;}
-button{padding:8px 12px;background:#005a9e;color:white;border:none;margin:5px;cursor:pointer;}
-.template{background:white;padding:15px;margin-top:10px;border-radius:8px;}
-.row{display:flex;gap:10px;}
-.col{flex:1;}
-.box{border:1px solid black;height:150px;display:flex;justify-content:center;align-items:center;}
+body{font-family:Arial;padding:20px;background:#f0f2f5;}
+button{padding:8px 12px;background:blue;color:white;border:none;cursor:pointer;margin:5px;}
+.box{border:1px solid black;height:120px;display:flex;align-items:center;justify-content:center;}
 .box img{max-width:100%;max-height:100%;}
-.desc{border:1px solid black;padding:5px;margin-top:5px;}
-.takeaway{background:#003d66;color:white;padding:8px;margin-top:10px;text-align:center;}
+.template{background:white;padding:10px;margin:10px 0;}
 </style>
+
 </head>
 
 <body>
 
-<h2>REX Management</h2>
-
-<button onclick="showCreate()">New REX</button>
-<button onclick="showSummary()">Summary</button>
-
-<div id="createPage">
+<h2>REX System</h2>
 
 <input id="title" placeholder="Title"><br><br>
 
@@ -39,115 +31,46 @@ button{padding:8px 12px;background:#005a9e;color:white;border:none;margin:5px;cu
 
 <br><br>
 
-<b>Before</b><br>
 <input type="file" id="beforeFile"><br>
-<img id="beforeImg" style="max-width:200px;display:none"><br>
-<textarea id="beforeDesc"></textarea>
+<img id="beforeImg" width="150"><br>
 
-<br><br>
-
-<b>After</b><br>
 <input type="file" id="afterFile"><br>
-<img id="afterImg" style="max-width:200px;display:none"><br>
-<textarea id="afterDesc"></textarea>
+<img id="afterImg" width="150"><br>
 
-<br><br>
+<br>
 
-<textarea id="impact" placeholder="Impact"></textarea><br>
-<textarea id="takeaway" placeholder="Takeaway"></textarea><br><br>
+<textarea id="impact" placeholder="Impact"></textarea><br><br>
 
-<button onclick="saveRex()">Save</button>
+<button onclick="saveData()">Save</button>
 
-</div>
+<hr>
 
-<div id="summaryPage" style="display:none"></div>
+<div id="summary"></div>
 
 <script>
-var rexList=[];
-var beforeData="", afterData="";
-var selectedCat="All";
+let beforeData="", afterData="";
 
-/* IMAGE */
-beforeFile.onchange=function(){
- var r=new FileReader();
+beforeFile.onchange = function(){
+ let r=new FileReader();
  r.onload=e=>{
   beforeData=e.target.result;
   beforeImg.src=beforeData;
-  beforeImg.style.display="block";
  };
  r.readAsDataURL(this.files[0]);
 };
 
-afterFile.onchange=function(){
- var r=new FileReader();
+afterFile.onchange = function(){
+ let r=new FileReader();
  r.onload=e=>{
   afterData=e.target.result;
   afterImg.src=afterData;
-  afterImg.style.display="block";
  };
  r.readAsDataURL(this.files[0]);
 };
-
-function filterCat(c){
- selectedCat=c;
- showSummary();
-}
-
-function showSummary(){
- createPage.style.display="none";
- summaryPage.style.display="block";
-
- let html = `
- <button onclick="filterCat('All')">All</button>
- <button onclick="filterCat('5S')">5S</button>
- <button onclick="filterCat('Safety')">Safety</button>
- <button onclick="filterCat('QMS')">QMS</button>
- <button onclick="filterCat('Automation')">Automation</button>
- <button onclick="filterCat('Others')">Others</button>
- `;
-
- rexList.forEach(d=>{
-
-  if(selectedCat!="All" && d.cat!=selectedCat) return;
-
-  html+=`
-  <div class="template">
-
-  <b>${d.title}</b> (${d.cat})
-
-  <div class="row">
-    <div class="col">
-      BEFORE
-      <div class="box">${d.before? `<img src="${d""}</div>
-      <div class="desc">${d.beforeDesc}</div>
-    </div>
-
-    <div class="col">
-      AFTER
-      <div class="box">${d.after? `<img src="${d"}</div>
-      <div class="desc">${d.afterDesc}</div>
-    </div>
-  </div>
-
-  <div>${d.impact}</div>
-  <div class="takeaway">${d.takeaway}</div>
-
-  </div>`;
- });
-
- summaryPage.innerHTML=html;
-}
-
-function showCreate(){
- createPage.style.display="block";
- summaryPage.style.display="none";
-}
-
-window.showSummary=showSummary;
 </script>
 
-<!-- FIREBASE -->
 <script type="module">
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -164,35 +87,49 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* SAVE */
-window.saveRex = async function(){
+// ✅ SAVE
+window.saveData = async function(){
 
- const obj={
-  title:title.value,
+ let t = document.getElementById("title").value;
+
+ if(!t){
+  alert("Enter title");
+  return;
+ }
+
+ await addDoc(collection(db,"rex"),{
+  title:t,
   cat:cat.value,
   before:beforeData,
   after:afterData,
-  beforeDesc:beforeDesc.value,
-  afterDesc:afterDesc.value,
-  impact:impact.value,
-  takeaway:takeaway.value
- };
-
- if(!obj.title){ alert("Enter title"); return; }
-
- await addDoc(collection(db,"rex"),obj);
+  impact:impact.value
+ });
 
  alert("Saved ✅");
 };
 
-/* LIVE */
+// ✅ LOAD DATA
 onSnapshot(collection(db,"rex"),snap=>{
- rexList=[];
- snap.forEach(d=>{
-  rexList.push(d.data());
+
+ let html="";
+
+ snap.forEach(doc=>{
+  let d = doc.data();
+
+  html += `
+  <div class="template">
+    <b>${d.title}</b> (${d.cat})
+    <div style="display:flex;gap:10px;">
+      <div class="box">${d.before?`<img src="${d.before}>
+      <div class="box">${d.after?`<img srcr}`:""}</div>
+    </div>
+    <div>${d.impact || ""}</div>
+  </div>`;
  });
- showSummary();
+
+ document.getElementById("summary").innerHTML = html;
 });
+
 </script>
 
 </body>
