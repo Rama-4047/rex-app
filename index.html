@@ -57,6 +57,12 @@ button{
  margin-top:15px;
  text-align:center;
 }
+
+/* Print (main page optional) */
+@media print {
+ button { display:none; }
+ body { background:white; }
+}
 </style>
 
 </head>
@@ -68,7 +74,7 @@ button{
 <button id="btnCreate">New REX</button>
 <button id="btnSummary">Summary</button>
 
-<!-- CREATE PAGE -->
+<!-- CREATE -->
 <div id="createPage">
 
 <input id="title" placeholder="REX Title"><br><br>
@@ -82,10 +88,8 @@ button{
 </select>
 
 <div class="template">
-
 <div class="row">
 
-<!-- BEFORE -->
 <div class="col">
 <b>BEFORE</b><br>
 <input type="file" id="beforeFile">
@@ -93,7 +97,6 @@ button{
 <textarea id="beforeDesc" class="desc"></textarea>
 </div>
 
-<!-- AFTER -->
 <div class="col">
 <b>AFTER</b><br>
 <input type="file" id="afterFile">
@@ -114,7 +117,7 @@ button{
 
 </div>
 
-<button id="saveBtn" type="button">Save REX</button>
+<button id="saveBtn">Save REX</button>
 
 </div>
 
@@ -123,19 +126,21 @@ button{
 
 <script>
 
-/* GLOBAL DATA */
+/* LOAD DATA */
 var rexList=[];
+var saved=localStorage.getItem("rexData");
+if(saved){ rexList=JSON.parse(saved); }
+
 var beforeData="";
 var afterData="";
+var editIndex=-1;
 
-/* LOAD IMAGE */
+/* IMAGE LOAD */
 function loadImage(input,type){
-
  var f=input.files[0];
  if(!f) return;
 
  var reader=new FileReader();
-
  reader.onload=function(e){
   if(type==="before"){
     beforeData=e.target.result;
@@ -147,11 +152,10 @@ function loadImage(input,type){
     document.getElementById("afterImg").style.display="block";
   }
  };
-
  reader.readAsDataURL(f);
 }
 
-/* SAVE FUNCTION */
+/* SAVE */
 function saveRex(){
 
  var title=document.getElementById("title").value;
@@ -161,27 +165,34 @@ function saveRex(){
   return;
  }
 
- var obj={};
- obj.title=title;
- obj.cat=document.getElementById("cat").value;
- obj.before=beforeData;
- obj.after=afterData;
- obj.beforeDesc=document.getElementById("beforeDesc").value;
- obj.afterDesc=document.getElementById("afterDesc").value;
- obj.impact=document.getElementById("impact").value;
- obj.takeaway=document.getElementById("takeaway").value;
+ var obj={
+  title:title,
+  cat:document.getElementById("cat").value,
+  before:beforeData,
+  after:afterData,
+  beforeDesc:document.getElementById("beforeDesc").value,
+  afterDesc:document.getElementById("afterDesc").value,
+  impact:document.getElementById("impact").value,
+  takeaway:document.getElementById("takeaway").value
+ };
 
- rexList.push(obj);
+ if(editIndex===-1){
+   rexList.push(obj);
+ }else{
+   rexList[editIndex]=obj;
+   editIndex=-1;
+ }
 
- alert("✅ REX Saved");
+ localStorage.setItem("rexData", JSON.stringify(rexList));
 
- clearForm();
+ alert("✅ Saved");
+
+ resetForm();
  showSummary();
 }
 
-/* CLEAR FORM */
-function clearForm(){
-
+/* RESET */
+function resetForm(){
  document.getElementById("title").value="";
  document.getElementById("beforeDesc").value="";
  document.getElementById("afterDesc").value="";
@@ -193,22 +204,79 @@ function clearForm(){
 
  beforeData="";
  afterData="";
+ editIndex=-1;
 }
 
-/* SHOW SUMMARY */
-function showSummary(){
+/* EDIT */
+function editRex(i){
 
- document.getElementById("createPage").style.display="none";
- document.getElementById("summaryPage").style.display="block";
+ var d=rexList[i];
+ editIndex=i;
 
+ document.getElementById("title").value=d.title;
+ document.getElementById("cat").value=d.cat;
+
+ beforeData=d.before;
+ afterData=d.after;
+
+ document.getElementById("beforeImg").src=d.before;
+ document.getElementById("beforeImg").style.display="block";
+
+ document.getElementById("afterImg").src=d.after;
+ document.getElementById("afterImg").style.display="block";
+
+ document.getElementById("beforeDesc").value=d.beforeDesc;
+ document.getElementById("afterDesc").value=d.afterDesc;
+ document.getElementById("impact").value=d.impact;
+ document.getElementById("takeaway").value=d.takeaway;
+
+ showCreate();
+}
+
+/* CATEGORY BUTTONS */
+function buildCategoryButtons(){
+
+ var cats=["5S","Safety","QMS","Automation","Others"];
  var html="";
 
- for(var i=0;i<rexList.length;i++){
+ for(var i=0;i<cats.length;i++){
+   var count=0;
+   for(var j=0;j<rexList.length;j++){
+     if(rexList[j].cat===cats[i]) count++;
+   }
+   html += "<button onclick=\"filterCat('"+cats[i]+"')\">"+cats[i]+" ("+count+")</button>";
+ }
 
-  var d=rexList[i];
+ html += "<button onclick='showSummary()'>All</button>";
+ html += "<button onclick='printSummary()'>Export PDF</button>";
+
+ return html;
+}
+
+/* FILTER */
+function filterCat(cat){
+ var list=[];
+ for(var i=0;i<rexList.length;i++){
+   if(rexList[i].cat===cat){
+     list.push({d:rexList[i], i:i});
+   }
+ }
+ renderSummary(list);
+}
+
+/* RENDER */
+function renderSummary(list){
+
+ var html=buildCategoryButtons();
+
+ for(var i=0;i<list.length;i++){
+
+  var d=list[i].d;
+  var index=list[i].i;
 
   html+="<div class='template'>";
-  html+="<b>"+d.title+"</b> ("+d.cat+")";
+  html+="<b>"+d.title+"</b> ("+d.cat+") ";
+  html+="<button onclick='editRex("+index+")'>Edit</button>";
 
   html+="<div class='row'>";
 
@@ -226,11 +294,7 @@ function showSummary(){
 
   html+="</div>";
 
-  html+="<div class='impact'>";
-  html+="<div><b>Impact</b></div>";
-  html+="<div>"+d.impact+"</div>";
-  html+="</div>";
-
+  html+="<div class='impact'><div><b>Impact</b></div><div>"+d.impact+"</div></div>";
   html+="<div class='takeaway'>"+d.takeaway+"</div>";
 
   html+="</div>";
@@ -239,13 +303,108 @@ function showSummary(){
  document.getElementById("summaryPage").innerHTML=html;
 }
 
+/* SHOW SUMMARY */
+function showSummary(){
+
+ document.getElementById("createPage").style.display="none";
+ document.getElementById("summaryPage").style.display="block";
+
+ var list=[];
+ for(var i=0;i<rexList.length;i++){
+   list.push({d:rexList[i], i:i});
+ }
+
+ renderSummary(list);
+}
+
 /* NAV */
 function showCreate(){
  document.getElementById("createPage").style.display="block";
  document.getElementById("summaryPage").style.display="none";
 }
 
-/* ✅ SAFEST EVENT BINDING */
+/* ✅ FINAL PDF (ONE REX PER PAGE) */
+function printSummary(){
+
+ var content = document.getElementById("summaryPage").innerHTML;
+
+ var win = window.open("", "", "width=1000,height=800");
+
+ win.document.write(`
+  <html>
+  <head>
+  <title>REX Report</title>
+
+  <style>
+  body{font-family:Arial;padding:20px;}
+
+  .template{
+    page-break-after: always;
+    break-after: page;
+    margin-bottom:20px;
+  }
+
+  .template:last-child{
+    page-break-after:auto;
+  }
+
+  .row{display:flex;gap:20px;}
+  .col{flex:1;}
+
+  .box{
+    border:2px solid black;
+    height:180px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .box img{max-width:100%;max-height:100%;}
+
+  .desc{
+    border:2px solid black;
+    margin-top:10px;
+    padding:8px;
+  }
+
+  .impact{
+    display:flex;
+    border:2px solid black;
+    margin-top:15px;
+  }
+
+  .impact div{
+    flex:1;
+    padding:10px;
+  }
+
+  .takeaway{
+    background:#003d66;
+    color:white;
+    padding:10px;
+    margin-top:15px;
+    text-align:center;
+  }
+
+  button{display:none;}
+  </style>
+
+  </head>
+
+  <body>
+  ${content}
+  </body>
+  </html>
+ `);
+
+ win.document.close();
+
+ setTimeout(function(){
+  win.print();
+ },500);
+}
+
+/* EVENTS */
 document.addEventListener("DOMContentLoaded",function(){
 
  document.getElementById("beforeFile").onchange=function(){
@@ -268,7 +427,10 @@ document.addEventListener("DOMContentLoaded",function(){
   showSummary();
  };
 
+ showSummary();
+
 });
+
 </script>
 
 </body>
