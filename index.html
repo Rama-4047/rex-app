@@ -13,41 +13,38 @@ button{
  background:#005a9e;
  color:white;
  border:none;
- cursor:pointer;
  margin:5px;
+ cursor:pointer;
 }
 
-.template{
+.container{
  background:white;
  padding:15px;
  margin-top:10px;
  border-radius:8px;
 }
 
-.row{
- display:flex;
- gap:10px;
-}
+.row{display:flex;gap:10px;}
 
 .col{flex:1;}
 
 .box{
  border:1px solid black;
- height:150px;
+ height:140px;
  display:flex;
- justify-content:center;
  align-items:center;
+ justify-content:center;
 }
 
-.box img{
- max-width:100%;
- max-height:100%;
-}
+.box img{max-width:100%;max-height:100%;}
 
-.desc{
- border:1px solid black;
- padding:5px;
- margin-top:5px;
+textarea{width:100%;margin-top:5px;}
+
+.takeaway{
+ background:#003d66;
+ color:white;
+ padding:8px;
+ margin-top:10px;
 }
 </style>
 
@@ -60,8 +57,8 @@ button{
 <button onclick="showCreate()">New REX</button>
 <button onclick="showSummary()">Summary</button>
 
-<!-- CREATE -->
-<div id="createPage">
+<!-- CREATE PAGE -->
+<div id="createPage" class="container">
 
 <input id="title" placeholder="Title"><br><br>
 
@@ -75,38 +72,43 @@ button{
 
 <br><br>
 
-<b>Before</b><br>
+<div class="row">
+<div class="col">
+<b>BEFORE</b><br>
 <input type="file" id="beforeFile"><br>
-<img id="beforeImg" width="150"><br>
-<textarea id="beforeDesc"></textarea>
+<img id="beforeImg" style="width:100%;max-height:120px"><br>
+<textarea id="beforeDesc" placeholder="Before Description"></textarea>
+</div>
 
-<br><br>
-
-<b>After</b><br>
+<div class="col">
+<b>AFTER</b><br>
 <input type="file" id="afterFile"><br>
-<img id="afterImg" width="150"><br>
-<textarea id="afterDesc"></textarea>
+<img id="afterImg" style="width:100%;max-height:120px"><br>
+<textarea id="afterDesc" placeholder="After Description"></textarea>
+</div>
+</div>
 
-<br><br>
+<br>
 
-<textarea id="impact" placeholder="Impact"></textarea><br>
-<textarea id="takeaway" placeholder="Takeaway"></textarea>
+<b>Impact</b>
+<textarea id="impact"></textarea>
 
-<br><br>
+<b>Takeaway</b>
+<textarea id="takeaway"></textarea>
 
-<button onclick="saveRex()">Save</button>
+<br>
+
+<button onclick="saveRex()">Save REX</button>
 
 </div>
 
-<!-- SUMMARY -->
+<!-- SUMMARY PAGE -->
 <div id="summaryPage" style="display:none"></div>
 
 <script>
 let rexList=[];
 let beforeData="", afterData="";
-let selectedCat="All";
 
-/* IMAGE LOAD */
 beforeFile.onchange=function(){
  let r=new FileReader();
  r.onload=e=>{
@@ -125,64 +127,44 @@ afterFile.onchange=function(){
  r.readAsDataURL(this.files[0]);
 };
 
-/* SHOW CREATE */
 function showCreate(){
  createPage.style.display="block";
  summaryPage.style.display="none";
 }
 
-/* FILTER */
-function filterCat(c){
- selectedCat=c;
- render();
-}
-
-/* SHOW SUMMARY */
 function showSummary(){
  createPage.style.display="none";
  summaryPage.style.display="block";
  render();
 }
 
-/* RENDER */
 function render(){
 
- let html = `
- <button onclick="filterCat('All')">All</button>
- <button onclick="filterCat('5S')">5S</button>
- <button onclick="filterCat('Safety')">Safety</button>
- <button onclick="filterCat('QMS')">QMS</button>
- <button onclick="filterCat('Automation')">Automation</button>
- <button onclick="filterCat('Others')">Others</button>
- `;
+ let html="";
 
  rexList.forEach(d=>{
 
-  if(selectedCat!="All" && d.cat!=selectedCat) return;
-
-  html += `
-  <div class="template">
+  html+=`
+  <div class="container">
 
   <b>${d.title}</b> (${d.cat})
 
   <div class="row">
     <div class="col">
       BEFORE
-      <div class="box">${d.before?`<img src="${d""}</div>
-      <div class="desc">${d.beforeDesc}</div>
+      <div class="box">${d.before? `${d.before}`:""}</div>
+      <div>${d.beforeDesc}</div>
     </div>
 
     <div class="col">
       AFTER
-      <div class="box">${d.after?`<img src="${d"}</div>
-      <div class="desc">${d.afterDesc}</div>
+      <div class="box">${d.after? `${d.after}`:""}</div>
+      <div>${d.afterDesc}</div>
     </div>
   </div>
 
-  <br>
-
-  <div><b>Impact:</b> ${d.impact}</div>
-  <div><b>Takeaway:</b> ${d.takeaway}</div>
+  <p><b>Impact:</b> ${d.impact}</p>
+  <div class="takeaway">${d.takeaway}</div>
 
   </div>`;
  });
@@ -193,7 +175,7 @@ function render(){
 window.render=render;
 </script>
 
-<!-- ✅ FIREBASE (NO CONFLICT VERSION) -->
+<!-- FIREBASE -->
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -215,15 +197,8 @@ const db = getFirestore(app);
 /* SAVE */
 window.saveRex = async function(){
 
- let t = title.value;
-
- if(!t){
-  alert("Enter title");
-  return;
- }
-
- await addDoc(collection(db,"rex"),{
-  title:t,
+ let obj={
+  title:title.value,
   cat:cat.value,
   before:beforeData,
   after:afterData,
@@ -231,21 +206,28 @@ window.saveRex = async function(){
   afterDesc:afterDesc.value,
   impact:impact.value,
   takeaway:takeaway.value
- });
+ };
+
+ if(!obj.title){
+  alert("Enter Title");
+  return;
+ }
+
+ await addDoc(collection(db,"rex"),obj);
 
  alert("✅ Saved");
 };
 
-/* LIVE DATA */
+/* LOAD LIVE */
 onSnapshot(collection(db,"rex"),snap=>{
 
- window.rexList=[];
+ rexList=[];
 
- snap.forEach(d=>{
-  window.rexList.push(d.data());
+ snap.forEach(doc=>{
+  rexList.push(doc.data());
  });
 
- window.render();
+ render();
 });
 
 </script>
