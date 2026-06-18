@@ -23,10 +23,12 @@ button{padding:10px 15px;background:#005a9e;color:white;border:none;margin:5px;c
 <body>
 
 <h2>REX Management System</h2>
+
 <button onclick="showCreate()">New REX</button>
 <button onclick="showSummary()">Summary</button>
 
 <div id="createPage">
+
 <input id="title" placeholder="REX Title"><br><br>
 
 <select id="cat">
@@ -68,6 +70,7 @@ button{padding:10px 15px;background:#005a9e;color:white;border:none;margin:5px;c
 </div>
 
 <button onclick="saveRex()">Save REX</button>
+
 </div>
 
 <div id="summaryPage" style="display:none"></div>
@@ -76,6 +79,7 @@ button{padding:10px 15px;background:#005a9e;color:white;border:none;margin:5px;c
 var rexList=[];
 var beforeData="", afterData="";
 var editIndex=-1;
+var selectedCat="All";
 
 /* IMAGE */
 function loadImage(input,type){
@@ -90,13 +94,30 @@ function loadImage(input,type){
 beforeFile.onchange=()=>loadImage(beforeFile,"before");
 afterFile.onchange=()=>loadImage(afterFile,"after");
 
+/* FILTER */
+function filterCat(cat){
+ selectedCat = cat;
+ showSummary();
+}
+
 /* SHOW */
 function showSummary(){
  createPage.style.display="none";
  summaryPage.style.display="block";
 
- let html="";
+ let html = `
+ <button onclick="filterCat('All')">All</button>
+ <button onclick="filterCat('5S')">5S</button>
+ <button onclick="filterCat('Safety')">Safety</button>
+ <button onclick="filterCat('QMS')">QMS</button>
+ <button onclick="filterCat('Automation')">Automation</button>
+ <button onclick="filterCat('Others')">Others</button>
+ `;
+
  rexList.forEach((d,i)=>{
+
+  if(selectedCat !== "All" && d.cat !== selectedCat) return;
+
   html+=`
   <div class='template'>
   <b>${d.title}</b> (${d.cat})
@@ -105,13 +126,13 @@ function showSummary(){
   <div class='row'>
    <div class='col'>
      <b>BEFORE</b>
-     <div class='box'>${d.before ? `<{d.before}` : ""}</div>
+     <div class='box'>${d.before ? `<img src="${d.before}iv>
      <div class='desc'>${d.beforeDesc}</div>
    </div>
 
    <div class='col'>
      <b>AFTER</b>
-     <div class='box'>${d.after ? `<{d.after}` : ""}</div>
+     <div class='box'>${d.after ? `${d.after}` : ""}</div>
      <div class='desc'>${d.afterDesc}</div>
    </div>
   </div>
@@ -189,17 +210,14 @@ window.saveRex = async function(){
   return;
  }
 
- try{
-   if(editIndex===-1){
-     await addDoc(collection(db,"rex"),obj);
-   } else {
-     await updateDoc(doc(db,"rex",rexList[editIndex].id),obj);
-     editIndex=-1;
-   }
-   alert("✅ Saved to Cloud");
- }catch(e){
-   alert("❌ Error saving: " + e.message);
+ if(editIndex===-1){
+   await addDoc(collection(db,"rex"),obj);
+ } else {
+   await updateDoc(doc(db,"rex",rexList[editIndex].id),obj);
+   editIndex=-1;
  }
+
+ alert("✅ Saved to Cloud");
 };
 
 /* LIVE SYNC */
