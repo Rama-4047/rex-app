@@ -7,29 +7,27 @@
 
 <style>
 body{font-family:Arial;margin:20px;background:#eef1f5;}
-button{padding:10px 15px;background:#005a9e;color:white;border:none;margin:5px;cursor:pointer;}
-.template{background:white;padding:20px;margin-top:20px;border-radius:10px;}
-.row{display:flex;gap:20px;}
+button{padding:8px 12px;background:#005a9e;color:white;border:none;margin:5px;cursor:pointer;}
+.template{background:white;padding:15px;margin-top:10px;border-radius:8px;}
+.row{display:flex;gap:10px;}
 .col{flex:1;}
-.box{border:2px solid black;height:180px;display:flex;align-items:center;justify-content:center;}
+.box{border:1px solid black;height:150px;display:flex;justify-content:center;align-items:center;}
 .box img{max-width:100%;max-height:100%;}
-.desc{border:2px solid black;margin-top:10px;padding:8px;}
-.impact{display:flex;border:2px solid black;margin-top:15px;}
-.impact div{flex:1;padding:10px;}
-.takeaway{background:#003d66;color:white;padding:10px;margin-top:15px;text-align:center;}
+.desc{border:1px solid black;padding:5px;margin-top:5px;}
+.takeaway{background:#003d66;color:white;padding:8px;margin-top:10px;text-align:center;}
 </style>
 </head>
 
 <body>
 
-<h2>REX Management System</h2>
+<h2>REX Management</h2>
 
 <button onclick="showCreate()">New REX</button>
 <button onclick="showSummary()">Summary</button>
 
 <div id="createPage">
 
-<input id="title" placeholder="REX Title"><br><br>
+<input id="title" placeholder="Title"><br><br>
 
 <select id="cat">
 <option>5S</option>
@@ -39,37 +37,26 @@ button{padding:10px 15px;background:#005a9e;color:white;border:none;margin:5px;c
 <option>Others</option>
 </select>
 
-<div class="template">
-<div class="row">
+<br><br>
 
-<div class="col">
-<b>BEFORE</b><br>
-<input type="file" id="beforeFile">
-<div class="box"><img id="beforeImg" style="display:none"></div>
-<textarea id="beforeDesc" class="desc"></textarea>
-</div>
+<b>Before</b><br>
+<input type="file" id="beforeFile"><br>
+<img id="beforeImg" style="max-width:200px;display:none"><br>
+<textarea id="beforeDesc"></textarea>
 
-<div class="col">
-<b>AFTER</b><br>
-<input type="file" id="afterFile">
-<div class="box"><img id="afterImg" style="display:none"></div>
-<textarea id="afterDesc" class="desc"></textarea>
-</div>
+<br><br>
 
-</div>
+<b>After</b><br>
+<input type="file" id="afterFile"><br>
+<img id="afterImg" style="max-width:200px;display:none"><br>
+<textarea id="afterDesc"></textarea>
 
-<div class="impact">
-<div><b>Impact</b></div>
-<div><textarea id="impact" style="width:100%;border:none"></textarea></div>
-</div>
+<br><br>
 
-<div class="takeaway">
-<textarea id="takeaway" style="width:100%;border:none"></textarea>
-</div>
+<textarea id="impact" placeholder="Impact"></textarea><br>
+<textarea id="takeaway" placeholder="Takeaway"></textarea><br><br>
 
-</div>
-
-<button onclick="saveRex()">Save REX</button>
+<button onclick="saveRex()">Save</button>
 
 </div>
 
@@ -78,29 +65,34 @@ button{padding:10px 15px;background:#005a9e;color:white;border:none;margin:5px;c
 <script>
 var rexList=[];
 var beforeData="", afterData="";
-var editIndex=-1;
 var selectedCat="All";
 
 /* IMAGE */
-function loadImage(input,type){
- var reader=new FileReader();
- reader.onload=e=>{
-  if(type==="before"){beforeData=e.target.result; beforeImg.src=beforeData; beforeImg.style.display="block";}
-  else{afterData=e.target.result; afterImg.src=afterData; afterImg.style.display="block";}
+beforeFile.onchange=function(){
+ var r=new FileReader();
+ r.onload=e=>{
+  beforeData=e.target.result;
+  beforeImg.src=beforeData;
+  beforeImg.style.display="block";
  };
- reader.readAsDataURL(input.files[0]);
-}
+ r.readAsDataURL(this.files[0]);
+};
 
-beforeFile.onchange=()=>loadImage(beforeFile,"before");
-afterFile.onchange=()=>loadImage(afterFile,"after");
+afterFile.onchange=function(){
+ var r=new FileReader();
+ r.onload=e=>{
+  afterData=e.target.result;
+  afterImg.src=afterData;
+  afterImg.style.display="block";
+ };
+ r.readAsDataURL(this.files[0]);
+};
 
-/* FILTER */
-function filterCat(cat){
- selectedCat = cat;
+function filterCat(c){
+ selectedCat=c;
  showSummary();
 }
 
-/* SHOW */
 function showSummary(){
  createPage.style.display="none";
  summaryPage.style.display="block";
@@ -114,31 +106,32 @@ function showSummary(){
  <button onclick="filterCat('Others')">Others</button>
  `;
 
- rexList.forEach((d,i)=>{
+ rexList.forEach(d=>{
 
-  if(selectedCat !== "All" && d.cat !== selectedCat) return;
+  if(selectedCat!="All" && d.cat!=selectedCat) return;
 
   html+=`
-  <div class='template'>
+  <div class="template">
+
   <b>${d.title}</b> (${d.cat})
-  <button onclick="editRex(${i})">Edit</button>
 
-  <div class='row'>
-   <div class='col'>
-     <b>BEFORE</b>
-     <div class='box'>${d.before ? `<img src="${d.before}iv>
-     <div class='desc'>${d.beforeDesc}</div>
-   </div>
+  <div class="row">
+    <div class="col">
+      BEFORE
+      <div class="box">${d.before? `<img src="${d""}</div>
+      <div class="desc">${d.beforeDesc}</div>
+    </div>
 
-   <div class='col'>
-     <b>AFTER</b>
-     <div class='box'>${d.after ? `${d.after}` : ""}</div>
-     <div class='desc'>${d.afterDesc}</div>
-   </div>
+    <div class="col">
+      AFTER
+      <div class="box">${d.after? `<img src="${d"}</div>
+      <div class="desc">${d.afterDesc}</div>
+    </div>
   </div>
 
-  <div class='impact'><div><b>Impact</b></div><div>${d.impact}</div></div>
-  <div class='takeaway'>${d.takeaway}</div>
+  <div>${d.impact}</div>
+  <div class="takeaway">${d.takeaway}</div>
+
   </div>`;
  });
 
@@ -150,34 +143,13 @@ function showCreate(){
  summaryPage.style.display="none";
 }
 
-/* EDIT */
-function editRex(i){
- let d=rexList[i];
- editIndex=i;
-
- title.value=d.title;
- cat.value=d.cat;
- beforeData=d.before;
- afterData=d.after;
-
- beforeImg.src=d.before; beforeImg.style.display="block";
- afterImg.src=d.after; afterImg.style.display="block";
-
- beforeDesc.value=d.beforeDesc;
- afterDesc.value=d.afterDesc;
- impact.value=d.impact;
- takeaway.value=d.takeaway;
-
- showCreate();
-}
-
 window.showSummary=showSummary;
 </script>
 
-<!-- ✅ FIREBASE -->
+<!-- FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc }
+import { getFirestore, collection, addDoc, onSnapshot }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -194,7 +166,8 @@ const db = getFirestore(app);
 
 /* SAVE */
 window.saveRex = async function(){
- let obj={
+
+ const obj={
   title:title.value,
   cat:cat.value,
   before:beforeData,
@@ -205,28 +178,20 @@ window.saveRex = async function(){
   takeaway:takeaway.value
  };
 
- if(obj.title===""){
-  alert("Enter Title");
-  return;
- }
+ if(!obj.title){ alert("Enter title"); return; }
 
- if(editIndex===-1){
-   await addDoc(collection(db,"rex"),obj);
- } else {
-   await updateDoc(doc(db,"rex",rexList[editIndex].id),obj);
-   editIndex=-1;
- }
+ await addDoc(collection(db,"rex"),obj);
 
- alert("✅ Saved to Cloud");
+ alert("Saved ✅");
 };
 
-/* LIVE SYNC */
-onSnapshot(collection(db,"rex"),snapshot=>{
- window.rexList=[];
- snapshot.forEach(docSnap=>{
-  window.rexList.push({...docSnap.data(),id:docSnap.id});
+/* LIVE */
+onSnapshot(collection(db,"rex"),snap=>{
+ rexList=[];
+ snap.forEach(d=>{
+  rexList.push(d.data());
  });
- window.showSummary();
+ showSummary();
 });
 </script>
 
