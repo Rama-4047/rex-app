@@ -18,12 +18,12 @@ button{padding:10px 15px;background:#005a9e;color:white;border:none;margin:5px;c
 .impact div{flex:1;padding:10px;}
 .takeaway{background:#003d66;color:white;padding:10px;margin-top:15px;text-align:center;}
 </style>
-
 </head>
 
 <body>
 
 <h2>REX Management System</h2>
+
 <button onclick="showCreate()">New REX</button>
 <button onclick="showSummary()">Summary</button>
 
@@ -93,34 +93,6 @@ function loadImage(input,type){
 beforeFile.onchange=()=>loadImage(beforeFile,"before");
 afterFile.onchange=()=>loadImage(afterFile,"after");
 
-/* SAVE (FIREBASE) */
-async function saveRex(){
-
- var obj={
-  title:title.value,
-  cat:cat.value,
-  before:beforeData,
-  after:afterData,
-  beforeDesc:beforeDesc.value,
-  afterDesc:afterDesc.value,
-  impact:impact.value,
-  takeaway:takeaway.value
- };
-
- if(obj.title===""){
-  alert("Enter Title"); return;
- }
-
- if(editIndex===-1){
-  await window.addDoc(window.collection(window.db,"rex"),obj);
- }else{
- await window.updateDoc(window.doc(window.db,"rex",rexList[editIndex].id),obj);
-  editIndex=-1;
- }
-
- alert("✅ Saved");
-}
-
 /* SHOW */
 function showSummary(){
  createPage.style.display="none";
@@ -136,13 +108,13 @@ function showSummary(){
   <div class='row'>
    <div class='col'>
      <b>BEFORE</b>
-     <div class='box'>${d.before?`<img srcre}`:""}</div>
+     <div class='box'>${d.before ? `<img src="${d.before}iv>
      <div class='desc'>${d.beforeDesc}</div>
    </div>
 
    <div class='col'>
      <b>AFTER</b>
-     <div class='box'>${d.after?`<img src="${d"}</div>
+     <div class='box'>${d.after ? `<img src="${d.afterdiv>
      <div class='desc'>${d.afterDesc}</div>
    </div>
   </div>
@@ -182,10 +154,9 @@ function editRex(i){
 }
 
 window.showSummary=showSummary;
-
 </script>
 
-
+<!-- ✅ FIREBASE -->
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -204,14 +175,12 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// ✅ ALL FUNCTIONS INSIDE MODULE (IMPORTANT)
-
-// SAVE
+/* ✅ SAVE */
 window.saveRex = async function(){
 
  let obj={
-  title:document.getElementById("title").value,
-  cat:document.getElementById("cat").value,
+  title:title.value,
+  cat:cat.value,
   before:beforeData,
   after:afterData,
   beforeDesc:beforeDesc.value,
@@ -225,24 +194,23 @@ window.saveRex = async function(){
   return;
  }
 
- await addDoc(collection(db,"rex"),obj);
+ if(editIndex===-1){
+   await addDoc(collection(db,"rex"),obj);
+ } else {
+   await updateDoc(doc(db,"rex",rexList[editIndex].id),obj);
+   editIndex=-1;
+ }
 
  alert("✅ Saved to Cloud");
-}
+};
 
-// LIVE DATA
+/* ✅ LIVE SYNC */
 onSnapshot(collection(db,"rex"),snapshot=>{
-
  window.rexList=[];
-
  snapshot.forEach(docSnap=>{
-  window.rexList.push({
-    ...docSnap.data(),
-    id:docSnap.id
-  });
+  window.rexList.push({...docSnap.data(),id:docSnap.id});
  });
-
- showSummary();
+ window.showSummary();
 });
 
 </script>
