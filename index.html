@@ -3,24 +3,26 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>REX</title>
+<title>REX System</title>
 
 <style>
 body{font-family:Arial;background:#eef1f5;padding:20px;}
-button{padding:8px 12px;background:#005a9e;color:white;border:none;margin:5px;}
-.box{border:1px solid black;height:120px;display:flex;justify-content:center;align-items:center;}
-.box img{max-width:100%;max-height:100%;}
-.card{background:white;padding:10px;margin-top:10px;}
+input,select,textarea{width:100%;margin:5px 0;}
+button{padding:8px;background:#005a9e;color:white;border:none;margin-top:10px;}
+.container{background:white;padding:15px;margin-top:10px;}
 .row{display:flex;gap:10px;}
-.col{flex:1;}
+.box{border:1px solid black;height:120px;display:flex;align-items:center;justify-content:center;}
+.box img{max-width:100%;max-height:100%;}
 </style>
 </head>
 
 <body>
 
-<h2>REX System</h2>
+<h2>REX Management</h2>
 
-<input id="title" placeholder="Title"><br><br>
+<div class="container">
+
+<input id="title" placeholder="Title">
 
 <select id="cat">
 <option>5S</option>
@@ -30,50 +32,23 @@ button{padding:8px 12px;background:#005a9e;color:white;border:none;margin:5px;}
 <option>Others</option>
 </select>
 
-<br><br>
+<label>Before</label>
+<input type="file" id="before">
+<img id="bImg" width="100">
 
-BEFORE:<br>
-<input type="file" id="before"><br>
-<img id="bImg" width="150"><br>
+<label>After</label>
+<input type="file" id="after">
+<img id="aImg" width="100">
 
-AFTER:<br>
-<input type="file" id="after"><br>
-<img id="aImg" width="150"><br>
+<textarea id="impact" placeholder="Impact"></textarea>
 
-<br>
+<button onclick="save()">Save REX</button>
 
-<textarea id="impact" placeholder="Impact"></textarea><br><br>
-
-<button onclick="save()">SAVE</button>
+</div>
 
 <hr>
 
-<div id="data"></div>
-
-<script>
-
-// ✅ IMAGE LOAD
-let bData="", aData="";
-
-before.onchange = e=>{
- let r=new FileReader();
- r.onload=x=>{
-  bData=x.target.result;
-  bImg.src=bData;
- };
- r.readAsDataURL(e.target.files[0]);
-};
-
-after.onchange = e=>{
- let r=new FileReader();
- r.onload=x=>{
-  aData=x.target.result;
-  aImg.src=aData;
- };
- r.readAsDataURL(e.target.files[0]);
-};
-
-</script>
+<div id="summary"></div>
 
 <script type="module">
 
@@ -81,6 +56,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getFirestore, collection, addDoc, onSnapshot }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+// ✅ Firebase config
 const app = initializeApp({
   apiKey: "AIzaSyCPUL-TGaO2PY7zYC3d1Eyx6J2oHjHWoyE",
   authDomain: "rex-multi-user-file.firebaseapp.com",
@@ -89,47 +65,77 @@ const app = initializeApp({
 
 const db = getFirestore(app);
 
-// ✅ SAVE
+// ✅ Image storage variables
+let beforeData="", afterData="";
+
+// ✅ File handling INSIDE SAME SCRIPT
+document.getElementById("before").addEventListener("change",function(e){
+ let r=new FileReader();
+ r.onload=x=>{
+  beforeData=x.target.result;
+  document.getElementById("bImg").src=beforeData;
+ };
+ r.readAsDataURL(e.target.files[0]);
+});
+
+document.getElementById("after").addEventListener("change",function(e){
+ let r=new FileReader();
+ r.onload=x=>{
+  afterData=x.target.result;
+  document.getElementById("aImg").src=afterData;
+ };
+ r.readAsDataURL(e.target.files[0]);
+});
+
+// ✅ SAVE (NO CONFLICT)
 window.save = async function(){
 
- let t = title.value;
+ let title = document.getElementById("title").value;
+ let cat = document.getElementById("cat").value;
+ let impact = document.getElementById("impact").value;
 
- if(!t){
+ if(title===""){
   alert("Enter Title");
   return;
  }
 
- await addDoc(collection(db,"rex"),{
-  title:t,
-  cat:cat.value,
-  before:bData,
-  after:aData,
-  impact:impact.value
- });
+ try{
+   await addDoc(collection(db,"rex"),{
+     title:title,
+     cat:cat,
+     before:beforeData,
+     after:afterData,
+     impact:impact
+   });
 
- alert("Saved ✅");
+   alert("✅ Saved Successfully");
+
+ }catch(err){
+   alert("❌ Error: "+err.message);
+ }
 };
 
-// ✅ LOAD
+// ✅ LIVE LOAD
 onSnapshot(collection(db,"rex"),snap=>{
 
  let html="";
 
  snap.forEach(doc=>{
-  let d=doc.data();
+  let d = doc.data();
 
-  html+=`
-  <div class="card">
-    <b>${d.title}</b> (${d.cat})
-    <div class="row">
-      <div class="col box">${d.before?`<img src="${d.beforev>
-      <div class="col box">${d.after?`<img src="${d.after}>
-    </div>
-    <div>${d.impact || ""}</div>
-  </div>`;
+  html += `
+  <div class="container">
+   <b>${d.title}</b> (${d.cat})
+   <div class="row">
+     <div class="box">${d.before?`<img src="${d.before}>
+     <div class="box">${d.after?`<img src="${""}</div>
+   </div>
+   <p>${d.impact || ""}</p>
+  </div>
+  `;
  });
 
- data.innerHTML = html;
+ document.getElementById("summary").innerHTML = html;
 
 });
 
