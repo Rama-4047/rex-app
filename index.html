@@ -112,9 +112,9 @@ async function saveRex(){
  }
 
  if(editIndex===-1){
-  await addDoc(collection(db,"rex"),obj);
+  await window.addDoc(window.collection(window.db,"rex"),obj);
  }else{
-  await updateDoc(doc(db,"rex",rexList[editIndex].id),obj);
+ await window.updateDoc(window.doc(window.db,"rex",rexList[editIndex].id),obj);
   editIndex=-1;
  }
 
