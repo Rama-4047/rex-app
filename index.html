@@ -3,19 +3,47 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>REX Management</title>
+<title>REX System</title>
 
 <style>
-body{font-family:Arial;background:#eef1f5;padding:20px;}
-input,select,textarea{width:100%;margin:6px 0;}
-button{padding:10px;background:#005a9e;color:white;border:none;margin:5px;cursor:pointer;}
-.card{background:white;padding:15px;margin-top:10px;border-radius:6px;}
-.row{display:flex;gap:10px;flex-wrap:wrap;}
-.box{border:1px solid black;height:140px;display:flex;align-items:center;justify-content:center;}
-.box img{max-width:100%;max-height:100%;}
+body{font-family:Arial;padding:20px;background:#eef1f5;}
+
+input, select, textarea{
+ width:100%;
+ margin:5px 0;
+ padding:5px;
+}
+
+button{
+ padding:10px;
+ background:#005a9e;
+ color:white;
+ border:none;
+ margin-top:10px;
+}
+
+.card{
+ background:white;
+ padding:10px;
+ margin-top:10px;
+ border-radius:6px;
+}
+
+.imgbox{
+ border:1px solid black;
+ height:120px;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+}
+
+.imgbox img{
+ max-width:100%;
+ max-height:100%;
+}
 </style>
 
-<!-- ✅ ✅ CORRECT FIREBASE LOADING -->
+<!-- ✅ CORRECT Firebase Script -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
@@ -23,10 +51,7 @@ button{padding:10px;background:#005a9e;color:white;border:none;margin:5px;cursor
 
 <body>
 
-<h2>REX Management System</h2>
-
-<!-- FORM -->
-<div class="card">
+<h2>REX System</h2>
 
 <input id="title" placeholder="Title">
 
@@ -38,23 +63,20 @@ button{padding:10px;background:#005a9e;color:white;border:none;margin:5px;cursor
 <option>Others</option>
 </select>
 
-<label>Before</label>
+Before:
 <input type="file" id="before">
 <img id="bImg" width="120">
 
-<label>After</label>
+After:
 <input type="file" id="after">
 <img id="aImg" width="120">
 
 <textarea id="impact" placeholder="Impact"></textarea>
 
-<button onclick="saveRex()">Save REX</button>
-
-</div>
+<button onclick="save()">Save</button>
 
 <hr>
 
-<!-- SUMMARY -->
 <div id="summary"></div>
 
 <script>
@@ -68,69 +90,69 @@ firebase.initializeApp({
 
 var db = firebase.firestore();
 
-// ✅ IMAGE LOAD
-var beforeData="", afterData="";
+var beforeData = "";
+var afterData = "";
 
+// ✅ IMAGE LOAD
 document.getElementById("before").onchange = function(e){
- let r=new FileReader();
- r.onload=function(x){
-  beforeData=x.target.result;
-  document.getElementById("bImg").src=beforeData;
+ var r = new FileReader();
+ r.onload = function(x){
+  beforeData = x.target.result;
+  document.getElementById("bImg").src = beforeData;
  };
  r.readAsDataURL(e.target.files[0]);
 };
 
 document.getElementById("after").onchange = function(e){
- let r=new FileReader();
- r.onload=function(x){
-  afterData=x.target.result;
-  document.getElementById("aImg").src=afterData;
+ var r = new FileReader();
+ r.onload = function(x){
+  afterData = x.target.result;
+  document.getElementById("aImg").src = afterData;
  };
  r.readAsDataURL(e.target.files[0]);
 };
 
-// ✅ SAVE FUNCTION (WORKING)
-function saveRex(){
+// ✅ SAVE (WILL WORK NOW)
+function save(){
 
- let t = document.getElementById("title").value;
+ var title = document.getElementById("title").value;
 
- if(!t){
-  alert("Enter Title");
+ if(title == ""){
+  alert("Enter title");
   return;
  }
 
  db.collection("rex").add({
-  title:t,
-  cat:document.getElementById("cat").value,
-  before:beforeData,
-  after:afterData,
-  impact:document.getElementById("impact").value
- })
- .then(()=>{
-    alert("✅ Saved Successfully");
- })
- .catch(err=>{
-    alert("Error: "+err.message);
+  title: title,
+  cat: document.getElementById("cat").value,
+  before: beforeData,
+  after: afterData,
+  impact: document.getElementById("impact").value
+ }).then(function(){
+   alert("✅ Saved Successfully");
+ }).catch(function(e){
+   alert("Error: " + e.message);
  });
 
 }
 
-// ✅ LIVE SUMMARY
+// ✅ LIVE DATA
 db.collection("rex").onSnapshot(function(snapshot){
 
- let html="";
+ var html = "";
 
  snapshot.forEach(function(doc){
 
-  let d = doc.data();
+  var d = doc.data();
 
   html += `
   <div class="card">
-    <b>${d.title}</class="box">${d.before?`${d.before}`:""}</div>
-      <div class="box">${d.after?`<img src="${d.after}>
-    </div>
-    <div>${d.impact || ""}</div>
-  </div>`;
+    <b>${d.title}</b> (${d.cat})
+    <div class="imgbox">${d.before ? `<img src="${d.beforeer ? `${d.after}` : ""}</div>
+    <p>${d.impact || ""}</p>
+  </div>
+  `;
+
  });
 
  document.getElementById("summary").innerHTML = html;
