@@ -7,7 +7,6 @@
 
 <style>
 body{font-family:Arial;background:#e5e7eb;padding:20px;}
-
 h1{margin-bottom:20px;}
 
 button{
@@ -25,7 +24,6 @@ button{
  border-radius:8px;
 }
 
-/* REX CARD */
 .card{
  background:#f3f4f6;
  padding:15px;
@@ -43,10 +41,7 @@ button{
  justify-content:center;
 }
 
-.box img{
- max-width:100%;
- max-height:100%;
-}
+.box img{max-width:100%;max-height:100%;}
 
 .desc{
  border:2px solid black;
@@ -71,8 +66,8 @@ button{
 }
 </style>
 
-<!-- ✅ CORRECT FIREBASE LOADING -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<!-- ✅ ✅ CORRECT SCRIPT TAGS -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1.js</script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 </head>
@@ -84,7 +79,7 @@ button{
 <button onclick="showCreate()">New REX</button>
 <button onclick="showSummary()">Summary</button>
 
-<!-- CREATE PAGE -->
+<!-- CREATE -->
 <div id="createPage" class="main">
 
 <input id="title" placeholder="Title"><br><br>
@@ -100,7 +95,6 @@ button{
 <br><br>
 
 <div class="row">
-
 <div style="flex:1">
 <b>BEFORE</b><br>
 <input type="file" id="before"><br>
@@ -114,7 +108,6 @@ button{
 <img id="aImg" width="100%">
 <textarea id="afterDesc"></textarea>
 </div>
-
 </div>
 
 <div class="impact">
@@ -137,32 +130,33 @@ button{
 
 /* ✅ FIREBASE INIT */
 firebase.initializeApp({
-  apiKey: "AIzaSyCPUL-TGaO2PY7zYC3d1Eyx6J2oHjHWoyE",
-  authDomain: "rex-multi-user-file.firebaseapp.com",
-  projectId: "rex-multi-user-file"
+ apiKey: "AIzaSyCPUL-TGaO2PY7zYC3d1Eyx6J2oHjHWoyE",
+ authDomain: "rex-multi-user-file.firebaseapp.com",
+ projectId: "rex-multi-user-file"
 });
 
 var db = firebase.firestore();
 
+/* IMAGE */
 var beforeData="", afterData="";
 
-/* IMAGE */
-before.onchange=e=>{
+document.getElementById("before").onchange=function(e){
  let r=new FileReader();
  r.onload=x=>{beforeData=x.target.result;bImg.src=beforeData;};
  r.readAsDataURL(e.target.files[0]);
 };
 
-after.onchange=e=>{
+document.getElementById("after").onchange=function(e){
  let r=new FileReader();
  r.onload=x=>{afterData=x.target.result;aImg.src=afterData;};
  r.readAsDataURL(e.target.files[0]);
 };
 
-/* SAVE */
+/* SAVE ✅ */
 function save(){
  if(!title.value){
-   alert("Enter title"); return;
+   alert("Enter title");
+   return;
  }
 
  db.collection("rex").add({
@@ -175,7 +169,7 @@ function save(){
   impact:impact.value,
   takeaway:takeaway.value
  }).then(()=>{
-   alert("✅ Saved");
+   alert("✅ Saved Successfully");
  });
 }
 
@@ -191,7 +185,7 @@ function showSummary(){
  loadData("All");
 }
 
-/* LOAD DATA */
+/* LOAD */
 function loadData(filter){
 
  db.collection("rex").get().then(snapshot=>{
@@ -200,7 +194,6 @@ function loadData(filter){
   snapshot.forEach(doc=>list.push(doc.data()));
 
   let count={"5S":0,"Safety":0,"QMS":0,"Automation":0,"Others":0};
-
   list.forEach(d=>count[d.cat]++);
 
   let html=`
@@ -210,7 +203,6 @@ function loadData(filter){
   <button onclick="loadData('Automation')">Automation (${count["Automation"]})</button>
   <button onclick="loadData('Others')">Others (${count["Others"]})</button>
   <button onclick="loadData('All')">All</button>
-  <button onclick="window.print()">Export PDF</button>
   `;
 
   list.forEach(d=>{
@@ -220,31 +212,27 @@ function loadData(filter){
    <div class="card">
 
    <b>${d.cat}</b>
-   <button>Edit</button>
 
    <div class="row">
-
-    <div style="flex:1">
-     <b>BEFORE</b>
-     <div class="box">${d.before?`<img srcd.beforeDesc}</div>
+    <div style="   <div class="box">${d.before?`${d.before}`:""}</div>
+     <div class="desc">${d.beforeDesc}</div>
     </div>
 
     <div style="flex:1">
-     <b>AFTER</b>
-     <div class="box">${d.after?`${d.after}`:""}</div>
+     AFTER
+     <div class="box">${d.after?`<img src="${""}</div>
      <div class="desc">${d.afterDesc}</div>
     </div>
-
    </div>
 
    <div class="impact"><b>Impact</b><div>${d.impact}</div></div>
-
    <div class="takeaway">${d.takeaway}</div>
 
    </div>`;
   });
 
   summaryPage.innerHTML=html;
+
  });
 }
 
