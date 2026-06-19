@@ -3,47 +3,75 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>REX System</title>
+<title>REX Management System</title>
 
 <style>
-body{font-family:Arial;padding:20px;background:#eef1f5;}
+body{font-family:Arial;background:#e5e7eb;padding:20px;}
 
-input, select, textarea{
- width:100%;
- margin:5px 0;
- padding:5px;
-}
+h1{margin-bottom:20px;}
 
 button{
- padding:10px;
- background:#005a9e;
+ padding:10px 15px;
+ background:#155e95;
  color:white;
  border:none;
- margin-top:10px;
+ margin:5px;
+ cursor:pointer;
 }
 
-.card{
+.main{
  background:white;
- padding:10px;
- margin-top:10px;
- border-radius:6px;
+ padding:15px;
+ border-radius:8px;
 }
 
-.imgbox{
- border:1px solid black;
- height:120px;
+/* REX CARD */
+.card{
+ background:#f3f4f6;
+ padding:15px;
+ margin-top:15px;
+ border-radius:10px;
+}
+
+.row{display:flex;gap:20px;}
+
+.box{
+ border:2px solid black;
+ height:200px;
  display:flex;
  align-items:center;
  justify-content:center;
 }
 
-.imgbox img{
+.box img{
  max-width:100%;
  max-height:100%;
 }
+
+.desc{
+ border:2px solid black;
+ padding:5px;
+ margin-top:5px;
+}
+
+.impact{
+ border:2px solid black;
+ padding:10px;
+ margin-top:10px;
+ display:flex;
+ justify-content:space-between;
+}
+
+.takeaway{
+ background:#0c4a6e;
+ color:white;
+ padding:10px;
+ margin-top:10px;
+ text-align:center;
+}
 </style>
 
-<!-- ✅ CORRECT Firebase Script -->
+<!-- ✅ CORRECT FIREBASE LOADING -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
@@ -51,9 +79,15 @@ button{
 
 <body>
 
-<h2>REX System</h2>
+<h1>REX Management System</h1>
 
-<input id="title" placeholder="Title">
+<button onclick="showCreate()">New REX</button>
+<button onclick="showSummary()">Summary</button>
+
+<!-- CREATE PAGE -->
+<div id="createPage" class="main">
+
+<input id="title" placeholder="Title"><br><br>
 
 <select id="cat">
 <option>5S</option>
@@ -63,25 +97,45 @@ button{
 <option>Others</option>
 </select>
 
-Before:
-<input type="file" id="before">
-<img id="bImg" width="120">
+<br><br>
 
-After:
-<input type="file" id="after">
-<img id="aImg" width="120">
+<div class="row">
 
-<textarea id="impact" placeholder="Impact"></textarea>
+<div style="flex:1">
+<b>BEFORE</b><br>
+<input type="file" id="before"><br>
+<img id="bImg" width="100%">
+<textarea id="beforeDesc"></textarea>
+</div>
 
-<button onclick="save()">Save</button>
+<div style="flex:1">
+<b>AFTER</b><br>
+<input type="file" id="after"><br>
+<img id="aImg" width="100%">
+<textarea id="afterDesc"></textarea>
+</div>
 
-<hr>
+</div>
 
-<div id="summary"></div>
+<div class="impact">
+<b>Impact</b>
+<textarea id="impact"></textarea>
+</div>
+
+<div class="takeaway">
+<textarea id="takeaway"></textarea>
+</div>
+
+<button onclick="save()">Save REX</button>
+
+</div>
+
+<!-- SUMMARY -->
+<div id="summaryPage" class="main" style="display:none"></div>
 
 <script>
 
-// ✅ FIREBASE INIT
+/* ✅ FIREBASE INIT */
 firebase.initializeApp({
   apiKey: "AIzaSyCPUL-TGaO2PY7zYC3d1Eyx6J2oHjHWoyE",
   authDomain: "rex-multi-user-file.firebaseapp.com",
@@ -90,74 +144,109 @@ firebase.initializeApp({
 
 var db = firebase.firestore();
 
-var beforeData = "";
-var afterData = "";
+var beforeData="", afterData="";
 
-// ✅ IMAGE LOAD
-document.getElementById("before").onchange = function(e){
- var r = new FileReader();
- r.onload = function(x){
-  beforeData = x.target.result;
-  document.getElementById("bImg").src = beforeData;
- };
+/* IMAGE */
+before.onchange=e=>{
+ let r=new FileReader();
+ r.onload=x=>{beforeData=x.target.result;bImg.src=beforeData;};
  r.readAsDataURL(e.target.files[0]);
 };
 
-document.getElementById("after").onchange = function(e){
- var r = new FileReader();
- r.onload = function(x){
-  afterData = x.target.result;
-  document.getElementById("aImg").src = afterData;
- };
+after.onchange=e=>{
+ let r=new FileReader();
+ r.onload=x=>{afterData=x.target.result;aImg.src=afterData;};
  r.readAsDataURL(e.target.files[0]);
 };
 
-// ✅ SAVE (WILL WORK NOW)
+/* SAVE */
 function save(){
-
- var title = document.getElementById("title").value;
-
- if(title == ""){
-  alert("Enter title");
-  return;
+ if(!title.value){
+   alert("Enter title"); return;
  }
 
  db.collection("rex").add({
-  title: title,
-  cat: document.getElementById("cat").value,
-  before: beforeData,
-  after: afterData,
-  impact: document.getElementById("impact").value
- }).then(function(){
-   alert("✅ Saved Successfully");
- }).catch(function(e){
-   alert("Error: " + e.message);
+  title:title.value,
+  cat:cat.value,
+  before:beforeData,
+  after:afterData,
+  beforeDesc:beforeDesc.value,
+  afterDesc:afterDesc.value,
+  impact:impact.value,
+  takeaway:takeaway.value
+ }).then(()=>{
+   alert("✅ Saved");
  });
-
 }
 
-// ✅ LIVE DATA
-db.collection("rex").onSnapshot(function(snapshot){
+/* NAV */
+function showCreate(){
+ createPage.style.display="block";
+ summaryPage.style.display="none";
+}
 
- var html = "";
+function showSummary(){
+ createPage.style.display="none";
+ summaryPage.style.display="block";
+ loadData("All");
+}
 
- snapshot.forEach(function(doc){
+/* LOAD DATA */
+function loadData(filter){
 
-  var d = doc.data();
+ db.collection("rex").get().then(snapshot=>{
 
-  html += `
-  <div class="card">
-    <b>${d.title}</b> (${d.cat})
-    <div class="imgbox">${d.before ? `<img src="${d.beforeer ? `${d.after}` : ""}</div>
-    <p>${d.impact || ""}</p>
-  </div>
+  let list=[];
+  snapshot.forEach(doc=>list.push(doc.data()));
+
+  let count={"5S":0,"Safety":0,"QMS":0,"Automation":0,"Others":0};
+
+  list.forEach(d=>count[d.cat]++);
+
+  let html=`
+  <button onclick="loadData('5S')">5S (${count["5S"]})</button>
+  <button onclick="loadData('Safety')">Safety (${count["Safety"]})</button>
+  <button onclick="loadData('QMS')">QMS (${count["QMS"]})</button>
+  <button onclick="loadData('Automation')">Automation (${count["Automation"]})</button>
+  <button onclick="loadData('Others')">Others (${count["Others"]})</button>
+  <button onclick="loadData('All')">All</button>
+  <button onclick="window.print()">Export PDF</button>
   `;
 
+  list.forEach(d=>{
+   if(filter!="All" && d.cat!=filter) return;
+
+   html+=`
+   <div class="card">
+
+   <b>${d.cat}</b>
+   <button>Edit</button>
+
+   <div class="row">
+
+    <div style="flex:1">
+     <b>BEFORE</b>
+     <div class="box">${d.before?`<img srcd.beforeDesc}</div>
+    </div>
+
+    <div style="flex:1">
+     <b>AFTER</b>
+     <div class="box">${d.after?`${d.after}`:""}</div>
+     <div class="desc">${d.afterDesc}</div>
+    </div>
+
+   </div>
+
+   <div class="impact"><b>Impact</b><div>${d.impact}</div></div>
+
+   <div class="takeaway">${d.takeaway}</div>
+
+   </div>`;
+  });
+
+  summaryPage.innerHTML=html;
  });
-
- document.getElementById("summary").innerHTML = html;
-
-});
+}
 
 </script>
 
