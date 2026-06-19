@@ -7,48 +7,17 @@
 
 <style>
 body{font-family:Arial;background:#eef1f5;padding:20px;}
-
-button{
- padding:10px 15px;
- background:#005a9e;
- color:white;
- border:none;
- margin:5px;
- cursor:pointer;
-}
-
-.container{
- background:white;
- padding:15px;
- margin-top:10px;
- border-radius:8px;
-}
-
-.row{display:flex;gap:10px;}
-.col{flex:1;}
-
-.box{
- border:2px solid black;
- height:150px;
- display:flex;
- align-items:center;
- justify-content:center;
-}
-
+input,select,textarea{width:100%;margin:6px 0;}
+button{padding:10px;background:#005a9e;color:white;border:none;margin:5px;cursor:pointer;}
+.card{background:white;padding:15px;margin-top:10px;border-radius:6px;}
+.row{display:flex;gap:10px;flex-wrap:wrap;}
+.box{border:1px solid black;height:140px;display:flex;align-items:center;justify-content:center;}
 .box img{max-width:100%;max-height:100%;}
-.desc{border:1px solid black;padding:5px;margin-top:5px;}
-
-.takeaway{
- background:#003d66;
- color:white;
- padding:10px;
- margin-top:10px;
-}
 </style>
 
-<!-- ✅ Firebase (stable version) -->
-https://www.gstatic.com/firebasejs/8.10.1/firebase-app.jsscript>
-https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.jsscript>
+<!-- ✅ ✅ CORRECT FIREBASE LOADING -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 </head>
 
@@ -56,13 +25,10 @@ https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.jsscript>
 
 <h2>REX Management System</h2>
 
-<button onclick="showCreate()">New REX</button>
-<button onclick="showSummary()">Summary</button>
+<!-- FORM -->
+<div class="card">
 
-<!-- CREATE -->
-<div id="createPage" class="container">
-
-<input id="title" placeholder="Title"><br><br>
+<input id="title" placeholder="Title">
 
 <select id="cat">
 <option>5S</option>
@@ -72,37 +38,24 @@ https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.jsscript>
 <option>Others</option>
 </select>
 
-<br><br>
+<label>Before</label>
+<input type="file" id="before">
+<img id="bImg" width="120">
 
-<div class="row">
-<div class="col">
-<b>BEFORE</b><br>
-<input type="file" id="before"><br>
-<img id="bImg" width="100"><br>
-<textarea id="beforeDesc"></textarea>
-</div>
-
-<div class="col">
-<b>AFTER</b><br>
-<input type="file" id="after"><br>
-<img id="aImg" width="100"><br>
-<textarea id="afterDesc"></textarea>
-</div>
-</div>
-
-<br>
+<label>After</label>
+<input type="file" id="after">
+<img id="aImg" width="120">
 
 <textarea id="impact" placeholder="Impact"></textarea>
-<textarea id="takeaway" placeholder="Takeaway"></textarea>
 
-<br>
-
-<button onclick="save()">Save REX</button>
+<button onclick="saveRex()">Save REX</button>
 
 </div>
 
+<hr>
+
 <!-- SUMMARY -->
-<div id="summaryPage" style="display:none"></div>
+<div id="summary"></div>
 
 <script>
 
@@ -118,107 +71,71 @@ var db = firebase.firestore();
 // ✅ IMAGE LOAD
 var beforeData="", afterData="";
 
-before.onchange=e=>{
+document.getElementById("before").onchange = function(e){
  let r=new FileReader();
- r.onload=x=>{ beforeData=x.target.result; bImg.src=beforeData; };
+ r.onload=function(x){
+  beforeData=x.target.result;
+  document.getElementById("bImg").src=beforeData;
+ };
  r.readAsDataURL(e.target.files[0]);
 };
 
-after.onchange=e=>{
+document.getElementById("after").onchange = function(e){
  let r=new FileReader();
- r.onload=x=>{ afterData=x.target.result; aImg.src=afterData; };
+ r.onload=function(x){
+  afterData=x.target.result;
+  document.getElementById("aImg").src=afterData;
+ };
  r.readAsDataURL(e.target.files[0]);
 };
 
-// ✅ SAVE
-function save(){
+// ✅ SAVE FUNCTION (WORKING)
+function saveRex(){
 
- if(!title.value){
-  alert("Enter title");
+ let t = document.getElementById("title").value;
+
+ if(!t){
+  alert("Enter Title");
   return;
  }
 
  db.collection("rex").add({
-  title:title.value,
-  cat:cat.value,
+  title:t,
+  cat:document.getElementById("cat").value,
   before:beforeData,
   after:afterData,
-  beforeDesc:beforeDesc.value,
-  afterDesc:afterDesc.value,
-  impact:impact.value,
-  takeaway:takeaway.value
+  impact:document.getElementById("impact").value
+ })
+ .then(()=>{
+    alert("✅ Saved Successfully");
+ })
+ .catch(err=>{
+    alert("Error: "+err.message);
  });
 
- alert("✅ Saved");
 }
 
-// ✅ NAVIGATION
-function showCreate(){
- createPage.style.display="block";
- summaryPage.style.display="none";
-}
+// ✅ LIVE SUMMARY
+db.collection("rex").onSnapshot(function(snapshot){
 
-function showSummary(){
- createPage.style.display="none";
- summaryPage.style.display="block";
- render("All");
-}
+ let html="";
 
-// ✅ RENDER SUMMARY WITH CATEGORY COUNT
-function render(filter){
+ snapshot.forEach(function(doc){
 
- db.collection("rex").get().then(snapshot=>{
+  let d = doc.data();
 
-  let data=[];
-  snapshot.forEach(doc=>data.push(doc.data()));
-
-  let counts={
-   "5S":0,"Safety":0,"QMS":0,"Automation":0,"Others":0
-  };
-
-  data.forEach(d=>counts[d.cat]++);
-
-  let html = `
-  <button onclick="render('5S')">5S (${counts["5S"]})</button>
-  <button onclick="render('Safety')">Safety (${counts["Safety"]})</button>
-  <button onclick="render('QMS')">QMS (${counts["QMS"]})</button>
-  <button onclick="render('Automation')">Automation (${counts["Automation"]})</button>
-  <button onclick="render('Others')">Others (${counts["Others"]})</button>
-  <button onclick="render('All')">All</button>
-  `;
-
-  data.forEach(d=>{
-
-   if(filter!="All" && d.cat!=filter) return;
-
-   html+=`
-   <div class="container">
-
-   <b>${d.title}</b> (${d.cat})
-
-   <div class="row">
-    <div class="col">
-     BEFORE
-     <div class="box">${d.before?`${d.before}`:""}</div>
-     <div class="desc">${d.beforeDesc}</div>
+  html += `
+  <div class="card">
+    <b>${d.title}</class="box">${d.before?`${d.before}`:""}</div>
+      <div class="box">${d.after?`<img src="${d.after}>
     </div>
-
-    <div class="col">
-     AFTER
-     <div class="box">${d.after?`${d.after}`:""}</div>
-     <div class="desc">${d.afterDesc}</div>
-    </div>
-   </div>
-
-   <p><b>Impact:</b> ${d.impact}</p>
-   <div class="takeaway">${d.takeaway}</div>
-
-   </div>`;
-  });
-
-  summaryPage.innerHTML = html;
+    <div>${d.impact || ""}</div>
+  </div>`;
  });
-}
+
+ document.getElementById("summary").innerHTML = html;
+
+});
 
 </script>
 
