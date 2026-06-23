@@ -66,8 +66,8 @@ button{
 }
 </style>
 
-<!-- ✅ ✅ CORRECT SCRIPT TAGS -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1.js</script>
+<!-- ✅ FIXED FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 </head>
@@ -98,14 +98,14 @@ button{
 <div style="flex:1">
 <b>BEFORE</b><br>
 <input type="file" id="before"><br>
-<img id="bImg" width="100%">
+<img id="bImg" width="100%"><br>
 <textarea id="beforeDesc"></textarea>
 </div>
 
 <div style="flex:1">
 <b>AFTER</b><br>
 <input type="file" id="after"><br>
-<img id="aImg" width="100%">
+<img id="aImg" width="100%"><br>
 <textarea id="afterDesc"></textarea>
 </div>
 </div>
@@ -137,22 +137,30 @@ firebase.initializeApp({
 
 var db = firebase.firestore();
 
-/* IMAGE */
+/* ✅ IMAGE VARIABLES */
 var beforeData="", afterData="";
+var bImg = document.getElementById("bImg");
+var aImg = document.getElementById("aImg");
 
 document.getElementById("before").onchange=function(e){
  let r=new FileReader();
- r.onload=x=>{beforeData=x.target.result;bImg.src=beforeData;};
+ r.onload=x=>{
+   beforeData=x.target.result;
+   bImg.src=beforeData;
+ };
  r.readAsDataURL(e.target.files[0]);
 };
 
 document.getElementById("after").onchange=function(e){
  let r=new FileReader();
- r.onload=x=>{afterData=x.target.result;aImg.src=afterData;};
+ r.onload=x=>{
+   afterData=x.target.result;
+   aImg.src=afterData;
+ };
  r.readAsDataURL(e.target.files[0]);
 };
 
-/* SAVE ✅ */
+/* ✅ SAVE */
 function save(){
  if(!title.value){
    alert("Enter title");
@@ -173,7 +181,7 @@ function save(){
  });
 }
 
-/* NAV */
+/* ✅ NAV */
 function showCreate(){
  createPage.style.display="block";
  summaryPage.style.display="none";
@@ -185,7 +193,7 @@ function showSummary(){
  loadData("All");
 }
 
-/* LOAD */
+/* ✅ LOAD DATA */
 function loadData(filter){
 
  db.collection("rex").get().then(snapshot=>{
@@ -211,21 +219,28 @@ function loadData(filter){
    html+=`
    <div class="card">
 
-   <b>${d.cat}</b>
+   <b>${d.title} (${d.cat})</b>
 
    <div class="row">
-    <div style="   <div class="box">${d.before?`${d.before}`:""}</div>
-     <div class="desc">${d.beforeDesc}</div>
+    <div style="flex:1">
+     BEFORE
+     <div class="box">
+       ${d.before ? `<img src="${ <div class="desc">${d.beforeDesc}</div>
     </div>
 
     <div style="flex:1">
      AFTER
-     <div class="box">${d.after?`<img src="${""}</div>
+     <div class="box">
+       ${d.after ? `<img src="${d.after    </div>
      <div class="desc">${d.afterDesc}</div>
     </div>
    </div>
 
-   <div class="impact"><b>Impact</b><div>${d.impact}</div></div>
+   <div class="impact">
+     <b>Impact</b>
+     <div>${d.impact}</div>
+   </div>
+
    <div class="takeaway">${d.takeaway}</div>
 
    </div>`;
