@@ -53,8 +53,6 @@ button{
  border:2px solid black;
  padding:10px;
  margin-top:10px;
- display:flex;
- justify-content:space-between;
 }
 
 .takeaway{
@@ -66,7 +64,7 @@ button{
 }
 </style>
 
-<!-- ✅ FIXED FIREBASE -->
+<!-- ✅ CORRECT FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
@@ -111,7 +109,7 @@ button{
 </div>
 
 <div class="impact">
-<b>Impact</b>
+<b>Impact</b><br>
 <textarea id="impact"></textarea>
 </div>
 
@@ -119,6 +117,7 @@ button{
 <textarea id="takeaway"></textarea>
 </div>
 
+<br>
 <button onclick="save()">Save REX</button>
 
 </div>
@@ -137,59 +136,77 @@ firebase.initializeApp({
 
 var db = firebase.firestore();
 
-/* ✅ IMAGE VARIABLES */
-var beforeData="", afterData="";
-var bImg = document.getElementById("bImg");
-var aImg = document.getElementById("aImg");
+/* ✅ IMAGE */
+let beforeData = "";
+let afterData = "";
 
-document.getElementById("before").onchange=function(e){
- let r=new FileReader();
- r.onload=x=>{
-   beforeData=x.target.result;
-   bImg.src=beforeData;
+const bImg = document.getElementById("bImg");
+const aImg = document.getElementById("aImg");
+
+document.getElementById("before").onchange = function(e){
+ let reader = new FileReader();
+ reader.onload = function(evt){
+   beforeData = evt.target.result;
+   bImg.src = beforeData;
  };
- r.readAsDataURL(e.target.files[0]);
+ reader.readAsDataURL(e.target.files[0]);
 };
 
-document.getElementById("after").onchange=function(e){
- let r=new FileReader();
- r.onload=x=>{
-   afterData=x.target.result;
-   aImg.src=afterData;
+document.getElementById("after").onchange = function(e){
+ let reader = new FileReader();
+ reader.onload = function(evt){
+   afterData = evt.target.result;
+   aImg.src = afterData;
  };
- r.readAsDataURL(e.target.files[0]);
+ reader.readAsDataURL(e.target.files[0]);
 };
 
-/* ✅ SAVE */
+/* ✅ SAVE FUNCTION */
 function save(){
- if(!title.value){
+
+ console.log("Save clicked");
+
+ let titleVal = document.getElementById("title").value;
+ let catVal = document.getElementById("cat").value;
+ let beforeDescVal = document.getElementById("beforeDesc").value;
+ let afterDescVal = document.getElementById("afterDesc").value;
+ let impactVal = document.getElementById("impact").value;
+ let takeawayVal = document.getElementById("takeaway").value;
+
+ if(!titleVal){
    alert("Enter title");
    return;
  }
 
  db.collection("rex").add({
-  title:title.value,
-  cat:cat.value,
-  before:beforeData,
-  after:afterData,
-  beforeDesc:beforeDesc.value,
-  afterDesc:afterDesc.value,
-  impact:impact.value,
-  takeaway:takeaway.value
- }).then(()=>{
+  title: titleVal,
+  cat: catVal,
+  before: beforeData,
+  after: afterData,
+  beforeDesc: beforeDescVal,
+  afterDesc: afterDescVal,
+  impact: impactVal,
+  takeaway: takeawayVal
+ })
+ .then(()=>{
    alert("✅ Saved Successfully");
+ })
+ .catch((error)=>{
+   console.error(error);
+   alert("❌ Error: " + error.message);
  });
+
 }
 
-/* ✅ NAV */
+/* ✅ NAVIGATION */
 function showCreate(){
- createPage.style.display="block";
- summaryPage.style.display="none";
+ document.getElementById("createPage").style.display="block";
+ document.getElementById("summaryPage").style.display="none";
 }
 
 function showSummary(){
- createPage.style.display="none";
- summaryPage.style.display="block";
+ document.getElementById("createPage").style.display="none";
+ document.getElementById("summaryPage").style.display="block";
  loadData("All");
 }
 
@@ -198,57 +215,46 @@ function loadData(filter){
 
  db.collection("rex").get().then(snapshot=>{
 
-  let list=[];
-  snapshot.forEach(doc=>list.push(doc.data()));
+  let html="";
 
-  let count={"5S":0,"Safety":0,"QMS":0,"Automation":0,"Others":0};
-  list.forEach(d=>count[d.cat]++);
+  snapshot.forEach(doc=>{
+   let d = doc.data();
 
-  let html=`
-  <button onclick="loadData('5S')">5S (${count["5S"]})</button>
-  <button onclick="loadData('Safety')">Safety (${count["Safety"]})</button>
-  <button onclick="loadData('QMS')">QMS (${count["QMS"]})</button>
-  <button onclick="loadData('Automation')">Automation (${count["Automation"]})</button>
-  <button onclick="loadData('Others')">Others (${count["Others"]})</button>
-  <button onclick="loadData('All')">All</button>
-  `;
+   if(filter !== "All" && d.cat !== filter) return;
 
-  list.forEach(d=>{
-   if(filter!="All" && d.cat!=filter) return;
-
-   html+=`
+   html += `
    <div class="card">
+    <b>${d.title} (${d.cat})</b>
 
-   <b>${d.title} (${d.cat})</b>
+    <div class="row">
+      <div style="flex:1">
+        BEFORE
+        <div class="box">${d.before ? `<img src="${d.before}class="desc">${d.beforeDesc || ""}</div>
+      </div>
 
-   <div class="row">
-    <div style="flex:1">
-     BEFORE
-     <div class="box">
-       ${d.before ? `<img src="${ <div class="desc">${d.beforeDesc}</div>
+      <div style="flex:1">
+        AFTER
+        <div class="box">${d.after ? `<{d.after}` : ""}</div>
+        <div class="desc">${d.afterDesc || ""}</div>
+      </div>
     </div>
 
-    <div style="flex:1">
-     AFTER
-     <div class="box">
-       ${d.after ? `<img src="${d.after    </div>
-     <div class="desc">${d.afterDesc}</div>
+    <div class="impact">
+      <b>Impact</b><br>
+      ${d.impact || ""}
     </div>
-   </div>
 
-   <div class="impact">
-     <b>Impact</b>
-     <div>${d.impact}</div>
-   </div>
-
-   <div class="takeaway">${d.takeaway}</div>
+    <div class="takeaway">
+      ${d.takeaway || ""}
+    </div>
 
    </div>`;
   });
 
-  summaryPage.innerHTML=html;
+  document.getElementById("summaryPage").innerHTML = html;
 
  });
+
 }
 
 </script>
