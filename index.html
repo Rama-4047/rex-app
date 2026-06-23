@@ -64,7 +64,7 @@ button{
 }
 </style>
 
-<!-- ✅ CORRECT FIREBASE -->
+<!-- ✅ ✅ CORRECT FIREBASE SCRIPTS -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
@@ -77,7 +77,7 @@ button{
 <button onclick="showCreate()">New REX</button>
 <button onclick="showSummary()">Summary</button>
 
-<!-- CREATE -->
+<!-- CREATE PAGE -->
 <div id="createPage" class="main">
 
 <input id="title" placeholder="Title"><br><br>
@@ -122,21 +122,21 @@ button{
 
 </div>
 
-<!-- SUMMARY -->
+<!-- SUMMARY PAGE -->
 <div id="summaryPage" class="main" style="display:none"></div>
 
 <script>
 
-/* ✅ FIREBASE INIT */
+/* ✅ FIREBASE CONFIG */
 firebase.initializeApp({
  apiKey: "AIzaSyCPUL-TGaO2PY7zYC3d1Eyx6J2oHjHWoyE",
  authDomain: "rex-multi-user-file.firebaseapp.com",
  projectId: "rex-multi-user-file"
 });
 
-var db = firebase.firestore();
+const db = firebase.firestore();
 
-/* ✅ IMAGE */
+/* ✅ IMAGE HANDLING */
 let beforeData = "";
 let afterData = "";
 
@@ -144,7 +144,7 @@ const bImg = document.getElementById("bImg");
 const aImg = document.getElementById("aImg");
 
 document.getElementById("before").onchange = function(e){
- let reader = new FileReader();
+ const reader = new FileReader();
  reader.onload = function(evt){
    beforeData = evt.target.result;
    bImg.src = beforeData;
@@ -153,7 +153,7 @@ document.getElementById("before").onchange = function(e){
 };
 
 document.getElementById("after").onchange = function(e){
- let reader = new FileReader();
+ const reader = new FileReader();
  reader.onload = function(evt){
    afterData = evt.target.result;
    aImg.src = afterData;
@@ -166,34 +166,34 @@ function save(){
 
  console.log("Save clicked");
 
- let titleVal = document.getElementById("title").value;
- let catVal = document.getElementById("cat").value;
- let beforeDescVal = document.getElementById("beforeDesc").value;
- let afterDescVal = document.getElementById("afterDesc").value;
- let impactVal = document.getElementById("impact").value;
- let takeawayVal = document.getElementById("takeaway").value;
+ const title = document.getElementById("title").value;
+ const cat = document.getElementById("cat").value;
+ const beforeDesc = document.getElementById("beforeDesc").value;
+ const afterDesc = document.getElementById("afterDesc").value;
+ const impact = document.getElementById("impact").value;
+ const takeaway = document.getElementById("takeaway").value;
 
- if(!titleVal){
+ if(!title){
    alert("Enter title");
    return;
  }
 
  db.collection("rex").add({
-  title: titleVal,
-  cat: catVal,
+  title,
+  cat,
   before: beforeData,
   after: afterData,
-  beforeDesc: beforeDescVal,
-  afterDesc: afterDescVal,
-  impact: impactVal,
-  takeaway: takeawayVal
+  beforeDesc,
+  afterDesc,
+  impact,
+  takeaway
  })
  .then(()=>{
    alert("✅ Saved Successfully");
  })
- .catch((error)=>{
-   console.error(error);
-   alert("❌ Error: " + error.message);
+ .catch(err=>{
+   console.error(err);
+   alert("❌ Error: " + err.message);
  });
 
 }
@@ -207,46 +207,44 @@ function showCreate(){
 function showSummary(){
  document.getElementById("createPage").style.display="none";
  document.getElementById("summaryPage").style.display="block";
- loadData("All");
+ loadData();
 }
 
 /* ✅ LOAD DATA */
-function loadData(filter){
+function loadData(){
 
  db.collection("rex").get().then(snapshot=>{
 
-  let html="";
+  let html = "";
 
   snapshot.forEach(doc=>{
-   let d = doc.data();
-
-   if(filter !== "All" && d.cat !== filter) return;
+   const d = doc.data();
 
    html += `
    <div class="card">
-    <b>${d.title} (${d.cat})</b>
 
-    <div class="row">
-      <div style="flex:1">
-        BEFORE
-        <div class="box">${d.before ? `<img src="${d.before}class="desc">${d.beforeDesc || ""}</div>
-      </div>
+     <b>${d.title} (${d.cat})</b>
 
-      <div style="flex:1">
-        AFTER
-        <div class="box">${d.after ? `<{d.after}` : ""}</div>
-        <div class="desc">${d.afterDesc || ""}</div>
-      </div>
-    </div>
+     <div class="row">
+       <div style="flex:1">
+         BEFORE
+         <div class="box">${d.before ? `<img src="${d.before}>${d.beforeDesc || ""}</div>
+       </div>
 
-    <div class="impact">
-      <b>Impact</b><br>
-      ${d.impact || ""}
-    </div>
+       <div style="flex:1">
+         AFTER
+         <div class="box">${d.after ? `<img src="${: ""}</div>
+         <div class="desc">${d.afterDesc || ""}</div>
+       </div>
+     </div>
 
-    <div class="takeaway">
-      ${d.takeaway || ""}
-    </div>
+     <div class="impact">
+       <b>Impact</b><br>${d.impact || ""}
+     </div>
+
+     <div class="takeaway">
+       ${d.takeaway || ""}
+     </div>
 
    </div>`;
   });
