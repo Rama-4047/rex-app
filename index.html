@@ -7,15 +7,15 @@
 
 <style>
 body{font-family:Arial;background:#e5e7eb;padding:20px;}
-button{padding:10px 15px;background:#155e95;color:#fff;border:none;margin:5px;cursor:pointer;}
-.main{background:#fff;padding:15px;border-radius:8px;}
+button{padding:10px 15px;background:#155e95;color:white;border:none;margin:5px;cursor:pointer;}
+.main{background:white;padding:15px;border-radius:8px;}
 .card{background:#f3f4f6;padding:15px;margin-top:15px;border-radius:10px;}
 .row{display:flex;gap:20px;}
 .box{border:2px solid black;height:200px;display:flex;align-items:center;justify-content:center;}
 .box img{max-width:100%;max-height:100%;}
 .desc{border:1px solid black;margin-top:5px;padding:5px;}
 .impact{border:1px solid black;margin-top:10px;padding:10px;}
-.takeaway{background:#0c4a6e;color:#fff;margin-top:10px;padding:10px;text-align:center;}
+.takeaway{background:#0c4a6e;color:white;margin-top:10px;padding:10px;text-align:center;}
 </style>
 
 <!-- ✅ CORRECT FIREBASE -->
@@ -31,6 +31,7 @@ button{padding:10px 15px;background:#155e95;color:#fff;border:none;margin:5px;cu
 <button onclick="showCreate()">New REX</button>
 <button onclick="showSummary()">Summary</button>
 
+<!-- CREATE PAGE -->
 <div id="createPage" class="main">
 
 <input id="title" placeholder="Title"><br><br>
@@ -46,7 +47,6 @@ button{padding:10px 15px;background:#155e95;color:#fff;border:none;margin:5px;cu
 <br><br>
 
 <div class="row">
-
 <div style="flex:1">
 <b>BEFORE</b><br>
 <input type="file" id="before"><br>
@@ -60,7 +60,6 @@ button{padding:10px 15px;background:#155e95;color:#fff;border:none;margin:5px;cu
 <img id="aImg"><br>
 <textarea id="afterDesc"></textarea>
 </div>
-
 </div>
 
 <div class="impact">
@@ -77,11 +76,12 @@ button{padding:10px 15px;background:#155e95;color:#fff;border:none;margin:5px;cu
 
 </div>
 
+<!-- SUMMARY -->
 <div id="summaryPage" class="main" style="display:none"></div>
 
 <script>
 
-/* ✅ Firebase Init */
+/* ✅ FIREBASE INIT */
 firebase.initializeApp({
  apiKey: "AIzaSyCPUL-TGaO2PY7zYC3d1Eyx6J2oHjHWoyE",
  authDomain: "rex-multi-user-file.firebaseapp.com",
@@ -90,49 +90,58 @@ firebase.initializeApp({
 
 const db = firebase.firestore();
 
-/* ✅ Image handling */
-let beforeData="", afterData="";
+/* ✅ IMAGE HANDLING */
+let beforeData = "";
+let afterData = "";
 
-document.getElementById("before").onchange=e=>{
- let r=new FileReader();
- r.onload=x=>{
-   beforeData=x.target.result;
-   document.getElementById("bImg").src=beforeData;
+document.getElementById("before").onchange = function(e){
+ let reader = new FileReader();
+ reader.onload = function(evt){
+   beforeData = evt.target.result;
+   document.getElementById("bImg").src = beforeData;
  };
- r.readAsDataURL(e.target.files[0]);
+ reader.readAsDataURL(e.target.files[0]);
 };
 
-document.getElementById("after").onchange=e=>{
- let r=new FileReader();
- r.onload=x=>{
-   afterData=x.target.result;
-   document.getElementById("aImg").src=afterData;
+document.getElementById("after").onchange = function(e){
+ let reader = new FileReader();
+ reader.onload = function(evt){
+   afterData = evt.target.result;
+   document.getElementById("aImg").src = afterData;
  };
- r.readAsDataURL(e.target.files[0]);
+ reader.readAsDataURL(e.target.files[0]);
 };
 
-/* ✅ SAVE */
+/* ✅ SAVE FUNCTION */
 function save(){
 
- let title=document.getElementById("title").value;
- if(!title){ alert("Enter title"); return; }
+ let title = document.getElementById("title").value;
+
+ if(!title){
+   alert("Enter title");
+   return;
+ }
 
  db.collection("rex").add({
-  title:title,
-  cat:document.getElementById("cat").value,
-  before:beforeData,
-  after:afterData,
-  beforeDesc:document.getElementById("beforeDesc").value,
-  afterDesc:document.getElementById("afterDesc").value,
-  impact:document.getElementById("impact").value,
-  takeaway:document.getElementById("takeaway").value
+   title: title,
+   cat: document.getElementById("cat").value,
+   before: beforeData,
+   after: afterData,
+   beforeDesc: document.getElementById("beforeDesc").value,
+   afterDesc: document.getElementById("afterDesc").value,
+   impact: document.getElementById("impact").value,
+   takeaway: document.getElementById("takeaway").value
  })
- .then(()=>alert("✅ Saved Successfully"))
- .catch(e=>alert("Error: "+e.message));
+ .then(function(){
+   alert("✅ Saved Successfully");
+ })
+ .catch(function(error){
+   alert("❌ Error: " + error.message);
+ });
 
 }
 
-/* ✅ NAV */
+/* ✅ NAVIGATION */
 function showCreate(){
  document.getElementById("createPage").style.display="block";
  document.getElementById("summaryPage").style.display="none";
@@ -144,48 +153,46 @@ function showSummary(){
  loadData();
 }
 
-/* ✅ LOAD DATA (FIXED NO SYNTAX ERROR) */
+/* ✅ SAFE LOAD DATA (NO SYNTAX ISSUE) */
 function loadData(){
 
- db.collection("rex").get().then(snapshot=>{
+ db.collection("rex").get().then(function(snapshot){
 
-  let html="";
+  let html = "";
 
-  snapshot.forEach(doc=>{
-   let d=doc.data();
+  snapshot.forEach(function(doc){
 
-   html += `
-   <div class="card">
+   let d = doc.data();
 
-     <b>${d.title} (${d.cat})</b>
+   html += '<div class="card">';
 
-     <div class="row">
+   html += '<b>' + (d.title || '') + ' (' + (d.cat || '') + ')</b>';
 
-       <div style="flex:1">
-         BEFORE
-         <div class="box">
-           ${d.before ? `<img src="${d.before}      <div class="desc">${d.beforeDesc || ""}</div>
-       </div>
+   html += '<div class="row">';
 
-       <div style="flex:1">
-         AFTER
-         <div class="box">
-           ${d.after ? `<img src="${d.after        </div>
-         <div class="desc">${d.afterDesc || ""}</div>
-       </div>
+   html += '<div style="flex:1">';
+   html += 'BEFORE';
+   html += '<div class="box">';
+   if(d.before){ html += '<img src="' + d.before + '">'; }
+   html += '</div>';
+   html += '<div class="desc">' + (d.beforeDesc || '') + '</div>';
+   html += '</div>';
 
-     </div>
+   html += '<div style="flex:1">';
+   html += 'AFTER';
+   html += '<div class="box">';
+   if(d.after){ html += '<img src="' + d.after + '">'; }
+   html += '</div>';
+   html += '<div class="desc">' + (d.afterDesc || '') + '</div>';
+   html += '</div>';
 
-     <div class="impact">
-       <b>Impact</b><br>
-       ${d.impact || ""}
-     </div>
+   html += '</div>';
 
-     <div class="takeaway">
-       ${d.takeaway || ""}
-     </div>
+   html += '<div class="impact"><b>Impact</b><br>' + (d.impact || '') + '</div>';
+   html += '<div class="takeaway">' + (d.takeaway || '') + '</div>';
 
-   </div>`;
+   html += '</div>';
+
   });
 
   document.getElementById("summaryPage").innerHTML = html;
