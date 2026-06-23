@@ -22,7 +22,7 @@ button{padding:10px 15px;background:#155e95;color:white;border:none;margin:5px;c
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-<!-- ✅ PDF LIB -->
+<!-- ✅ PDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 </head>
@@ -118,7 +118,6 @@ after.onchange=e=>{
 function save(){
 
  let title=document.getElementById("title").value;
-
  if(!title){ alert("Enter title"); return; }
 
  db.collection("rex").add({
@@ -148,25 +147,25 @@ function showSummary(){
  loadData();
 }
 
-/* ✅ LOAD + COUNT */
+/* ✅ LOAD DATA + COUNT */
 function loadData(){
 
  db.collection("rex").get().then(snapshot=>{
 
-  let count={5S:0,Safety:0,QMS:0,Automation:0,Others:0};
+  let count={"5S":0,"Safety":0,"QMS":0,"Automation":0,"Others":0};
   let list=[];
 
   snapshot.forEach(doc=>{
    let d=doc.data();
    list.push(d);
-   if(count[d.cat]!=undefined) count[d.cat]++;
+   if(count[d.cat] !== undefined) count[d.cat]++;
   });
 
-  window.rexData=list;
+  window.rexData = list;
 
-  let html=`
+  let html = `
   <div>
-    <button onclick="filterData('All')">All</button>
+    <button onclick="filterData('All')">All (${list.length})</button>
     <button onclick="filterData('5S')">5S (${count["5S"]})</button>
     <button onclick="filterData('Safety')">Safety (${count["Safety"]})</button>
     <button onclick="filterData('QMS')">QMS (${count["QMS"]})</button>
@@ -174,10 +173,12 @@ function loadData(){
     <button onclick="filterData('Others')">Others (${count["Others"]})</button>
     <button onclick="downloadPDF()">Download PDF</button>
   </div>
+
   <div id="cards"></div>
   `;
 
-  summaryPage.innerHTML=html;
+  summaryPage.innerHTML = html;
+
   renderCards(list);
 
  });
@@ -185,45 +186,54 @@ function loadData(){
 }
 
 /* ✅ FILTER */
-function filterData(cat){
- let data = cat=="All"?rexData:rexData.filter(d=>d.cat==cat);
- renderCards(data);
+function filterData(category){
+
+ let filtered;
+
+ if(category === "All"){
+   filtered = window.rexData;
+ } else {
+   filtered = window.rexData.filter(item => item.cat === category);
+ }
+
+ renderCards(filtered);
+
 }
 
-/* ✅ RENDER */
+/* ✅ RENDER CARDS */
 function renderCards(list){
 
  let html="";
 
  list.forEach(d=>{
 
-  html+='<div class="card">';
+  html += '<div class="card">';
+  html += '<b>'+d.title+' ('+d.cat+')</b>';
 
-  html+='<b>'+d.title+' ('+d.cat+')</b>';
+  html += '<div class="row">';
 
-  html+='<div class="row">';
+  html += '<div style="flex:1">BEFORE<div class="box">';
+  if(d.before) html += '<img src="'+d.before+'">';
+  html += '</div><div class="desc">'+(d.beforeDesc||"")+'</div></div>';
 
-  html+='<div style="flex:1">BEFORE<div class="box">';
-  if(d.before) html+='<img src="'+d.before+'">';
-  html+='</div><div class="desc">'+(d.beforeDesc||'')+'</div></div>';
+  html += '<div style="flex:1">AFTER<div class="box">';
+  if(d.after) html += '<img src="'+d.after+'">';
+  html += '</div><div class="desc">'+(d.afterDesc||"")+'</div></div>';
 
-  html+='<div style="flex:1">AFTER<div class="box">';
-  if(d.after) html+='<img src="'+d.after+'">';
-  html+='</div><div class="desc">'+(d.afterDesc||'')+'</div></div>';
+  html += '</div>';
 
-  html+='</div>';
+  html += '<div class="impact"><b>Impact</b><br>'+(d.impact||"")+'</div>';
+  html += '<div class="takeaway">'+(d.takeaway||"")+'</div>';
 
-  html+='<div class="impact"><b>Impact</b><br>'+ (d.impact||'') +'</div>';
-  html+='<div class="takeaway">'+ (d.takeaway||'') +'</div>';
+  html += '</div>';
 
-  html+='</div>';
  });
 
- document.getElementById("cards").innerHTML=html;
+ document.getElementById("cards").innerHTML = html;
 
 }
 
-/* ✅ PDF */
+/* ✅ PDF DOWNLOAD */
 function downloadPDF(){
 
  const { jsPDF } = window.jspdf;
@@ -232,14 +242,12 @@ function downloadPDF(){
  let y=10;
 
  rexData.forEach(d=>{
-
   doc.text("Title: "+d.title,10,y); y+=8;
   doc.text("Category: "+d.cat,10,y); y+=8;
   doc.text("Impact: "+(d.impact||""),10,y); y+=8;
   doc.text("Takeaway: "+(d.takeaway||""),10,y); y+=12;
 
   if(y>270){ doc.addPage(); y=10; }
-
  });
 
  doc.save("REX_Report.pdf");
