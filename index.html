@@ -45,8 +45,6 @@ button{padding:8px 12px;background:#155e95;color:white;border:none;margin:3px;cu
 
 <!-- ✅ Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<!-- ✅ Chart Data Labels -->
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 
 <!-- ✅ PDF -->
@@ -97,10 +95,8 @@ button{padding:8px 12px;background:#155e95;color:white;border:none;margin:3px;cu
 </div>
 </div>
 
-<div class="impact">
-<b>Impact</b><br>
-<textarea id="impact"></textarea>
-</div>
+<div class="impact"><b>Impact</b><br>
+<textarea id="impact"></textarea></div>
 
 <div class="takeaway">
 <textarea id="takeaway"></textarea>
@@ -121,10 +117,9 @@ firebase.initializeApp({
  authDomain:"rex-multi-user-file.firebaseapp.com",
  projectId:"rex-multi-user-file"
 });
-
 const db=firebase.firestore();
 
-/* Image */
+/* Images */
 let beforeData="",afterData="";
 
 before.onchange=e=>{
@@ -141,7 +136,6 @@ after.onchange=e=>{
 
 /* Save */
 function save(){
-
  let id=editId.value;
 
  let data={
@@ -200,11 +194,13 @@ db.collection("rex").onSnapshot(snap=>{
  let html="<h3>📊 REX Dashboard</h3>";
 
  html+=`<div class="summaryHeader">`;
+
  for(let c in count){
   html+=`<div class="catCard" onclick="filterCategory('${c}',this)">
            ${c}<br>${count[c]}
          </div>`;
  }
+
  html+=`</div>
  <canvas id="barChart" height="100"></canvas>
 
@@ -224,7 +220,7 @@ db.collection("rex").onSnapshot(snap=>{
  }
 });
 
-/* Chart */
+/* ✅ BAR CHART WITH LABELS */
 function createChart(count){
 
  let ctx=document.getElementById('barChart');
@@ -237,7 +233,11 @@ function createChart(count){
    labels:Object.keys(count),
    datasets:[{
     data:Object.values(count),
-    backgroundColor:'#3b82f6'
+    backgroundColor:[
+      '#3b82f6','#10b981','#f59e0b','#ef4444',
+      '#8b5cf6','#14b8a6','#f43f5e'
+    ],
+    borderRadius:6
    }]
   },
   plugins:[ChartDataLabels],
@@ -248,10 +248,13 @@ function createChart(count){
       anchor:'end',
       align:'top',
       color:'#000',
-      font:{weight:'bold'}
+      font:{weight:'bold'},
+      formatter:(v)=>v
     }
    },
-   scales:{y:{beginAtZero:true}}
+   scales:{
+    y:{beginAtZero:true}
+   }
   }
  });
 }
@@ -291,6 +294,7 @@ function renderList(data){
 function filterCategory(cat,el){
  document.querySelectorAll('.catCard').forEach(x=>x.classList.remove("activeCat"));
  el.classList.add("activeCat");
+
  let f=allData.filter(d=>d.cat.toLowerCase()===cat.toLowerCase());
  renderList(f);
 }
@@ -333,7 +337,6 @@ async function exportPDF(){
  let img=canvas.toDataURL("image/png");
 
  let pdf=new jsPDF("p","mm","a4");
-
  let w=210;
  let h=canvas.height*w/canvas.width;
 
