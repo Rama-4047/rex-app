@@ -7,29 +7,30 @@
 
 <style>
 body{
- font-family:Arial;
- background:linear-gradient(135deg,#1e3a8a,#0ea5e9);
- padding:20px;
+  font-family:Arial;
+  background:linear-gradient(135deg,#1e3a8a,#0ea5e9);
+  padding:20px;
 }
 
 /* HEADER */
 .headerBox{
- background:linear-gradient(90deg,#1e3a8a,#0ea5e9);
- padding:18px;
- border-radius:12px;
- display:flex;
- justify-content:space-between;
- color:white;
+  background:linear-gradient(90deg,#1e3a8a,#0ea5e9);
+  padding:15px;
+  border-radius:12px;
+  display:flex;
+  justify-content:space-between;
+  color:white;
 }
 
+/* MAIN */
 .main{
- background:white;
- border-radius:12px;
- padding:20px;
- margin-top:15px;
+  background:white;
+  border-radius:12px;
+  padding:20px;
+  margin-top:15px;
 }
 
-/* CATEGORY */
+/* CATEGORY SMART */
 .summaryHeader{
  display:flex;
  flex-wrap:wrap;
@@ -48,6 +49,10 @@ body{
  cursor:pointer;
  position:relative;
 }
+.timelineCard.active{
+ background:#059669;
+}
+
 .cornerCount{
  position:absolute;
  top:-8px;
@@ -79,38 +84,53 @@ body{
  justify-content:center;
  cursor:pointer;
 }
-.box img{max-width:100%;max-height:100%;}
+.box img{
+ max-width:100%;
+ max-height:100%;
+}
 
-/* ✅ SECTION TITLE */
+/* TEXT */
 .sectionTitle{
  font-weight:bold;
- margin-top:5px;
  color:#1e3a8a;
 }
 
-/* DATA */
-.descBox{background:#eef2ff;padding:8px;margin-top:5px;}
-.impactBox{background:#dbeafe;padding:8px;margin-top:5px;border-left:4px solid blue;}
-.takeaway{background:#0c4a6e;color:white;padding:8px;margin-top:5px;}
+.descBox{
+ background:#eef2ff;
+ padding:8px;
+ margin-top:5px;
+}
+.impactBox{
+ background:#dbeafe;
+ padding:8px;
+ margin-top:5px;
+ border-left:4px solid blue;
+}
+.takeaway{
+ background:#0c4a6e;
+ color:white;
+ padding:8px;
+ margin-top:5px;
+}
 
+/* BUTTON */
 button{margin-top:5px;}
 .deleteBtn{background:red;color:white;}
-
-textarea{width:100%;}
 
 /* ZOOM */
 #imgModal{
  display:none;
  position:fixed;
- top:0;
- left:0;
- width:100%;
- height:100%;
+ top:0;left:0;
+ width:100%;height:100%;
  background:rgba(0,0,0,0.8);
  justify-content:center;
  align-items:center;
 }
-#imgModal img{max-width:90%;max-height:90%;}
+#imgModal img{
+ max-width:90%;
+ max-height:90%;
+}
 </style>
 
 <!-- LIBRARIES -->
@@ -122,22 +142,23 @@ textarea{width:100%;}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
 </head>
 
 <body>
 
 <div class="headerBox">
- <b>📊 REX Dashboard</b>
- <div>
-   <button onclick="showCreate()">New REX</button>
-   <button onclick="showSummary()">Summary</button>
- </div>
+  <div><b>📊 REX Dashboard</b></div>
+  <div>
+    <button onclick="showCreate()">New REX</button>
+    <button onclick="showSummary()">Summary</button>
+  </div>
 </div>
 
 <!-- CREATE -->
 <div id="createPage" class="main">
+
 <input type="hidden" id="editId">
+
 <input id="title" placeholder="Title"><br><br>
 
 <select id="cat">
@@ -172,29 +193,31 @@ After <input type="file" id="after"><br>
 </div>
 
 <button onclick="save()">Save</button>
+
 </div>
 
 <!-- SUMMARY -->
 <div id="summaryPage" class="main" style="display:none"></div>
 
+<!-- ZOOM -->
 <div id="imgModal" onclick="this.style.display='none'">
 <img id="zoomImg">
 </div>
 
 <script>
 
+/* FIREBASE */
 firebase.initializeApp({
  apiKey:"AIzaSyCPUL-TGaO2PY7zYC3d1Eyx6J2oHjHWoyE",
  projectId:"rex-multi-user-file"
 });
-
 const db=firebase.firestore();
 
+/* NAV */
 function showCreate(){
  createPage.style.display="block";
  summaryPage.style.display="none";
 }
-
 function showSummary(){
  createPage.style.display="none";
  summaryPage.style.display="block";
@@ -214,9 +237,11 @@ after.onchange=e=>{
  r.readAsDataURL(e.target.files[0]);
 };
 
-/* SAVE */
+/* SAVE & EDIT */
 function save(){
- db.collection("rex").add({
+ let id=editId.value;
+
+ let data={
   title:title.value,
   cat:cat.value,
   before:beforeData,
@@ -225,10 +250,18 @@ function save(){
   afterDesc:afterDesc.value,
   impact:impact.value,
   takeaway:takeaway.value
- });
+ };
+
+ if(id){
+  db.collection("rex").doc(id).update(data);
+ }else{
+  db.collection("rex").add(data);
+ }
 }
 
 /* LOAD */
+let selectedCategory=null;
+
 db.collection("rex").onSnapshot(snap=>{
 
  let data=[],count={};
@@ -237,7 +270,10 @@ db.collection("rex").onSnapshot(snap=>{
   let d=doc.data();
   d.id=doc.id;
   data.push(d);
-  count[d.cat]=(count[d.cat]||0)+1;
+
+  if(d.cat){
+   count[d.cat]=(count[d.cat]||0)+1;
+  }
  });
 
  if(summaryPage.style.display==="block"){
@@ -245,20 +281,19 @@ db.collection("rex").onSnapshot(snap=>{
  let html="<h3>Dashboard</h3>";
 
  html+="<div class='summaryHeader'>";
- for(let c in count){
+ Object.keys(count).forEach(c=>{
  html+=`
  <div class="timelineCard" onclick="filter('${c}')">
-   <div class="cornerCount">${count[c]}</div>
-   ${c}
+  <div class="cornerCount">${count[c]}</div>
+  ${c}
  </div>`;
- }
+ });
  html+="</div>";
 
  html+=`
  <canvas id="barChart"></canvas>
-
+ <button onclick="showAll()">Show All</button>
  <button onclick="exportPDF()">Export PDF</button>
-
  <div id="rexList"></div>`;
 
  summaryPage.innerHTML=html;
@@ -268,7 +303,6 @@ db.collection("rex").onSnapshot(snap=>{
  renderList(data);
  createChart(count);
  }
-
 });
 
 /* GRAPH */
@@ -277,35 +311,68 @@ function createChart(count){
  let labels=Object.keys(count);
  let values=Object.values(count);
 
+ let colorMap={
+  "5S":"#3b82f6",
+  "Safety":"#10b981",
+  "Skill Development":"#f59e0b",
+  "Process Capability Improvement":"#ef4444",
+  "Automation":"#8b5cf6",
+  "Digitization":"#14b8a6",
+  "QMS":"#f97316",
+  "Others":"#6366f1"
+ };
+
+ let colors=labels.map(l=>{
+  return selectedCategory && l!==selectedCategory ? "#cbd5e1" : colorMap[l];
+ });
+
  new Chart(barChart,{
   type:'bar',
-  data:{labels:labels,datasets:[{data:values}]},
-  plugins:[ChartDataLabels]
+  data:{labels:labels,datasets:[{data:values,backgroundColor:colors}]},
+  plugins:[ChartDataLabels],
+  options:{
+   onClick:(e,el)=>{
+    if(el.length){
+     selectedCategory=labels[el[0].index];
+     filter(selectedCategory);
+     createChart(count);
+    }
+   }
+  }
  });
 }
 
 /* FILTER */
 function filter(cat){
+ selectedCategory=cat;
+ document.querySelectorAll('.timelineCard').forEach(el=>{
+   el.classList.toggle('active', el.innerText.includes(cat));
+ });
  renderList(allData.filter(d=>d.cat===cat));
 }
 
-/* IMAGE ZOOM */
+function showAll(){
+ selectedCategory=null;
+ renderList(allData);
+}
+
+/* ZOOM */
 function zoom(src){
+ if(!src) return;
  zoomImg.src=src;
  imgModal.style.display="flex";
 }
 
-/* ✅ DISPLAY FIXED */
+/* DISPLAY */
 function renderList(data){
 
  rexList.innerHTML=data.map(d=>`
  <div class="card">
 
  <b>${d.title}</b>
- <div>Category: ${d.cat}</div>
+ <div style="color:#1e3a8a">Category: ${d.cat}</div>
 
  <div class="row">
-
  <div style="flex:1">
  <div class="sectionTitle">Before</div>
  <div class="box" onclick="zoom('${d.before}')">
@@ -321,32 +388,55 @@ function renderList(data){
  </div>
  <div class="descBox">${d.afterDesc||""}</div>
  </div>
-
  </div>
 
  <div class="impactBox">${d.impact||""}</div>
  <div class="takeaway">${d.takeaway||""}</div>
 
+ <button onclick="edit('${d.id}')">Edit</button>
+ <button class="deleteBtn" onclick="del('${d.id}')">Delete</button>
+
  </div>
  `).join('');
 }
 
-/* ✅ IMPROVED PDF */
+/* EDIT */
+function edit(id){
+ let d=allData.find(x=>x.id===id);
+ showCreate();
+
+ editId.value=id;
+ title.value=d.title;
+ cat.value=d.cat;
+
+ beforeData=d.before;
+ afterData=d.after;
+
+ bImg.src=d.before;
+ aImg.src=d.after;
+
+ beforeDesc.value=d.beforeDesc;
+ afterDesc.value=d.afterDesc;
+ impact.value=d.impact;
+ takeaway.value=d.takeaway;
+}
+
+/* DELETE */
+function del(id){
+ if(confirm("Delete?")){
+  db.collection("rex").doc(id).delete();
+ }
+}
+
+/* PDF */
 async function exportPDF(){
  const {jsPDF}=window.jspdf;
-
- let canvas=await html2canvas(document.getElementById("rexList"),{
-  scale:2
- });
-
+ let canvas=await html2canvas(rexList,{scale:2});
  let img=canvas.toDataURL("image/png");
 
- let pdf=new jsPDF('p','mm','a4');
- let pageWidth=210;
- let pageHeight=(canvas.height * pageWidth) / canvas.width;
-
- pdf.addImage(img,'PNG',0,0,pageWidth,pageHeight);
- pdf.save("REX_Report.pdf");
+ let pdf=new jsPDF();
+ pdf.addImage(img,'PNG',0,0,210,canvas.height*210/canvas.width);
+ pdf.save("REX.pdf");
 }
 
 </script>
