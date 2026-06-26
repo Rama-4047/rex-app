@@ -7,7 +7,7 @@
 
 <style>
 body{font-family:Arial;background:#e5e7eb;padding:20px;}
-button{padding:10px 15px;background:#155e95;color:white;border:none;margin:5px;cursor:pointer;}
+button{padding:8px 12px;background:#155e95;color:white;border:none;margin:3px;cursor:pointer;}
 .main{background:white;padding:15px;border-radius:8px;}
 .card{background:#f3f4f6;padding:15px;margin-top:15px;border-radius:10px;}
 .row{display:flex;gap:20px;}
@@ -16,13 +16,15 @@ button{padding:10px 15px;background:#155e95;color:white;border:none;margin:5px;c
 .desc{border:1px solid black;margin-top:5px;padding:5px;}
 .impact{border:1px solid black;margin-top:10px;padding:10px;}
 .takeaway{background:#0c4a6e;color:white;margin-top:10px;padding:10px;text-align:center;}
+.actions button{background:#0f766e;}
+.deleteBtn{background:#b91c1c;}
 </style>
 
-<!-- ✅ Firebase -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-<!-- ✅ ✅ PDF Libraries (CORRECT LINKS) -->
+<!-- PDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -38,6 +40,8 @@ button{padding:10px 15px;background:#155e95;color:white;border:none;margin:5px;c
 <!-- CREATE -->
 <div id="createPage" class="main">
 
+<input type="hidden" id="editId">
+
 <input id="title" placeholder="Title"><br><br>
 
 <select id="cat">
@@ -45,6 +49,9 @@ button{padding:10px 15px;background:#155e95;color:white;border:none;margin:5px;c
 <option>Safety</option>
 <option>QMS</option>
 <option>Automation</option>
+<option>Digitization</option>
+<option>Skill Development</option>
+<option>Process Capability Improvement</option>
 <option>Others</option>
 </select>
 
@@ -85,93 +92,88 @@ button{padding:10px 15px;background:#155e95;color:white;border:none;margin:5px;c
 
 <script>
 
-/* ✅ FIREBASE INIT */
+/* ✅ FIREBASE */
 firebase.initializeApp({
- apiKey: "AIzaSyCPUL-TGaO2PY7zYC3d1Eyx6J2oHjHWoyE",
- authDomain: "rex-multi-user-file.firebaseapp.com",
- projectId: "rex-multi-user-file"
+ apiKey:"AIzaSyCPUL-TGaO2PY7zYC3d1Eyx6J2oHjHWoyE",
+ authDomain:"rex-multi-user-file.firebaseapp.com",
+ projectId:"rex-multi-user-file"
 });
 
-const db = firebase.firestore();
+const db=firebase.firestore();
 
-/* ✅ IMAGE HANDLE */
-let beforeData="", afterData="";
+/* IMAGE */
+let beforeData="",afterData="";
 
-document.getElementById("before").onchange = function(e){
- let reader=new FileReader();
- reader.onload=function(evt){
-   beforeData=evt.target.result;
-   document.getElementById("bImg").src=beforeData;
- };
- reader.readAsDataURL(e.target.files[0]);
+before.onchange=e=>{
+ let r=new FileReader();
+ r.onload=evt=>{beforeData=evt.target.result;bImg.src=beforeData;};
+ r.readAsDataURL(e.target.files[0]);
 };
 
-document.getElementById("after").onchange=function(e){
- let reader=new FileReader();
- reader.onload=function(evt){
-   afterData=evt.target.result;
-   document.getElementById("aImg").src=afterData;
- };
- reader.readAsDataURL(e.target.files[0]);
+after.onchange=e=>{
+ let r=new FileReader();
+ r.onload=evt=>{afterData=evt.target.result;aImg.src=afterData;};
+ r.readAsDataURL(e.target.files[0]);
 };
 
-/* ✅ SAVE */
+/* SAVE / UPDATE */
 function save(){
- let title=document.getElementById("title").value;
 
- if(!title){
-   alert("Enter title");
-   return;
+ let id=document.getElementById("editId").value;
+
+ let data={
+  title:title.value,
+  cat:(cat.value||"Others").trim(),
+  before:beforeData,
+  after:afterData,
+  beforeDesc:beforeDesc.value,
+  afterDesc:afterDesc.value,
+  impact:impact.value,
+  takeaway:takeaway.value
+ };
+
+ if(!data.title){alert("Enter title");return;}
+
+ if(id){
+   db.collection("rex").doc(id).update(data).then(()=>{
+     alert("✅ Updated");
+     editId.value="";
+   });
+ }else{
+   db.collection("rex").add(data).then(()=>alert("✅ Saved"));
  }
-
- db.collection("rex").add({
-   title:title,
-   cat:(document.getElementById("cat").value || "Others").trim(),
-   before:beforeData,
-   after:afterData,
-   beforeDesc:document.getElementById("beforeDesc").value,
-   afterDesc:document.getElementById("afterDesc").value,
-   impact:document.getElementById("impact").value,
-   takeaway:document.getElementById("takeaway").value
- }).then(function(){
-   alert("✅ Saved Successfully");
- });
 }
 
-/* ✅ NAVIGATION */
+/* NAV */
 function showCreate(){
- document.getElementById("createPage").style.display="block";
- document.getElementById("summaryPage").style.display="none";
+ createPage.style.display="block";
+ summaryPage.style.display="none";
 }
 
 function showSummary(){
- document.getElementById("createPage").style.display="none";
- document.getElementById("summaryPage").style.display="block";
+ createPage.style.display="none";
+ summaryPage.style.display="block";
  loadData();
 }
 
-/* ✅ LOAD DATA (FINAL FIX FOR OTHERS) */
+/* LOAD */
 function loadData(){
 
- db.collection("rex").get().then(function(snapshot){
+ db.collection("rex").get().then(snap=>{
 
-  let data=[];
-  let count={};
+  let data=[],count={};
 
-  snapshot.forEach(function(doc){
-
+  snap.forEach(doc=>{
    let d=doc.data();
+   d.id=doc.id;
 
-   // ✅ STRICT CLEANING
-   let cleanCat = (d.cat || "").trim();
-   if(cleanCat === "" || cleanCat === null) cleanCat = "Others";
-
-   d.cat = cleanCat;
+   let c=(d.cat||"").trim()||"Others";
+   d.cat=c;
 
    data.push(d);
 
-   if(!count[cleanCat]) count[cleanCat]=0;
-   count[cleanCat]++;
+   if(!count[c]) count[c]=0;
+   count[c]++;
   });
 
   let html="<h3>Category Summary</h3>";
@@ -180,11 +182,11 @@ function loadData(){
    html+=`<button onclick="filterCategory('${c}')">${c} (${count[c]})</button>`;
   }
 
-  html+=`<button onclick="showAll()">Show All</button>`;
-  html+=`<button onclick="exportPDF()">Export PDF</button>`;
-  html+=`<div id="rexList"></div>`;
+  html+=`<button onclick="showAll()">Show All</button>
+         <button onclick="exportPDF()">Export PDF</button>
+         <div id="rexList"></div>`;
 
-  document.getElementById("summaryPage").innerHTML=html;
+  summaryPage.innerHTML=html;
 
   window.allData=data;
   window.currentFilter=data;
@@ -193,91 +195,104 @@ function loadData(){
  });
 }
 
-/* ✅ RENDER */
+/* RENDER */
 function renderList(data){
 
  let html="";
 
- data.forEach(function(d){
+ data.forEach(d=>{
 
-  html+=`<div class="card">
-  <b>${d.title} (${d.cat})</b>
+ html+=`
+ <div class="card">
+ <b>${d.title} (${d.cat})</b>
 
-  <div class="row">
+ <div class="row">
 
-    <div style="flex:1">
-      BEFORE
-      <div class="box">${d.before?'<img src="'+d.before+'">':''}</div>
-      <div class="desc">${d.beforeDesc||""}</div>
-    </div>
+ <div style="flex:1">
+ BEFORE
+ <div class="box">${d.before?'<img src="'+d.before+'">':''}</div>
+ <div class="desc">${d.beforeDesc||""}</div>
+ </div>
 
-    <div style="flex:1">
-      AFTER
-      <div class="box">${d.after?'<img src="'+d.after+'">':''}</div>
-      <div class="desc">${d.afterDesc||""}</div>
-    </div>
+ <div style="flex:1">
+ AFTER
+ <div class="box">${d.after?'<img src="'+d.after+'">':''}</div>
+ <div class="desc">${d.afterDesc||""}</div>
+ </div>
 
-  </div>
+ </div>
 
-  <div class="impact"><b>Impact</b><br>${d.impact||""}</div>
-  <div class="takeaway">${d.takeaway||""}</div>
+ <div class="impact"><b>Impact</b><br>${d.impact||""}</div>
+ <div class="takeaway">${d.takeaway||""}</div>
 
-  </div>`;
+ <div class="actions">
+   <button onclick="edit('${d.id}')">Edit</button>
+   <button class="deleteBtn" onclick="del('${d.id}')">Delete</button>
+ </div>
+
+ </div>`;
  });
 
- document.getElementById("rexList").innerHTML=html;
+ rexList.innerHTML=html;
 }
 
-/* ✅ FILTER (FINAL FIXED) */
+/* FILTER */
 function filterCategory(cat){
-
- let f = window.allData.filter(d => {
-   let c = (d.cat || "").trim();
-   if(c === "" || c === null) c = "Others";
-
-   return c.toLowerCase() === cat.toLowerCase();
- });
-
- window.currentFilter = f;
+ let f=allData.filter(d=>(d.cat||"").trim().toLowerCase()===cat.toLowerCase());
+ currentFilter=f;
  renderList(f);
 }
 
 function showAll(){
- window.currentFilter=window.allData;
- renderList(window.allData);
+ currentFilter=allData;
+ renderList(allData);
 }
 
-/* ✅ ✅ HIGH QUALITY PDF */
+/* EDIT */
+function edit(id){
+
+ let d=allData.find(x=>x.id===id);
+
+ showCreate();
+
+ editId.value=id;
+ title.value=d.title;
+ cat.value=d.cat;
+ beforeData=d.before||"";
+ afterData=d.after||"";
+ bImg.src=beforeData;
+ aImg.src=afterData;
+ beforeDesc.value=d.beforeDesc;
+ afterDesc.value=d.afterDesc;
+ impact.value=d.impact;
+ takeaway.value=d.takeaway;
+
+}
+
+/* DELETE */
+function del(id){
+
+ if(confirm("Delete this REX?")){
+   db.collection("rex").doc(id).delete().then(()=>{
+     alert("Deleted");
+     loadData();
+   });
+ }
+}
+
+/* PDF */
 async function exportPDF(){
 
- const { jsPDF } = window.jspdf;
+ const {jsPDF}=window.jspdf;
+ let canvas=await html2canvas(rexList,{scale:2});
+ let img=canvas.toDataURL("image/png");
 
- let element = document.getElementById("rexList");
+ let pdf=new jsPDF("p","mm","a4");
 
- const canvas = await html2canvas(element, { scale: 2 });
+ let w=210,h=canvas.height*w/canvas.width;
+ pdf.addImage(img,"PNG",0,0,w,h);
 
- const imgData = canvas.toDataURL('image/png');
-
- let pdf = new jsPDF('p','mm','a4');
-
- let imgWidth=210;
- let pageHeight=295;
- let imgHeight=canvas.height*imgWidth/canvas.width;
-
- let heightLeft=imgHeight;
- let position=0;
-
- pdf.addImage(imgData,'PNG',0,position,imgWidth,imgHeight);
- heightLeft -= pageHeight;
-
- while(heightLeft>0){
-   position = heightLeft - imgHeight;
-   pdf.addPage();
-   pdf.addImage(imgData,'PNG',0,position,imgWidth,imgHeight);
-   heightLeft -= pageHeight;
- }
-
- pdf.save("REX_Report.pdf");
+ pdf.save("REX.pdf");
 }
 
 </script>
