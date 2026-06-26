@@ -35,7 +35,6 @@ button{
 
 textarea{width:100%;margin-top:5px;}
 
-/* Category */
 .summaryHeader{
   display:flex;
   flex-wrap:wrap;
@@ -51,7 +50,6 @@ textarea{width:100%;margin-top:5px;}
 }
 .activeCat{background:#059669 !important;}
 
-/* Chart */
 .chartWrapper{
   display:flex;
   justify-content:center;
@@ -62,7 +60,6 @@ textarea{width:100%;margin-top:5px;}
   height:350px;
 }
 
-/* Cards */
 .card{
   background:#f3f4f6;
   padding:10px;
@@ -103,7 +100,6 @@ textarea{width:100%;margin-top:5px;}
 <div id="createPage" class="main">
 
 <input type="hidden" id="editId">
-
 <input id="title" placeholder="Title"><br><br>
 
 <select id="cat">
@@ -120,7 +116,6 @@ textarea{width:100%;margin-top:5px;}
 <br><br>
 
 <div class="row">
-
 <div style="flex:1">
 Before
 <input type="file" id="before"><br>
@@ -134,17 +129,12 @@ After
 <img id="aImg">
 <textarea id="afterDesc"></textarea>
 </div>
-
 </div>
 
 <textarea id="impact"></textarea>
-
-<div>
 <textarea id="takeaway"></textarea>
-</div>
 
 <button onclick="save()">Save</button>
-
 </div>
 
 <!-- SUMMARY -->
@@ -161,19 +151,18 @@ firebase.initializeApp({
 
 const db=firebase.firestore();
 
-/* Navigation */
+/* NAV */
 function showCreate(){
  createPage.style.display="block";
  summaryPage.style.display="none";
 }
-
 function showSummary(){
  createPage.style.display="none";
  summaryPage.style.display="block";
- summaryPage.innerHTML="<h3 style='text-align:center'>Loading...</h3>";
+ summaryPage.innerHTML="<h3>Loading...</h3>";
 }
 
-/* Images */
+/* Image */
 let beforeData="",afterData="";
 
 before.onchange=e=>{
@@ -188,13 +177,12 @@ after.onchange=e=>{
  r.readAsDataURL(e.target.files[0]);
 };
 
-/* Save */
+/* ✅ SAVE + EDIT FIX */
 function save(){
 
- if(!title.value){
-  alert("Enter Title");
-  return;
- }
+ if(!title.value) return alert("Enter Title");
+
+ let id=editId.value;
 
  let data={
   title:title.value,
@@ -207,40 +195,57 @@ function save(){
   takeaway:takeaway.value
  };
 
- db.collection("rex").add(data)
- .then(()=>alert("Saved"))
- .catch(err=>{
-  console.error(err);
-  alert("Save Failed");
- });
+ if(id){
+   db.collection("rex").doc(id).update(data)
+     .then(()=>{
+       alert("✅ Updated");
+       resetForm();
+     });
+
+ }else{
+   db.collection("rex").add(data)
+     .then(()=>{
+       alert("✅ Saved");
+       resetForm();
+     });
+ }
 }
 
-/* Load Dashboard */
+/* ✅ RESET FORM */
+function resetForm(){
+ editId.value="";
+ title.value="";
+ beforeData="";
+ afterData="";
+ bImg.src="";
+ aImg.src="";
+ beforeDesc.value="";
+ afterDesc.value="";
+ impact.value="";
+ takeaway.value="";
+}
+
+/* LOAD */
 db.collection("rex").onSnapshot(snap=>{
 
  let data=[],count={};
 
  snap.forEach(doc=>{
   let d=doc.data();
-  data.push(d);
+  d.id=doc.id;
 
-  let c=d.cat || "Others";
-  count[c]=(count[c]||0)+1;
+  data.push(d);
+  count[d.cat]=(count[d.cat]||0)+1;
  });
 
  if(summaryPage.style.display==="block"){
 
- let html=`<h3 style="text-align:center">Dashboard</h3>
-
- <div class="summaryHeader">`;
-
- for(let c in count){
-  html+=`<div class="catCard" onclick="filterCategory('${c}',this)">
-   ${c}<br>${count[c]}
-  </div>`;
- }
-
- html+=`</div>
+ summaryPage.innerHTML=`
+ <div class="summaryHeader">
+ ${Object.keys(count).map(c=>
+ `<div class="catCard" onclick="filterCategory('${c}',this)">
+ ${c}<br>${count[c]}</div>`).join('')}
+ </div>
 
  <div class="chartWrapper">
   <div class="chartBox">
@@ -248,13 +253,7 @@ db.collection("rex").onSnapshot(snap=>{
   </div>
  </div>
 
- <div style="text-align:center">
-  <button onclick="showAll()">Show All</button>
- </div>
-
  <div id="rexList"></div>`;
-
- summaryPage.innerHTML=html;
 
  window.allData=data;
 
@@ -263,86 +262,89 @@ db.collection("rex").onSnapshot(snap=>{
  }
 });
 
-/* Chart */
-function createChart(count){
+/* EDIT */
+function edit(id){
+ let d=allData.find(x=>x.id===id);
 
- let labels=Object.keys(count);
- let values=Object.values(count);
+ showCreate();
 
- let colors=[
-  '#3b82f6','#10b981','#f59e0b','#ef4444',
-  '#8b5cf6','#14b8a6','#f97316','#6366f1'
- ];
+ editId.value=id;
+ title.value=d.title;
+ cat.value=d.cat;
 
- let max=Math.max(...values)||1;
+ beforeData=d.before || "";
+ afterData=d.after || "";
 
- new Chart(document.getElementById("barChart"),{
-  type:'bar',
-  data:{
-   labels:labels,
-   datasets:[{
-    data:values,
-    backgroundColor:colors.slice(0,labels.length),
-    borderRadius:6
-   }]
-  },
+ bImg.src=beforeData;
+ aImg.src=afterData;
 
-  plugins:[ChartDataLabels],
-
-  options:{
-   maintainAspectRatio:false,
-   plugins:{
-    legend:{display:false},
-    datalabels:{
-     anchor:'end',
-     align:'top',
-     formatter:v=>v
-    }
-   },
-   scales:{
-    y:{
-     beginAtZero:true,
-     suggestedMax: Math.ceil(max*1.2),   /* ✅ AUTO SCALE */
-     ticks:{
-       stepSize: Math.ceil(max/5) || 1   /* ✅ SMART STEP */
-     }
-    }
-   }
-  }
- });
+ beforeDesc.value=d.beforeDesc || "";
+ afterDesc.value=d.afterDesc || "";
+ impact.value=d.impact || "";
+ takeaway.value=d.takeaway || "";
 }
 
-/* Filter */
+/* DELETE */
+function del(id){
+ if(confirm("Delete?")){
+  db.collection("rex").doc(id).delete();
+ }
+}
+
+/* FILTER */
 function filterCategory(cat,el){
  document.querySelectorAll('.catCard').forEach(x=>x.classList.remove("activeCat"));
  el.classList.add("activeCat");
  renderList(allData.filter(d=>d.cat===cat));
 }
 
-function showAll(){
- renderList(allData);
-}
-
-/* Render */
+/* RENDER */
 function renderList(data){
- let html="";
- data.forEach(d=>{
- html+=`<div class="card">
- <b>${d.title} (${d.cat})</b>
+ rexList.innerHTML=data.map(d=>`
+ <div class="card">
+ <b>${d.title}</b>
 
  <div class="row">
- <div style="flex:1">
  <div class="box">${d.before?'<img src="'+d.before+'">':''}</div>
- </div>
-
- <div style="flex:1">
  <div class="box">${d.after?'<img src="'+d.after+'">':''}</div>
  </div>
- </div>
 
- </div>`;
+ <button onclick="edit('${d.id}')">Edit</button>
+ <button class="deleteBtn" onclick="del('${d.id}')">Delete</button>
+
+ </div>
+ `).join('');
+}
+
+/* ✅ CHART */
+function createChart(count){
+
+ let values=Object.values(count);
+ let max=Math.max(...values)||1;
+
+ new Chart(document.getElementById("barChart"),{
+  type:'bar',
+  data:{
+   labels:Object.keys(count),
+   datasets:[{
+    data:values,
+    backgroundColor:[
+     '#3b82f6','#10b981','#f59e0b','#ef4444',
+     '#8b5cf6','#14b8a6','#f97316'
+    ]
+   }]
+  },
+  plugins:[ChartDataLabels],
+  options:{
+   scales:{
+    y:{
+      beginAtZero:true,
+      suggestedMax:Math.ceil(max*1.2),
+      ticks:{stepSize:Math.ceil(max/5)}
+    }
+   }
+  }
  });
- rexList.innerHTML=html;
 }
 
 </script>
