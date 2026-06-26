@@ -6,7 +6,6 @@
 <title>REX Dashboard</title>
 
 <style>
-
 body{
   font-family:Arial;
   background:linear-gradient(135deg,#1e3a8a,#0ea5e9);
@@ -16,96 +15,95 @@ body{
 /* HEADER */
 .headerBox{
   background:linear-gradient(90deg,#1e3a8a,#0ea5e9);
-  padding:18px 25px;
-  border-radius:15px;
+  padding:18px;
+  border-radius:12px;
   display:flex;
   justify-content:space-between;
-  align-items:center;
-  max-width:1100px;
-  margin:auto;
-}
-
-.headerTitle{
   color:white;
-  font-size:22px;
-  font-weight:bold;
 }
 
-.btnNew{background:#e5e7eb;color:#1e3a8a;padding:8px;border-radius:10px;}
-.btnSummary{background:transparent;border:2px solid white;color:white;padding:8px;border-radius:10px;}
-
+/* MAIN */
 .main{
   background:white;
   border-radius:12px;
   padding:20px;
-  max-width:1100px;
-  margin:20px auto;
+  margin-top:15px;
 }
 
-/* ✅ SMART ART FIXED */
+/* CATEGORY SMART ART */
 .summaryHeader{
  display:flex;
  flex-wrap:wrap;
- justify-content:center;
  gap:15px;
- padding:10px;
+ justify-content:center;
  border-top:2px solid #94a3b8;
  border-bottom:2px solid #94a3b8;
+ padding:10px;
 }
 
 .timelineCard{
  background:#1e3a8a;
  color:white;
- padding:10px 18px;
+ padding:10px 20px;
  border-radius:30px;
  cursor:pointer;
  position:relative;
- min-width:150px;
- text-align:center;
 }
 
 .cornerCount{
  position:absolute;
  top:-8px;
  left:-8px;
- background:#fff;
+ background:white;
  color:black;
  padding:4px 8px;
  border-radius:10px;
- font-weight:bold;
 }
 
 /* CHART */
 .chartWrapper{display:flex;justify-content:center;}
 .chartBox{width:80%;height:350px;}
 
-/* CARDS */
-.card{background:#f3f4f6;padding:10px;margin-top:10px;border-radius:8px;}
+/* CARD */
+.card{
+ background:#f3f4f6;
+ padding:10px;
+ margin-top:10px;
+ border-radius:8px;
+}
+
 .row{display:flex;gap:10px;}
-.box{height:150px;border:1px dashed #aaa;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+
+.box{
+ height:150px;
+ border:1px dashed #aaa;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ cursor:pointer;
+}
 .box img{max-width:100%;max-height:100%;}
 
 /* DATA BOX */
-.descBox{background:#eef2ff;padding:8px;margin-top:5px;border-radius:6px;}
-.impactBox{background:#dbeafe;padding:8px;margin-top:5px;border-left:3px solid blue;}
+.descBox{background:#eef2ff;padding:8px;margin-top:5px;}
+.impactBox{background:#dbeafe;padding:8px;margin-top:5px;border-left:4px solid blue;}
 .takeaway{background:#0c4a6e;color:white;padding:8px;margin-top:5px;}
 
 .deleteBtn{background:red;color:white;}
 
+textarea{width:100%;}
+
+/* IMAGE ZOOM */
 #imgModal{
  display:none;
  position:fixed;
- top:0;
- left:0;
- width:100%;
- height:100%;
+ top:0;left:0;
+ width:100%;height:100%;
  background:rgba(0,0,0,0.8);
  justify-content:center;
  align-items:center;
 }
 #imgModal img{max-width:90%;max-height:90%;}
-
-textarea{width:100%;}
 
 </style>
 
@@ -124,14 +122,18 @@ textarea{width:100%;}
 <body>
 
 <div class="headerBox">
-  <div class="headerTitle">📊 REX Dashboard</div>
+  <div><b>📊 REX Dashboard</b></div>
   <div>
-    <button class="btnNew" onclick="showCreate()">+ New REX</button>
-    <button class="btnSummary" onclick="showSummary()">Summary</button>
+    <button onclick="showCreate()">New REX</button>
+    <button onclick="showSummary()">Summary</button>
   </div>
 </div>
 
+<!-- CREATE -->
 <div id="createPage" class="main">
+
+<input type="hidden" id="editId">
+
 <input id="title" placeholder="Title"><br><br>
 
 <select id="cat">
@@ -166,21 +168,24 @@ After <input type="file" id="after"><br>
 </div>
 
 <button onclick="save()">Save</button>
+
 </div>
 
+<!-- SUMMARY -->
 <div id="summaryPage" class="main" style="display:none"></div>
 
+<!-- IMAGE MODAL -->
 <div id="imgModal" onclick="this.style.display='none'">
-<img id="zoomImg">
+  <img id="zoomImg">
 </div>
 
 <script>
 
+/* FIREBASE */
 firebase.initializeApp({
  apiKey:"AIzaSyCPUL-TGaO2PY7zYC3d1Eyx6J2oHjHWoyE",
  projectId:"rex-multi-user-file"
 });
-
 const db=firebase.firestore();
 
 /* NAV */
@@ -188,7 +193,6 @@ function showCreate(){
  createPage.style.display="block";
  summaryPage.style.display="none";
 }
-
 function showSummary(){
  createPage.style.display="none";
  summaryPage.style.display="block";
@@ -208,9 +212,12 @@ after.onchange=e=>{
  r.readAsDataURL(e.target.files[0]);
 };
 
-/* SAVE */
+/* SAVE + EDIT */
 function save(){
- db.collection("rex").add({
+
+ let id=editId.value;
+
+ let data={
   title:title.value,
   cat:cat.value,
   before:beforeData,
@@ -219,14 +226,19 @@ function save(){
   afterDesc:afterDesc.value,
   impact:impact.value,
   takeaway:takeaway.value
- });
+ };
+
+ if(id){
+   db.collection("rex").doc(id).update(data).then(()=>alert("Updated"));
+ }else{
+   db.collection("rex").add(data).then(()=>alert("Saved"));
+ }
 }
 
-/* ✅ LOAD FIXED */
+/* LOAD */
 db.collection("rex").onSnapshot(snap=>{
 
- let data=[];
- let count={};
+ let data=[],count={};
 
  snap.forEach(doc=>{
   let d=doc.data();
@@ -234,7 +246,7 @@ db.collection("rex").onSnapshot(snap=>{
   data.push(d);
 
   if(d.cat){
-    count[d.cat]=(count[d.cat]||0)+1;
+   count[d.cat]=(count[d.cat]||0)+1;
   }
  });
 
@@ -242,14 +254,14 @@ db.collection("rex").onSnapshot(snap=>{
 
  let html="<h3>Dashboard</h3>";
 
- /* ✅ CATEGORY FIX */
+ /* CATEGORY */
  html+="<div class='summaryHeader'>";
  Object.keys(count).forEach(c=>{
-  html+=`
-  <div class="timelineCard" onclick="filter('${c}')">
+ html+=`
+ <div class="timelineCard" onclick="filter('${c}')">
    <div class="cornerCount">${count[c]}</div>
    ${c}
-  </div>`;
+ </div>`;
  });
  html+="</div>";
 
@@ -272,9 +284,10 @@ db.collection("rex").onSnapshot(snap=>{
  renderList(data);
  createChart(count);
  }
+
 });
 
-/* ✅ GRAPH FIX */
+/* GRAPH */
 function createChart(count){
 
  let labels=Object.keys(count);
@@ -283,33 +296,33 @@ function createChart(count){
  new Chart(barChart,{
   type:'bar',
   data:{
-   labels:labels,
-   datasets:[{
-    data:values,
-    backgroundColor:['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#14b8a6','#f97316']
-   }]
+    labels:labels,
+    datasets:[{
+      data:values,
+      backgroundColor:['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#14b8a6']
+    }]
   },
   plugins:[ChartDataLabels],
   options:{
-   onClick:(e,el)=>{
-    if(el.length){
-     let cat=labels[el[0].index];
-     filter(cat);
+    onClick:(e,el)=>{
+      if(el.length){
+        let cat=labels[el[0].index];
+        filter(cat);
+      }
     }
-   }
   }
  });
 }
 
+/* FILTER */
 function filter(cat){
  renderList(allData.filter(d=>d.cat===cat));
 }
-
 function showAll(){
  renderList(allData);
 }
 
-/* IMAGE ZOOM */
+/* ZOOM */
 function zoom(src){
  if(!src) return;
  zoomImg.src=src;
@@ -321,35 +334,67 @@ function renderList(data){
 
  rexList.innerHTML=data.map(d=>`
  <div class="card">
+
  <b>${d.title}</b>
+ <div style="color:#1e3a8a;font-size:13px;">Category: ${d.cat||"Others"}</div>
 
  <div class="row">
  <div style="flex:1">
- <div class="box" onclick="zoom('${d.before}')">${d.before?'<img src="'+d.before+'">':''}</div>
+ <div class="box" onclick="zoom('${d.before}')">
+ ${d.before?'<img src="'+d.before+'">':''}
+ </div>
  <div class="descBox">${d.beforeDesc||""}</div>
  </div>
 
  <div style="flex:1">
- <div class="box" onclick="zoom('${d.after}')">${d.after?'<img src="'+d.after+'">':''}</div>
+ <div class="box" onclick="zoom('${d.after}')">
+ ${d.after?'<img src="'+d.after+'">':''}
+ </div>
  <div class="descBox">${d.afterDesc||""}</div>
  </div>
  </div>
 
  <div class="impactBox">${d.impact||""}</div>
  <div class="takeaway">${d.takeaway||""}</div>
+
+ <button onclick="edit('${d.id}')">Edit</button>
+ <button class="deleteBtn" onclick="del('${d.id}')">Delete</button>
+
  </div>
  `).join('');
 }
 
-/* ✅ PDF RESTORED */
+/* EDIT */
+function edit(id){
+ let d=allData.find(x=>x.id==id);
+ showCreate();
+
+ editId.value=id;
+ title.value=d.title;
+ cat.value=d.cat;
+ beforeData=d.before;
+ afterData=d.after;
+ bImg.src=d.before;
+ aImg.src=d.after;
+ beforeDesc.value=d.beforeDesc;
+ afterDesc.value=d.afterDesc;
+ impact.value=d.impact;
+ takeaway.value=d.takeaway;
+}
+
+/* DELETE */
+function del(id){
+ if(confirm("Delete?")){
+  db.collection("rex").doc(id).delete();
+ }
+}
+
+/* PDF */
 async function exportPDF(){
  const {jsPDF}=window.jspdf;
-
  let canvas=await html2canvas(rexList);
- let img=canvas.toDataURL("image/png");
-
  let pdf=new jsPDF();
- pdf.addImage(img,"PNG",0,0);
+ pdf.addImage(canvas,"PNG",0,0);
  pdf.save("REX.pdf");
 }
 
