@@ -20,77 +20,49 @@ body{
   padding:20px;
   max-width:1200px;
   margin:auto;
-  box-shadow:0 12px 30px rgba(0,0,0,0.25);
 }
 
 h2{text-align:center;color:white;}
 
 button{
-  padding:10px 15px;
+  padding:10px;
   margin:5px;
   border:none;
-  border-radius:6px;
   background:#2563eb;
   color:white;
-  cursor:pointer;
+  border-radius:5px;
 }
-button:hover{background:#1d4ed8;}
 .deleteBtn{background:#dc2626;}
 
 textarea{
   width:100%;
-  padding:6px;
-  border-radius:6px;
-  border:1px solid #ccc;
   margin-top:5px;
 }
 
 /* KPI */
-.kpiContainer{display:flex;gap:15px;flex-wrap:wrap;}
-.kpi{
-  flex:1;
-  min-width:150px;
-  padding:15px;
-  border-radius:10px;
-  color:white;
-  text-align:center;
-}
+.kpiContainer{display:flex;gap:10px;}
+.kpi{flex:1;padding:10px;color:white;text-align:center;border-radius:8px;}
 .kpi1{background:#3b82f6;}
 .kpi2{background:#10b981;}
 .kpi3{background:#f59e0b;}
 
-/* Category */
-.summaryHeader{display:flex;flex-wrap:wrap;gap:10px;}
-.catCard{
-  background:#1e3a8a;color:white;padding:12px;border-radius:10px;
-  cursor:pointer;min-width:120px;text-align:center;
-}
-.catCard:hover{background:#2563eb;}
-.activeCat{background:#059669 !important;}
-
-/* Chart */
-.chartBox{
-  background:white;border-radius:10px;padding:15px;margin-top:15px;
-}
-
 /* Cards */
-.card{
-  background:white;border-radius:10px;padding:15px;margin-top:15px;
-}
-
-.row{display:flex;gap:20px;}
-
-.box{
-  border:2px dashed #ddd;height:200px;
-  display:flex;align-items:center;justify-content:center;
-}
+.card{background:white;padding:10px;margin-top:10px;border-radius:8px;}
+.row{display:flex;gap:10px;}
+.box{height:200px;border:1px dashed #ccc;display:flex;align-items:center;justify-content:center;}
 .box img{max-width:100%;max-height:100%;}
 
-.section{font-weight:bold;margin-top:10px;}
-
-.takeaway{
-  background:#0c4a6e;color:white;padding:10px;margin-top:10px;
+.summaryHeader{display:flex;flex-wrap:wrap;gap:10px;}
+.catCard{
+  background:#1e3a8a;color:white;padding:10px;border-radius:8px;
+  cursor:pointer;
 }
+.activeCat{background:#059669 !important;}
+
+.chartBox{background:white;padding:10px;margin-top:10px;border-radius:8px;}
+
+.takeaway{background:#0c4a6e;color:white;padding:10px;margin-top:10px;}
+.section{font-weight:bold;margin-top:5px;}
 </style>
 
 <!-- ✅ Firebase -->
@@ -116,7 +88,7 @@ textarea{
 <button onclick="showCreate()">New REX</button>
 <button onclick="showSummary()">Summary</button>
 
-<!-- CREATE -->
+<!-- CREATE PAGE -->
 <div id="createPage" class="main">
 
 <input type="hidden" id="editId">
@@ -137,19 +109,17 @@ textarea{
 
 <div class="row">
 
-<!-- BEFORE -->
 <div style="flex:1">
 <div class="section">Before</div>
 <input type="file" id="before"><br>
-<img id="bImg"><br>
+<img id="bImg">
 <textarea id="beforeDesc" placeholder="Before Description"></textarea>
 </div>
 
-<!-- AFTER -->
 <div style="flex:1">
 <div class="section">After</div>
 <input type="file" id="after"><br>
-<img id="aImg"><br>
+<img id="aImg">
 <textarea id="afterDesc" placeholder="After Description"></textarea>
 </div>
 
@@ -159,7 +129,7 @@ textarea{
 <textarea id="impact"></textarea>
 
 <div class="takeaway">
-<textarea id="takeaway" placeholder="Key Takeaway"></textarea>
+<textarea id="takeaway" placeholder="Takeaway"></textarea>
 </div>
 
 <br>
@@ -178,31 +148,28 @@ firebase.initializeApp({
  authDomain:"rex-multi-user-file.firebaseapp.com",
  projectId:"rex-multi-user-file"
 });
-
 const db=firebase.firestore();
 
 /* Image */
-let beforeData="", afterData="";
+let beforeData="",afterData="";
 
 before.onchange=e=>{
  let r=new FileReader();
- r.onload=evt=>{beforeData=evt.target.result;bImg.src=beforeData;}
- r.readAsDataURL(e.target.files[0]);
+ r.onload=x=>{beforeData=x.target.result;bImg.src=beforeData}
+ r.readAsDataURL(e.target.files[0])
 };
-
 after.onchange=e=>{
  let r=new FileReader();
- r.onload=evt=>{afterData=evt.target.result;aImg.src=afterData;}
- r.readAsDataURL(e.target.files[0]);
+ r.onload=x=>{afterData=x.target.result;aImg.src=afterData}
+ r.readAsDataURL(e.target.files[0])
 };
 
 /* Save */
 function save(){
- let id=editId.value;
 
  let data={
   title:title.value,
-  cat:(cat.value||"Others").trim(),
+  cat:cat.value,
   before:beforeData,
   after:afterData,
   beforeDesc:beforeDesc.value,
@@ -213,17 +180,11 @@ function save(){
 
  if(!title.value) return alert("Enter title");
 
- if(id){
-  db.collection("rex").doc(id).update(data);
- }else{
-  db.collection("rex").add(data);
- }
-
+ db.collection("rex").add(data);
  alert("Saved");
- editId.value="";
 }
 
-/* Navigation */
+/* Nav */
 function showCreate(){
  createPage.style.display="block";
  summaryPage.style.display="none";
@@ -231,52 +192,45 @@ function showCreate(){
 function showSummary(){
  createPage.style.display="none";
  summaryPage.style.display="block";
- summaryPage.innerHTML="Loading...";
 }
 
-/* Load Data */
+/* Load */
 db.collection("rex").onSnapshot(snap=>{
 
- let data=[], count={};
+ let data=[],count={};
 
  snap.forEach(doc=>{
    let d=doc.data();
-   d.id=doc.id;
-
-   let c=(d.cat||"").trim()||"Others";
-   d.cat=c;
-
    data.push(d);
+
+   let c=d.cat||"Others";
    count[c]=(count[c]||0)+1;
  });
 
  if(summaryPage.style.display==="block"){
 
- let total=data.length;
-
- let html=`<h3 style="text-align:center">📊 Dashboard</h3>
+ let html=`<h3>📊 Dashboard</h3>
 
  <div class="kpiContainer">
-  <div class="kpi kpi1">Total REX<br>${total}</div>
-  <div class="kpi kpi2">Categories<br>${Object.keys(count).length}</div>
-  <div class="kpi kpi3">Displayed<br>${total}</div>
+ <div class="kpi kpi1">Total<br>${data.length}</div>
+ <div class="kpi kpi2">Categories<br>${Object.keys(count).length}</div>
+ <div class="kpi kpi3">Displayed<br>${data.length}</div>
  </div>
 
  <div class="summaryHeader">`;
 
  for(let c in count){
   html+=`<div class="catCard" onclick="filterCategory('${c}',this)">
-           ${c}<br>${count[c]}
-         </div>`;
+  ${c}<br>${count[c]}</div>`;
  }
 
  html+=`</div>
- <div class="chartBox"><canvas id="barChart"></canvas></div>
 
- <div style="text-align:center">
- <button onclick="showAll()">Show All</button>
- <button onclick="exportPDF()">Export PDF</button>
+ <div class="chartBox">
+ <canvas id="barChart" height="200"></canvas>
  </div>
+
+ <button onclick="showAll()">Show All</button>
 
  <div id="rexList"></div>`;
 
@@ -289,34 +243,39 @@ db.collection("rex").onSnapshot(snap=>{
  }
 });
 
-/* Chart */
+/* ✅ PIE CHART */
 function createChart(count){
 
+ let labels=Object.keys(count);
  let values=Object.values(count);
- let max=Math.max(...values)||1;
 
  let ctx=document.getElementById("barChart");
 
- if(window.chartObj) window.chartObj.destroy();
-
- window.chartObj=new Chart(ctx,{
-  type:"bar",
+ new Chart(ctx,{
+  type:"pie",
   data:{
-   labels:Object.keys(count),
-   datasets:[{data:values,backgroundColor:"#3b82f6"}]
+   labels:labels,
+   datasets:[{
+    data:values,
+    backgroundColor:[
+     '#3b82f6','#10b981','#f59e0b','#ef4444',
+     '#8b5cf6','#14b8a6','#f43f5e'
+    ]
+   }]
   },
+
   plugins:[ChartDataLabels],
+
   options:{
    plugins:{
-     legend:{display:false},
-     datalabels:{anchor:'end',align:'top',formatter:v=>v}
-   },
-   scales:{
-     y:{
-       beginAtZero:true,
-       suggestedMax:max+1,
-       ticks:{stepSize:1}
-     }
+    legend:{position:'bottom'},
+    datalabels:{
+      color:"#fff",
+      formatter:(v,ctx)=>{
+        let total=values.reduce((a,b)=>a+b,0);
+        return ((v/total)*100).toFixed(1)+"%";
+      }
+    }
    }
   }
  });
@@ -330,7 +289,6 @@ function renderList(data){
  <b>${d.title} (${d.cat})</b>
 
  <div class="row">
-
  <div style="flex:1">
  <div class="section">Before</div>
  <div class="box">${d.before?'<img src="'+d.before+'">':''}</div>
@@ -342,20 +300,13 @@ function renderList(data){
  <div class="box">${d.after?'<img src="'+d.after+'">':''}</div>
  <div>${d.afterDesc||""}</div>
  </div>
-
  </div>
 
- <div class="section">Impact</div>
  <div>${d.impact||""}</div>
 
  <div class="takeaway">${d.takeaway||""}</div>
-
- <button onclick="edit('${d.id}')">Edit</button>
- <button class="deleteBtn" onclick="del('${d.id}')">Delete</button>
-
  </div>`;
  });
-
  rexList.innerHTML=html;
 }
 
@@ -365,45 +316,7 @@ function filterCategory(cat,el){
  el.classList.add("activeCat");
  renderList(allData.filter(d=>d.cat===cat));
 }
-
-function showAll(){
- document.querySelectorAll('.catCard').forEach(x=>x.classList.remove("activeCat"));
- renderList(allData);
-}
-
-/* Edit/Delete */
-function edit(id){
- let d=allData.find(x=>x.id===id);
- showCreate();
-
- editId.value=id;
- title.value=d.title;
- cat.value=d.cat;
- beforeData=d.before||"";
- afterData=d.after||"";
- bImg.src=beforeData;
- aImg.src=afterData;
- beforeDesc.value=d.beforeDesc||"";
- afterDesc.value=d.afterDesc||"";
- impact.value=d.impact||"";
- takeaway.value=d.takeaway||"";
-}
-
-function del(id){
- if(confirm("Delete?")) db.collection("rex").doc(id).delete();
-}
-
-/* PDF */
-async function exportPDF(){
- const {jsPDF}=window.jspdf;
-
- let canvas=await html2canvas(rexList);
- let img=canvas.toDataURL("image/png");
-
- let pdf=new jsPDF();
- pdf.addImage(img,"PNG",0,0);
- pdf.save("REX_Report.pdf");
-}
+function showAll(){renderList(allData);}
 
 </script>
 
