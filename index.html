@@ -35,21 +35,53 @@ button{
 
 textarea{width:100%;margin-top:5px;}
 
+/* ✅ CATEGORY STYLE (MATCH YOUR IMAGE) */
 .summaryHeader{
   display:flex;
   flex-wrap:wrap;
-  gap:10px;
+  gap:12px;
   justify-content:center;
 }
+
 .catCard{
   background:#1e3a8a;
   color:white;
-  padding:8px 14px;
-  border-radius:25px;
+  min-width:110px;
+  padding:12px 16px;
+  border-radius:30px;
   cursor:pointer;
-}
-.activeCat{background:#059669 !important;}
 
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+
+  text-align:center;
+  box-shadow:0 3px 8px rgba(0,0,0,0.25);
+  transition:0.3s;
+}
+
+.catCard:hover{
+  transform:scale(1.05);
+  background:#2563eb;
+}
+
+.activeCat{
+  background:#059669 !important;
+  transform:scale(1.08);
+}
+
+.catName{
+  font-weight:bold;
+  font-size:14px;
+}
+
+.catCount{
+  font-size:16px;
+  margin-top:4px;
+}
+
+/* Chart */
 .chartWrapper{
   display:flex;
   justify-content:center;
@@ -60,6 +92,7 @@ textarea{width:100%;margin-top:5px;}
   height:350px;
 }
 
+/* Cards */
 .card{
   background:#f3f4f6;
   padding:10px;
@@ -91,15 +124,15 @@ textarea{width:100%;margin-top:5px;}
 }
 </style>
 
-<!-- ✅ Firebase -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-<!-- ✅ Chart -->
+<!-- Chart -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 
-<!-- ✅ PDF (RESTORED) -->
+<!-- PDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -116,6 +149,7 @@ textarea{width:100%;margin-top:5px;}
 <div id="createPage" class="main">
 
 <input type="hidden" id="editId">
+
 <input id="title" placeholder="Title"><br><br>
 
 <select id="cat">
@@ -132,6 +166,7 @@ textarea{width:100%;margin-top:5px;}
 <br><br>
 
 <div class="row">
+
 <div style="flex:1">
 <div class="section">Before</div>
 <input type="file" id="before"><br>
@@ -145,6 +180,7 @@ textarea{width:100%;margin-top:5px;}
 <img id="aImg">
 <textarea id="afterDesc"></textarea>
 </div>
+
 </div>
 
 <div class="section">Impact</div>
@@ -163,7 +199,6 @@ textarea{width:100%;margin-top:5px;}
 
 <script>
 
-/* Firebase */
 firebase.initializeApp({
  apiKey:"AIzaSyCPUL-TGaO2PY7zYC3d1Eyx6J2oHjHWoyE",
  authDomain:"rex-multi-user-file.firebaseapp.com",
@@ -184,7 +219,7 @@ function showSummary(){
  summaryPage.innerHTML="<h3 style='text-align:center'>Loading...</h3>";
 }
 
-/* Image */
+/* IMAGE */
 let beforeData="",afterData="";
 
 before.onchange=e=>{
@@ -199,7 +234,7 @@ after.onchange=e=>{
  r.readAsDataURL(e.target.files[0]);
 };
 
-/* SAVE + EDIT */
+/* SAVE */
 function save(){
 
  if(!title.value) return alert("Enter Title");
@@ -218,11 +253,9 @@ function save(){
  };
 
  if(id){
-  db.collection("rex").doc(id).update(data)
-   .then(()=>alert("Updated"));
+  db.collection("rex").doc(id).update(data).then(()=>alert("Updated"));
  }else{
-  db.collection("rex").add(data)
-   .then(()=>alert("Saved"));
+  db.collection("rex").add(data).then(()=>alert("Saved"));
  }
 
 }
@@ -247,8 +280,11 @@ db.collection("rex").onSnapshot(snap=>{
  <div class="summaryHeader">`;
 
  for(let c in count){
-  html+=`<div class="catCard" onclick="filterCategory('${c}',this)">
-   ${c}<br>${count[c]}</div>`;
+ html+=`
+  <div class="catCard" onclick="filterCategory('${c}',this)">
+   <div class="catName">${c}</div>
+   <div class="catCount">${count[c]}</div>
+  </div>`;
  }
 
  html+=`</div>
@@ -275,26 +311,22 @@ db.collection("rex").onSnapshot(snap=>{
  }
 });
 
-/* BAR CHART */
+/* CHART */
 function createChart(count){
 
  let values=Object.values(count);
- let labels=Object.keys(count);
  let max=Math.max(...values)||1;
-
- let colors=[
- '#3b82f6','#10b981','#f59e0b','#ef4444',
- '#8b5cf6','#14b8a6','#f97316','#6366f1'
- ];
 
  new Chart(document.getElementById("barChart"),{
   type:'bar',
   data:{
-   labels:labels,
+   labels:Object.keys(count),
    datasets:[{
     data:values,
-    backgroundColor:colors.slice(0,labels.length),
-    borderRadius:6
+    backgroundColor:[
+     '#3b82f6','#10b981','#f59e0b','#ef4444',
+     '#8b5cf6','#14b8a6','#f97316'
+    ]
    }]
   },
   plugins:[ChartDataLabels],
@@ -327,12 +359,12 @@ function showAll(){
  renderList(allData);
 }
 
-/* FULL DATA DISPLAY */
+/* RENDER */
 function renderList(data){
 
  let html="";
- data.forEach(d=>{
 
+ data.forEach(d=>{
  html+=`
  <div class="card">
 
@@ -398,19 +430,12 @@ function del(id){
  }
 }
 
-/* ✅ PDF EXPORT (RESTORED EXACTLY) */
+/* PDF */
 async function exportPDF(){
 
  const { jsPDF } = window.jspdf;
 
- let element=document.getElementById("rexList");
-
- if(!element){
-  alert("No data");
-  return;
- }
-
- let canvas=await html2canvas(element,{scale:2});
+ let canvas=await html2canvas(document.getElementById("rexList"),{scale:2});
  let img=canvas.toDataURL("image/png");
 
  let pdf=new jsPDF("p","mm","a4");
