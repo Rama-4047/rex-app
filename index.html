@@ -33,22 +33,19 @@ button{
 
 textarea{width:100%;margin-top:5px;}
 
-/* ✅ TITLE */
+/* CATEGORY */
 .sectionTitle{
  text-align:center;
  font-size:20px;
  font-weight:bold;
- margin-top:10px;
+ margin-bottom:10px;
 }
-
-/* ✅ CATEGORY */
 .summaryHeader{
  display:flex;
  flex-wrap:wrap;
  gap:20px;
  justify-content:center;
 }
-
 .timelineCard{
  position:relative;
  width:180px;
@@ -62,11 +59,9 @@ textarea{width:100%;margin-top:5px;}
  cursor:pointer;
  box-shadow:0 5px 15px rgba(0,0,0,0.3);
 }
-
 .timelineCard.activeCat{
  background:#059669;
 }
-
 .cornerCount{
  position:absolute;
  top:0;
@@ -77,7 +72,6 @@ textarea{width:100%;margin-top:5px;}
  font-weight:bold;
  border-radius:15px 0 10px 0;
 }
-
 .timelineTitle{
  font-weight:bold;
  text-align:center;
@@ -103,6 +97,7 @@ textarea{width:100%;margin-top:5px;}
  justify-content:center;
 }
 .box img{max-width:100%;max-height:100%;}
+.section{font-weight:bold;margin-top:5px;}
 .takeaway{background:#0c4a6e;color:white;padding:10px;margin-top:10px;}
 </style>
 
@@ -147,20 +142,26 @@ textarea{width:100%;margin-top:5px;}
 
 <div class="row">
 <div style="flex:1">
-Before <input type="file" id="before"><br>
+<div class="section">Before</div>
+<input type="file" id="before"><br>
 <img id="bImg">
 <textarea id="beforeDesc"></textarea>
 </div>
 
 <div style="flex:1">
-After <input type="file" id="after"><br>
+<div class="section">After</div>
+<input type="file" id="after"><br>
 <img id="aImg">
 <textarea id="afterDesc"></textarea>
 </div>
 </div>
 
+<div class="section">Impact</div>
 <textarea id="impact"></textarea>
-<div class="takeaway"><textarea id="takeaway"></textarea></div>
+
+<div class="takeaway">
+<textarea id="takeaway"></textarea>
+</div>
 
 <button onclick="save()">Save</button>
 </div>
@@ -171,10 +172,11 @@ After <input type="file" id="after"><br>
 <script>
 
 firebase.initializeApp({
- apiKey:"YOUR_API_KEY",
+ apiKey:"AIzaSyCPUL-TGaO2PY7zYC3d1Eyx6J2oHjHWoyE",
  authDomain:"rex-multi-user-file.firebaseapp.com",
  projectId:"rex-multi-user-file"
 });
+
 const db=firebase.firestore();
 
 /* NAV */
@@ -209,7 +211,7 @@ function save(){
 
  let data={
   title:title.value,
-  cat:cat.value || "Others",
+  cat:cat.value,
   before:beforeData,
   after:afterData,
   beforeDesc:beforeDesc.value,
@@ -219,9 +221,9 @@ function save(){
  };
 
  if(id){
-   db.collection("rex").doc(id).update(data).then(()=>alert("Updated"));
- } else {
-   db.collection("rex").add(data).then(()=>alert("Saved"));
+  db.collection("rex").doc(id).update(data).then(()=>alert("Updated"));
+ }else{
+  db.collection("rex").add(data).then(()=>alert("Saved"));
  }
 }
 
@@ -234,7 +236,7 @@ db.collection("rex").onSnapshot(snap=>{
   let d=doc.data();
   d.id=doc.id;
 
-  if(!d.cat) return;   // remove undefined
+  if(!d.cat) return;
 
   data.push(d);
   count[d.cat]=(count[d.cat]||0)+1;
@@ -258,13 +260,13 @@ db.collection("rex").onSnapshot(snap=>{
  html+=`</div>
 
  <div class="chartWrapper">
- <div class="chartBox"><canvas id="barChart"></canvas></div>
+ <div class="chartBox">
+ <canvas id="barChart"></canvas>
+ </div>
  </div>
 
- <div style="text-align:center">
  <button onclick="showAll()">Show All</button>
  <button onclick="exportPDF()">Export PDF</button>
- </div>
 
  <div id="rexList"></div>`;
 
@@ -277,46 +279,58 @@ db.collection("rex").onSnapshot(snap=>{
  }
 });
 
-/* ✅ FILTER (FIXED) */
+/* FILTER */
 function filterCategory(cat,el){
  document.querySelectorAll('.timelineCard').forEach(x=>x.classList.remove("activeCat"));
  el.classList.add("activeCat");
-
- let filtered=allData.filter(d=>d.cat===cat);
- renderList(filtered);
+ renderList(allData.filter(d=>d.cat===cat));
 }
 
-/* SHOW ALL */
 function showAll(){
  document.querySelectorAll('.timelineCard').forEach(x=>x.classList.remove("activeCat"));
  renderList(allData);
 }
 
-/* ✅ RENDER FULL CONTENT */
+/* ✅ FULL DISPLAY FIXED */
 function renderList(data){
+
  let html="";
+
  data.forEach(d=>{
  html+=`
  <div class="card">
  <b>${d.title} (${d.cat})</b>
 
  <div class="row">
+
+ <div style="flex:1">
+ <div class="section">Before</div>
  <div class="box">${d.before?'<img src="'+d.before+'">':''}</div>
- <div class="box">${d.after?'<img src="'+d.after+'">':''}</div>
+ <div>${d.beforeDesc||""}</div>
  </div>
 
- <div>${d.impact||""}</div>
- <div class="takeaway">${d.takeaway||""}</div>
+ <div style="flex:1">
+ <div class="section">After</div>
+ <div class="box">${d.after?'<img src="'+d.after+'">':''}</div>
+ <div>${d.afterDesc||""}</div>
+ </div>
+
+ </div>
+
+ <div><b>Impact</b><br>${d.impact||""}</div>
+
+ <div class="takeaway"><b>Takeaway</b><br>${d.takeaway||""}</div>
 
  <button onclick="edit('${d.id}')">Edit</button>
  <button class="deleteBtn" onclick="del('${d.id}')">Delete</button>
+
  </div>`;
  });
 
  rexList.innerHTML=html;
 }
 
-/* ✅ EDIT */
+/* EDIT */
 function edit(id){
  let d=allData.find(x=>x.id===id);
  showCreate();
@@ -337,7 +351,7 @@ function edit(id){
  takeaway.value=d.takeaway||"";
 }
 
-/* ✅ DELETE */
+/* DELETE */
 function del(id){
  if(confirm("Delete?")){
   db.collection("rex").doc(id).delete();
@@ -377,13 +391,12 @@ function createChart(count){
 /* PDF */
 async function exportPDF(){
  const {jsPDF}=window.jspdf;
-
  let canvas=await html2canvas(rexList,{scale:2});
  let img=canvas.toDataURL("image/png");
 
  let pdf=new jsPDF();
  pdf.addImage(img,"PNG",0,0,210,canvas.height*210/canvas.width);
- pdf.save("REX.pdf");
+ pdf.save("REX_Report.pdf");
 }
 
 </script>
