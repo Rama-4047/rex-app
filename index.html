@@ -18,11 +18,11 @@ button{padding:10px 15px;background:#155e95;color:white;border:none;margin:5px;c
 .takeaway{background:#0c4a6e;color:white;margin-top:10px;padding:10px;text-align:center;}
 </style>
 
-<!-- Firebase -->
+<!-- ✅ Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-<!-- ✅ PDF LIBRARY -->
+<!-- ✅ ✅ FIXED jsPDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 </head>
@@ -34,7 +34,7 @@ button{padding:10px 15px;background:#155e95;color:white;border:none;margin:5px;c
 <button onclick="showCreate()">New REX</button>
 <button onclick="showSummary()">Summary</button>
 
-<!-- CREATE PAGE -->
+<!-- CREATE -->
 <div id="createPage" class="main">
 
 <input id="title" placeholder="Title"><br><br>
@@ -73,6 +73,7 @@ button{padding:10px 15px;background:#155e95;color:white;border:none;margin:5px;c
 <div class="takeaway">
 <textarea id="takeaway"></textarea>
 </div>
+
 <br>
 <button onclick="save()">Save REX</button>
 
@@ -83,7 +84,7 @@ button{padding:10px 15px;background:#155e95;color:white;border:none;margin:5px;c
 
 <script>
 
-/* ✅ FIREBASE INIT */
+/* ✅ FIREBASE */
 firebase.initializeApp({
  apiKey: "AIzaSyCPUL-TGaO2PY7zYC3d1Eyx6J2oHjHWoyE",
  authDomain: "rex-multi-user-file.firebaseapp.com",
@@ -132,13 +133,13 @@ function save(){
    impact: document.getElementById("impact").value,
    takeaway: document.getElementById("takeaway").value
  }).then(function(){
-   alert("✅ Saved");
+   alert("✅ Saved Successfully");
  }).catch(function(e){
    alert(e.message);
  });
 }
 
-/* ✅ NAV */
+/* ✅ NAVIGATION */
 function showCreate(){
  document.getElementById("createPage").style.display="block";
  document.getElementById("summaryPage").style.display="none";
@@ -150,7 +151,7 @@ function showSummary(){
  loadData();
 }
 
-/* ✅ LOAD + CATEGORY COUNT */
+/* ✅ LOAD DATA + CATEGORY COUNT */
 function loadData(){
 
  db.collection("rex").get().then(function(snapshot){
@@ -243,7 +244,7 @@ function exportPDF(){
  const { jsPDF } = window.jspdf;
  let doc=new jsPDF();
 
- let data=window.currentFilter||window.allData;
+ let data=window.currentFilter || window.allData;
 
  let y=10;
 
@@ -254,7 +255,10 @@ function exportPDF(){
   doc.text("Impact: "+(d.impact||""),10,y); y+=6;
   doc.text("Takeaway: "+(d.takeaway||""),10,y); y+=10;
 
-  if(y>270){ doc.addPage(); y=10; }
+  if(y>270){
+   doc.addPage();
+   y=10;
+  }
 
  });
 
