@@ -30,7 +30,7 @@ body{
   margin-top:15px;
 }
 
-/* CATEGORY SMART */
+/* CATEGORY */
 .summaryHeader{
  display:flex;
  flex-wrap:wrap;
@@ -113,6 +113,16 @@ body{
  margin-top:5px;
 }
 
+/* ✅ TEXTAREA SIZE FIX */
+textarea{
+ width:100%;
+ margin-top:5px;
+}
+
+#impact, #takeaway{
+ height:120px;   /* ✅ SAME SIZE */
+}
+
 /* BUTTON */
 button{margin-top:5px;}
 .deleteBtn{background:red;color:white;}
@@ -136,12 +146,11 @@ button{margin-top:5px;}
 <!-- LIBRARIES -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 </head>
 
 <body>
@@ -186,8 +195,11 @@ After <input type="file" id="after"><br>
 </div>
 </div>
 
+<!-- ✅ IMPACT FIXED -->
+<div class="sectionTitle">Impact</div>
 <textarea id="impact"></textarea>
 
+<div class="sectionTitle">Takeaway</div>
 <div class="takeaway">
 <textarea id="takeaway"></textarea>
 </div>
@@ -199,14 +211,13 @@ After <input type="file" id="after"><br>
 <!-- SUMMARY -->
 <div id="summaryPage" class="main" style="display:none"></div>
 
-<!-- ZOOM -->
 <div id="imgModal" onclick="this.style.display='none'">
 <img id="zoomImg">
 </div>
 
 <script>
 
-/* FIREBASE */
+/* Firebase */
 firebase.initializeApp({
  apiKey:"AIzaSyCPUL-TGaO2PY7zYC3d1Eyx6J2oHjHWoyE",
  projectId:"rex-multi-user-file"
@@ -237,7 +248,7 @@ after.onchange=e=>{
  r.readAsDataURL(e.target.files[0]);
 };
 
-/* SAVE & EDIT */
+/* SAVE + EDIT */
 function save(){
  let id=editId.value;
 
@@ -270,10 +281,7 @@ db.collection("rex").onSnapshot(snap=>{
   let d=doc.data();
   d.id=doc.id;
   data.push(d);
-
-  if(d.cat){
-   count[d.cat]=(count[d.cat]||0)+1;
-  }
+  if(d.cat) count[d.cat]=(count[d.cat]||0)+1;
  });
 
  if(summaryPage.style.display==="block"){
@@ -311,20 +319,10 @@ function createChart(count){
  let labels=Object.keys(count);
  let values=Object.values(count);
 
- let colorMap={
-  "5S":"#3b82f6",
-  "Safety":"#10b981",
-  "Skill Development":"#f59e0b",
-  "Process Capability Improvement":"#ef4444",
-  "Automation":"#8b5cf6",
-  "Digitization":"#14b8a6",
-  "QMS":"#f97316",
-  "Others":"#6366f1"
- };
-
- let colors=labels.map(l=>{
-  return selectedCategory && l!==selectedCategory ? "#cbd5e1" : colorMap[l];
- });
+ let colors=[
+ '#3b82f6','#10b981','#f59e0b','#ef4444',
+ '#8b5cf6','#14b8a6','#f97316','#6366f1'
+ ];
 
  new Chart(barChart,{
   type:'bar',
@@ -333,9 +331,7 @@ function createChart(count){
   options:{
    onClick:(e,el)=>{
     if(el.length){
-     selectedCategory=labels[el[0].index];
-     filter(selectedCategory);
-     createChart(count);
+     filter(labels[el[0].index]);
     }
    }
   }
@@ -344,15 +340,10 @@ function createChart(count){
 
 /* FILTER */
 function filter(cat){
- selectedCategory=cat;
- document.querySelectorAll('.timelineCard').forEach(el=>{
-   el.classList.toggle('active', el.innerText.includes(cat));
- });
  renderList(allData.filter(d=>d.cat===cat));
 }
 
 function showAll(){
- selectedCategory=null;
  renderList(allData);
 }
 
@@ -370,7 +361,7 @@ function renderList(data){
  <div class="card">
 
  <b>${d.title}</b>
- <div style="color:#1e3a8a">Category: ${d.cat}</div>
+ <div>Category: ${d.cat}</div>
 
  <div class="row">
  <div style="flex:1">
@@ -400,7 +391,6 @@ function renderList(data){
  `).join('');
 }
 
-/* EDIT */
 function edit(id){
  let d=allData.find(x=>x.id===id);
  showCreate();
@@ -408,20 +398,16 @@ function edit(id){
  editId.value=id;
  title.value=d.title;
  cat.value=d.cat;
-
  beforeData=d.before;
  afterData=d.after;
-
  bImg.src=d.before;
  aImg.src=d.after;
-
  beforeDesc.value=d.beforeDesc;
  afterDesc.value=d.afterDesc;
  impact.value=d.impact;
  takeaway.value=d.takeaway;
 }
 
-/* DELETE */
 function del(id){
  if(confirm("Delete?")){
   db.collection("rex").doc(id).delete();
