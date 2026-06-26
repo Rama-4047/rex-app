@@ -31,23 +31,9 @@ body{
   font-weight:bold;
 }
 
-.btnNew{
-  background:#e5e7eb;
-  color:#1e3a8a;
-  padding:8px 16px;
-  border-radius:10px;
-  border:none;
-}
+.btnNew{background:#e5e7eb;color:#1e3a8a;padding:8px;border-radius:10px;}
+.btnSummary{background:transparent;border:2px solid white;color:white;padding:8px;border-radius:10px;}
 
-.btnSummary{
-  background:transparent;
-  border:2px solid white;
-  color:white;
-  padding:8px 16px;
-  border-radius:10px;
-}
-
-/* MAIN */
 .main{
   background:white;
   border-radius:12px;
@@ -61,33 +47,28 @@ body{
  display:flex;
  flex-wrap:wrap;
  justify-content:center;
- gap:20px;
+ gap:15px;
+ padding:10px;
  border-top:2px solid #94a3b8;
  border-bottom:2px solid #94a3b8;
- padding:15px 10px;
 }
 
 .timelineCard{
  background:#1e3a8a;
  color:white;
- padding:12px 20px;
+ padding:10px 18px;
  border-radius:30px;
  cursor:pointer;
  position:relative;
- min-width:140px;
+ min-width:150px;
  text-align:center;
 }
 
-.timelineCard:hover{
- background:#2563eb;
-}
-
-/* COUNT */
 .cornerCount{
  position:absolute;
  top:-8px;
  left:-8px;
- background:#e5e7eb;
+ background:#fff;
  color:black;
  padding:4px 8px;
  border-radius:10px;
@@ -95,79 +76,22 @@ body{
 }
 
 /* CHART */
-.chartWrapper{
- display:flex;
- justify-content:center;
-}
-.chartBox{
- width:80%;
- height:350px;
-}
+.chartWrapper{display:flex;justify-content:center;}
+.chartBox{width:80%;height:350px;}
 
-/* CARD */
-.card{
-  background:#f3f4f6;
-  padding:12px;
-  margin-top:10px;
-  border-radius:8px;
-}
+/* CARDS */
+.card{background:#f3f4f6;padding:10px;margin-top:10px;border-radius:8px;}
+.row{display:flex;gap:10px;}
+.box{height:150px;border:1px dashed #aaa;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.box img{max-width:100%;max-height:100%;}
 
-.row{
- display:flex;
- gap:10px;
-}
+/* DATA BOX */
+.descBox{background:#eef2ff;padding:8px;margin-top:5px;border-radius:6px;}
+.impactBox{background:#dbeafe;padding:8px;margin-top:5px;border-left:3px solid blue;}
+.takeaway{background:#0c4a6e;color:white;padding:8px;margin-top:5px;}
 
-.box{
- height:150px;
- border:1px dashed #aaa;
- display:flex;
- align-items:center;
- justify-content:center;
- cursor:pointer;
-}
-.box img{
- max-width:100%;
- max-height:100%;
-}
+.deleteBtn{background:red;color:white;}
 
-/* ✅ DESCRIPTION */
-.descBox{
- background:#eef2ff;
- padding:8px;
- margin-top:5px;
- border-radius:6px;
- font-size:13px;
-}
-
-/* ✅ IMPACT */
-.impactBox{
- background:#dbeafe;
- padding:10px;
- margin-top:10px;
- border-left:4px solid #2563eb;
- border-radius:6px;
-}
-
-/* ✅ TAKEAWAY */
-.takeaway{
- background:#0c4a6e;
- color:white;
- padding:10px;
- margin-top:10px;
- border-radius:6px;
-}
-
-.deleteBtn{
- background:#dc2626;
- color:white;
-}
-
-textarea{
- width:100%;
- margin-top:5px;
-}
-
-/* ✅ IMAGE ZOOM */
 #imgModal{
  display:none;
  position:fixed;
@@ -179,10 +103,9 @@ textarea{
  justify-content:center;
  align-items:center;
 }
-#imgModal img{
- max-width:90%;
- max-height:90%;
-}
+#imgModal img{max-width:90%;max-height:90%;}
+
+textarea{width:100%;}
 
 </style>
 
@@ -200,7 +123,6 @@ textarea{
 
 <body>
 
-<!-- HEADER -->
 <div class="headerBox">
   <div class="headerTitle">📊 REX Dashboard</div>
   <div>
@@ -209,15 +131,14 @@ textarea{
   </div>
 </div>
 
-<!-- CREATE -->
 <div id="createPage" class="main">
-<input type="hidden" id="editId">
-
 <input id="title" placeholder="Title"><br><br>
 
 <select id="cat">
 <option>5S</option>
 <option>Safety</option>
+<option>Skill Development</option>
+<option>Process Capability Improvement</option>
 <option>QMS</option>
 <option>Automation</option>
 <option>Digitization</option>
@@ -247,17 +168,14 @@ After <input type="file" id="after"><br>
 <button onclick="save()">Save</button>
 </div>
 
-<!-- SUMMARY -->
 <div id="summaryPage" class="main" style="display:none"></div>
 
-<!-- IMAGE MODAL -->
 <div id="imgModal" onclick="this.style.display='none'">
 <img id="zoomImg">
 </div>
 
 <script>
 
-/* FIREBASE */
 firebase.initializeApp({
  apiKey:"AIzaSyCPUL-TGaO2PY7zYC3d1Eyx6J2oHjHWoyE",
  projectId:"rex-multi-user-file"
@@ -270,6 +188,7 @@ function showCreate(){
  createPage.style.display="block";
  summaryPage.style.display="none";
 }
+
 function showSummary(){
  createPage.style.display="none";
  summaryPage.style.display="block";
@@ -303,30 +222,35 @@ function save(){
  });
 }
 
-/* LOAD */
+/* ✅ LOAD FIXED */
 db.collection("rex").onSnapshot(snap=>{
 
- let data=[],count={};
+ let data=[];
+ let count={};
 
  snap.forEach(doc=>{
   let d=doc.data();
   d.id=doc.id;
   data.push(d);
-  count[d.cat]=(count[d.cat]||0)+1;
+
+  if(d.cat){
+    count[d.cat]=(count[d.cat]||0)+1;
+  }
  });
 
  if(summaryPage.style.display==="block"){
 
  let html="<h3>Dashboard</h3>";
 
+ /* ✅ CATEGORY FIX */
  html+="<div class='summaryHeader'>";
- for(let c in count){
- html+=`
- <div class="timelineCard" onclick="filter('${c}')">
-  <div class="cornerCount">${count[c]}</div>
-  ${c}
- </div>`;
- }
+ Object.keys(count).forEach(c=>{
+  html+=`
+  <div class="timelineCard" onclick="filter('${c}')">
+   <div class="cornerCount">${count[c]}</div>
+   ${c}
+  </div>`;
+ });
  html+="</div>";
 
  html+=`
@@ -337,6 +261,7 @@ db.collection("rex").onSnapshot(snap=>{
  </div>
 
  <button onclick="showAll()">Show All</button>
+ <button onclick="exportPDF()">Export PDF</button>
 
  <div id="rexList"></div>`;
 
@@ -347,22 +272,23 @@ db.collection("rex").onSnapshot(snap=>{
  renderList(data);
  createChart(count);
  }
-
 });
 
-/* GRAPH INTERACTION */
+/* ✅ GRAPH FIX */
 function createChart(count){
 
  let labels=Object.keys(count);
  let values=Object.values(count);
 
- let colors=[
- '#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#14b8a6'
- ];
-
  new Chart(barChart,{
   type:'bar',
-  data:{labels:labels,datasets:[{data:values,backgroundColor:colors}]},
+  data:{
+   labels:labels,
+   datasets:[{
+    data:values,
+    backgroundColor:['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#14b8a6','#f97316']
+   }]
+  },
   plugins:[ChartDataLabels],
   options:{
    onClick:(e,el)=>{
@@ -375,7 +301,6 @@ function createChart(count){
  });
 }
 
-/* FILTER */
 function filter(cat){
  renderList(allData.filter(d=>d.cat===cat));
 }
@@ -393,9 +318,9 @@ function zoom(src){
 
 /* DISPLAY */
 function renderList(data){
+
  rexList.innerHTML=data.map(d=>`
  <div class="card">
-
  <b>${d.title}</b>
 
  <div class="row">
@@ -412,9 +337,20 @@ function renderList(data){
 
  <div class="impactBox">${d.impact||""}</div>
  <div class="takeaway">${d.takeaway||""}</div>
-
  </div>
  `).join('');
+}
+
+/* ✅ PDF RESTORED */
+async function exportPDF(){
+ const {jsPDF}=window.jspdf;
+
+ let canvas=await html2canvas(rexList);
+ let img=canvas.toDataURL("image/png");
+
+ let pdf=new jsPDF();
+ pdf.addImage(img,"PNG",0,0);
+ pdf.save("REX.pdf");
 }
 
 </script>
