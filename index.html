@@ -13,31 +13,22 @@ body{
   padding:20px;
 }
 
-/* ✅ HEADER (ONLY CHANGE) */
+/* HEADER - SAME */
 .headerBox{
   background:linear-gradient(90deg,#1e3a8a,#0ea5e9);
   padding:18px 25px;
   border-radius:15px;
-
   display:flex;
   justify-content:space-between;
   align-items:center;
-
   max-width:1100px;
   margin:auto;
-
-  box-shadow:0 8px 20px rgba(0,0,0,0.3);
 }
 
 .headerTitle{
   color:white;
   font-size:22px;
   font-weight:bold;
-}
-
-.headerBtns{
-  display:flex;
-  gap:10px;
 }
 
 .btnNew{
@@ -47,21 +38,14 @@ body{
   padding:8px 16px;
   border-radius:10px;
   font-weight:bold;
-  cursor:pointer;
 }
-
 .btnSummary{
   background:transparent;
   border:2px solid white;
   color:white;
   padding:8px 16px;
   border-radius:10px;
-  font-weight:bold;
-  cursor:pointer;
 }
-
-.btnNew:hover{background:white;}
-.btnSummary:hover{background:white;color:#1e3a8a;}
 
 /* MAIN */
 .main{
@@ -72,45 +56,47 @@ body{
   margin:20px auto;
 }
 
-button{
-  padding:10px;
-  margin:5px;
-  background:#2563eb;
-  color:white;
-  border:none;
-  border-radius:6px;
-}
-.deleteBtn{background:#dc2626;}
-
-textarea{width:100%;}
-
-/* CATEGORY */
+/* ✅ SMART ART STYLE */
 .summaryHeader{
- display:flex;
- flex-wrap:wrap;
- gap:10px;
- justify-content:center;
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:40px;
+  position:relative;
+}
+
+/* LINE CONNECTOR */
+.summaryHeader::before{
+  content:"";
+  position:absolute;
+  top:50%;
+  left:0;
+  right:0;
+  height:3px;
+  background:#94a3b8;
 }
 
 .timelineCard{
- background:#1e3a8a;
- color:white;
- padding:12px;
- border-radius:20px;
- cursor:pointer;
- position:relative;
- text-align:center;
+  position:relative;
+  background:#1e3a8a;
+  color:white;
+  padding:15px 25px;
+  border-radius:30px;
+  cursor:pointer;
+  z-index:1;
+  font-size:14px;
 }
-.timelineCard:hover{background:#2563eb;}
 
+/* COUNT BADGE */
 .cornerCount{
- position:absolute;
- top:-5px;
- left:-5px;
- background:white;
- color:black;
- padding:4px 8px;
- border-radius:10px;
+  position:absolute;
+  top:-10px;
+  left:-10px;
+  background:#e5e7eb;
+  color:black;
+  padding:5px 10px;
+  border-radius:12px;
+  font-weight:bold;
 }
 
 /* CHART */
@@ -125,10 +111,10 @@ textarea{width:100%;}
 
 /* CARDS */
 .card{
- background:#f3f4f6;
- padding:10px;
- margin-top:10px;
- border-radius:8px;
+  background:#f3f4f6;
+  padding:10px;
+  margin-top:10px;
+  border-radius:8px;
 }
 
 .row{
@@ -143,9 +129,10 @@ textarea{width:100%;}
  align-items:center;
  justify-content:center;
 }
-.box img{max-width:100%;max-height:100%;}
-
-.desc{font-size:13px;}
+.box img{
+ max-width:100%;
+ max-height:100%;
+}
 
 .takeaway{
  background:#0c4a6e;
@@ -154,15 +141,17 @@ textarea{width:100%;}
  margin-top:5px;
 }
 
+.deleteBtn{background:#dc2626;color:white;}
+
+textarea{width:100%;}
+
 </style>
 
 <!-- LIBRARIES -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -170,10 +159,9 @@ textarea{width:100%;}
 
 <body>
 
-<!-- ✅ HEADER -->
 <div class="headerBox">
   <div class="headerTitle">📊 REX Dashboard</div>
-  <div class="headerBtns">
+  <div>
     <button class="btnNew" onclick="showCreate()">+ New REX</button>
     <button class="btnSummary" onclick="showSummary()">Summary</button>
   </div>
@@ -181,7 +169,6 @@ textarea{width:100%;}
 
 <!-- CREATE -->
 <div id="createPage" class="main">
-
 <input type="hidden" id="editId">
 
 <input id="title" placeholder="Title"><br><br>
@@ -196,7 +183,6 @@ textarea{width:100%;}
 </select><br><br>
 
 <div class="row">
-
 <div style="flex:1">
 Before <input type="file" id="before"><br>
 <img id="bImg">
@@ -208,7 +194,6 @@ After <input type="file" id="after"><br>
 <img id="aImg">
 <textarea id="afterDesc"></textarea>
 </div>
-
 </div>
 
 <textarea id="impact"></textarea>
@@ -226,35 +211,31 @@ After <input type="file" id="after"><br>
 
 <script>
 
-/* Firebase */
 firebase.initializeApp({
  apiKey:"AIzaSyCPUL-TGaO2PY7zYC3d1Eyx6J2oHjHWoyE",
- authDomain:"rex-multi-user-file.firebaseapp.com",
  projectId:"rex-multi-user-file"
 });
 
 const db=firebase.firestore();
 
-/* NAV */
 function showCreate(){
  createPage.style.display="block";
  summaryPage.style.display="none";
 }
+
 function showSummary(){
  createPage.style.display="none";
  summaryPage.style.display="block";
- summaryPage.innerHTML="<h3>Loading...</h3>";
+ summaryPage.innerHTML="Loading...";
 }
 
 /* IMAGE */
 let beforeData="",afterData="";
-
 before.onchange=e=>{
  let r=new FileReader();
  r.onload=x=>{beforeData=x.target.result;bImg.src=beforeData;}
  r.readAsDataURL(e.target.files[0]);
 };
-
 after.onchange=e=>{
  let r=new FileReader();
  r.onload=x=>{afterData=x.target.result;aImg.src=afterData;}
@@ -263,10 +244,7 @@ after.onchange=e=>{
 
 /* SAVE */
 function save(){
-
- let id=editId.value;
-
- let data={
+ db.collection("rex").add({
   title:title.value,
   cat:cat.value,
   before:beforeData,
@@ -275,13 +253,7 @@ function save(){
   afterDesc:afterDesc.value,
   impact:impact.value,
   takeaway:takeaway.value
- };
-
- if(id){
-  db.collection("rex").doc(id).update(data).then(()=>alert("Updated"));
- }else{
-  db.collection("rex").add(data).then(()=>alert("Saved"));
- }
+ });
 }
 
 /* LOAD */
@@ -298,29 +270,17 @@ db.collection("rex").onSnapshot(snap=>{
 
  if(summaryPage.style.display==="block"){
 
- let html="<h3>Dashboard</h3>";
+ let html="<h3>Dashboard</h3><div class='summaryHeader'>";
 
- html+="<div class='summaryHeader'>";
  for(let c in count){
  html+=`
  <div class="timelineCard" onclick="filter('${c}')">
-  <div class="cornerCount">${count[c]}</div>
-  ${c}
+   <div class="cornerCount">${count[c]}</div>
+   ${c}
  </div>`;
  }
- html+="</div>";
 
- html+=`
- <div class="chartWrapper">
- <div class="chartBox">
- <canvas id="barChart"></canvas>
- </div>
- </div>
-
- <button onclick="showAll()">Show All</button>
- <button onclick="exportPDF()">Export PDF</button>
-
- <div id="rexList"></div>`;
+ html+="</div><canvas id='barChart'></canvas><div id='rexList'></div>";
 
  summaryPage.innerHTML=html;
 
@@ -329,38 +289,17 @@ db.collection("rex").onSnapshot(snap=>{
  renderList(data);
  createChart(count);
  }
-
 });
 
-/* MULTI COLOR CHART */
+/* CHART */
 function createChart(count){
-
- let labels=Object.keys(count);
- let values=Object.values(count);
-
- let colors=[
- '#3b82f6','#10b981','#f59e0b','#ef4444',
- '#8b5cf6','#14b8a6','#f97316','#6366f1'
- ];
-
  new Chart(barChart,{
   type:'bar',
   data:{
-   labels:labels,
-   datasets:[{
-    data:values,
-    backgroundColor:colors.slice(0,labels.length)
-   }]
+   labels:Object.keys(count),
+   datasets:[{data:Object.values(count)}]
   },
-  plugins:[ChartDataLabels],
-  options:{
-   onClick:(e,el)=>{
-    if(el.length){
-     let cat=labels[el[0].index];
-     filter(cat);
-    }
-   }
-  }
+  plugins:[ChartDataLabels]
  });
 }
 
@@ -368,79 +307,28 @@ function createChart(count){
 function filter(cat){
  renderList(allData.filter(d=>d.cat===cat));
 }
-function showAll(){renderList(allData);}
 
 /* DISPLAY */
 function renderList(data){
-
  rexList.innerHTML=data.map(d=>`
  <div class="card">
-
- <b>${d.title} (${d.cat})</b>
+ <b>${d.title}</b>
 
  <div class="row">
-
- <div style="flex:1">
  <div class="box">${d.before?'<img src="'+d.before+'">':''}</div>
- <div class="desc">${d.beforeDesc||""}</div>
- </div>
-
- <div style="flex:1">
  <div class="box">${d.after?'<img src="'+d.after+'">':''}</div>
- <div class="desc">${d.afterDesc||""}</div>
  </div>
 
- </div>
+ <div>${d.beforeDesc||""}</div>
+ <div>${d.afterDesc||""}</div>
 
- <div><b>Impact:</b> ${d.impact||""}</div>
-
- <div class="takeaway"><b>Takeaway:</b> ${d.takeaway||""}</div>
+ <div>${d.impact||""}</div>
+ <div class="takeaway">${d.takeaway||""}</div>
 
  <button onclick="edit('${d.id}')">Edit</button>
  <button class="deleteBtn" onclick="del('${d.id}')">Delete</button>
-
  </div>
  `).join('');
-}
-
-/* EDIT */
-function edit(id){
- let d=allData.find(x=>x.id===id);
-
- showCreate();
-
- editId.value=id;
- title.value=d.title;
- cat.value=d.cat;
-
- beforeData=d.before;
- afterData=d.after;
-
- bImg.src=d.before;
- aImg.src=d.after;
-
- beforeDesc.value=d.beforeDesc;
- afterDesc.value=d.afterDesc;
- impact.value=d.impact;
- takeaway.value=d.takeaway;
-}
-
-/* DELETE */
-function del(id){
- if(confirm("Delete?")){
-  db.collection("rex").doc(id).delete();
- }
-}
-
-/* PDF */
-async function exportPDF(){
- const {jsPDF}=window.jspdf;
- let canvas=await html2canvas(rexList);
- let img=canvas.toDataURL("image/png");
-
- let pdf=new jsPDF();
- pdf.addImage(img,"PNG",0,0);
- pdf.save("REX_Report.pdf");
 }
 
 </script>
