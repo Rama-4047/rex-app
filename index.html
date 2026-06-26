@@ -31,13 +31,15 @@ button{
   border-radius:6px;
   cursor:pointer;
 }
+.deleteBtn{background:#dc2626;}
+
+textarea{width:100%;margin-top:5px;}
 
 /* KPI */
 .kpiContainer{
   display:flex;
   justify-content:center;
   gap:20px;
-  margin-bottom:10px;
 }
 .kpi{
   width:200px;
@@ -63,26 +65,17 @@ button{
   padding:10px;
   border-radius:8px;
   cursor:pointer;
-  text-align:center;
 }
 .activeCat{background:#059669 !important;}
 
-/* ✅ CENTER GRAPH */
-.chartWrapper{
-  display:flex;
-  justify-content:center;
-  margin-top:20px;
-}
-
-.chartBox{
-  width:80%;
-  height:350px;
-}
+/* Chart */
+.chartWrapper{display:flex;justify-content:center;}
+.chartBox{width:80%;height:350px;}
 
 /* Cards */
 .card{
   background:#f8fafc;
-  padding:12px;
+  padding:10px;
   margin-top:10px;
   border-radius:8px;
 }
@@ -118,11 +111,62 @@ button{
 
 <body>
 
-<h2>📊 Dashboard</h2>
+<h2>📊 REX Dashboard</h2>
 
+<button onclick="showCreate()">New REX</button>
 <button onclick="showSummary()">Summary</button>
 
-<div id="summaryPage" class="main"></div>
+<!-- ✅ CREATE PAGE -->
+<div id="createPage" class="main">
+
+<input type="hidden" id="editId">
+
+<input id="title" placeholder="Title"><br><br>
+
+<select id="cat">
+<option>5S</option>
+<option>Safety</option>
+<option>QMS</option>
+<option>Automation</option>
+<option>Digitization</option>
+<option>Skill Development</option>
+<option>Process Capability Improvement</option>
+<option>Others</option>
+</select>
+
+<br><br>
+
+<div class="row">
+
+<div style="flex:1">
+<div class="section">Before</div>
+<input type="file" id="before"><br>
+<img id="bImg">
+<textarea id="beforeDesc"></textarea>
+</div>
+
+<div style="flex:1">
+<div class="section">After</div>
+<input type="file" id="after"><br>
+<img id="aImg">
+<textarea id="afterDesc"></textarea>
+</div>
+
+</div>
+
+<div class="section">Impact</div>
+<textarea id="impact"></textarea>
+
+<div class="takeaway">
+<textarea id="takeaway"></textarea>
+</div>
+
+<button onclick="save()">Save</button>
+
+</div>
+
+<!-- ✅ SUMMARY -->
+<div id="summaryPage" class="main" style="display:none"></div>
 
 <script>
 
@@ -135,20 +179,74 @@ firebase.initializeApp({
 
 const db=firebase.firestore();
 
-/* Load */
+/* NAV */
+function showCreate(){
+ createPage.style.display="block";
+ summaryPage.style.display="none";
+}
+
+function showSummary(){
+ createPage.style.display="none";
+ summaryPage.style.display="block";
+ summaryPage.innerHTML="<h3 style='text-align:center'>⏳ Loading...</h3>";
+}
+
+/* SAVE */
+let beforeData="",afterData="";
+
+before.onchange=e=>{
+ let r=new FileReader();
+ r.onload=x=>{beforeData=x.target.result;bImg.src=beforeData;}
+ r.readAsDataURL(e.target.files[0]);
+};
+
+after.onchange=e=>{
+ let r=new FileReader();
+ r.onload=x=>{afterData=x.target.result;aImg.src=afterData;}
+ r.readAsDataURL(e.target.files[0]);
+};
+
+function save(){
+
+ let id=editId.value;
+
+ let data={
+  title:title.value,
+  cat:cat.value,
+  before:beforeData,
+  after:afterData,
+  beforeDesc:beforeDesc.value,
+  afterDesc:afterDesc.value,
+  impact:impact.value,
+  takeaway:takeaway.value
+ };
+
+ if(id){
+  db.collection("rex").doc(id).update(data);
+  alert("Updated");
+ }else{
+  db.collection("rex").add(data);
+  alert("Saved");
+ }
+
+ editId.value="";
+}
+
+/* LOAD */
 db.collection("rex").onSnapshot(snap=>{
 
  let data=[],count={};
 
  snap.forEach(doc=>{
   let d=doc.data();
+  d.id=doc.id;
   data.push(d);
-
-  let c=(d.cat||"Others").trim();
-  count[c]=(count[c]||0)+1;
+  count[d.cat]=(count[d.cat]||0)+1;
  });
 
- let html=`<h3 style="text-align:center">Dashboard</h3>
+ if(summaryPage.style.display==="block"){
+
+ let html=`<h3>📊 Dashboard</h3>
 
  <div class="kpiContainer">
   <div class="kpi kpi1">Total<br>${data.length}</div>
@@ -160,16 +258,13 @@ db.collection("rex").onSnapshot(snap=>{
 
  for(let c in count){
   html+=`<div class="catCard" onclick="filterCategory('${c}',this)">
-   ${c}<br><b>${count[c]}</b>
-  </div>`;
+  ${c}<br><b>${count[c]}</b></div>`;
  }
 
  html+=`</div>
 
  <div class="chartWrapper">
-  <div class="chartBox">
-   <canvas id="barChart"></canvas>
-  </div>
+  <div class="chartBox"><canvas id="barChart"></canvas></div>
  </div>
 
  <div style="text-align:center">
@@ -185,75 +280,53 @@ db.collection("rex").onSnapshot(snap=>{
 
  renderList(data);
  createChart(count);
+ }
 });
 
-/* ✅ FILTER */
+/* FILTER */
 function filterCategory(cat,el){
-
- document.querySelectorAll('.catCard')
-   .forEach(x=>x.classList.remove("activeCat"));
-
+ document.querySelectorAll('.catCard').forEach(x=>x.classList.remove("activeCat"));
  el.classList.add("activeCat");
 
- let filtered = allData.filter(d=>
-   d.cat && d.cat.trim().toLowerCase() === cat.toLowerCase()
- );
-
+ let filtered=allData.filter(d=>d.cat===cat);
  renderList(filtered);
 }
 
 function showAll(){
- document.querySelectorAll('.catCard')
-   .forEach(x=>x.classList.remove("activeCat"));
  renderList(allData);
 }
 
-/* ✅ IMPROVED CHART */
+/* ✅ CHART */
 function createChart(count){
 
- let values = Object.values(count);
- let labels = Object.keys(count);
-
- let max = Math.max(...values);
- let suggestedMax = Math.ceil(max * 1.2);
-
- let step = Math.ceil(max/5) || 1;
+ let values=Object.values(count);
+ let max=Math.max(...values);
 
  let ctx=document.getElementById("barChart");
 
- if(window.chartObj) window.chartObj.destroy();
-
- window.chartObj=new Chart(ctx,{
+ new Chart(ctx,{
   type:'bar',
   data:{
-   labels:labels,
+   labels:Object.keys(count),
    datasets:[{
-     data:values,
-     backgroundColor:[
-      '#3b82f6','#10b981','#f59e0b','#ef4444',
-      '#8b5cf6','#14b8a6','#f97316'
-     ],
-     borderRadius:8,
-     barPercentage:0.6
+    data:values,
+    backgroundColor:[
+     '#3b82f6','#10b981','#f59e0b','#ef4444',
+     '#8b5cf6','#14b8a6','#f97316'
+    ]
    }]
   },
   plugins:[ChartDataLabels],
   options:{
-   responsive:true,
-   maintainAspectRatio:false,
    plugins:{
-     legend:{display:false},
-     datalabels:{
-       anchor:'end',
-       align:'top',
-       formatter:v=>v
-     }
+    legend:{display:false},
+    datalabels:{anchor:'end',align:'top'}
    },
    scales:{
     y:{
-      beginAtZero:true,
-      suggestedMax:suggestedMax,
-      ticks:{stepSize:step}
+     beginAtZero:true,
+     suggestedMax:Math.ceil(max*1.2),
+     ticks:{stepSize:Math.ceil(max/5)}
     }
    }
   }
@@ -271,45 +344,68 @@ function renderList(data){
  <b>${d.title} (${d.cat})</b>
 
  <div class="row">
-
  <div style="flex:1">
- <div class="section">Before</div>
+ Before
  <div class="box">${d.before?'<img src="'+d.before+'">':''}</div>
  <div>${d.beforeDesc||""}</div>
  </div>
 
  <div style="flex:1">
- <div class="section">After</div>
+ After
  <div class="box">${d.after?'<img src="'+d.after+'">':''}</div>
  <div>${d.afterDesc||""}</div>
  </div>
-
  </div>
 
- <div class="section">Impact</div>
  <div>${d.impact||""}</div>
-
  <div class="takeaway">${d.takeaway||""}</div>
+
+ <button onclick="edit('${d.id}')">Edit</button>
+ <button class="deleteBtn" onclick="del('${d.id}')">Delete</button>
  </div>`;
  });
 
  rexList.innerHTML=html;
 }
 
-/* ✅ PDF */
+/* ✅ EDIT */
+function edit(id){
+ let d=allData.find(x=>x.id===id);
+ showCreate();
+
+ editId.value=id;
+
+ title.value=d.title;
+ cat.value=d.cat;
+
+ beforeData=d.before;
+ afterData=d.after;
+
+ beforeDesc.value=d.beforeDesc;
+ afterDesc.value=d.afterDesc;
+ impact.value=d.impact;
+ takeaway.value=d.takeaway;
+
+ bImg.src=beforeData;
+ aImg.src=afterData;
+}
+
+/* ✅ DELETE */
+function del(id){
+ if(confirm("Delete?")){
+  db.collection("rex").doc(id).delete();
+ }
+}
+
+/* PDF */
 async function exportPDF(){
  const {jsPDF}=window.jspdf;
-
- let canvas=await html2canvas(rexList,{scale:2});
+ let canvas=await html2canvas(rexList);
  let img=canvas.toDataURL("image/png");
 
- let pdf=new jsPDF("p","mm","a4");
-
- let w=210;
- let h=canvas.height*w/canvas.width;
-
- pdf.addImage(img,"PNG",0,0,w,h);
- pdf.save("REX_Report.pdf");
+ let pdf=new jsPDF();
+ pdf.addImage(img,"PNG",0,0);
+ pdf.save("REX.pdf");
 }
 
 </script>
