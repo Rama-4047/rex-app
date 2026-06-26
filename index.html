@@ -22,11 +22,7 @@ body{
   margin:auto;
 }
 
-/* Title */
-h2{
-  text-align:center;
-  color:white;
-}
+h2{text-align:center;color:white;}
 
 /* Buttons */
 button{
@@ -58,7 +54,7 @@ button{
 .kpi2{background:#10b981;}
 .kpi3{background:#f59e0b;}
 
-/* Category cards */
+/* Category boxes */
 .summaryHeader{
   display:flex;
   flex-wrap:wrap;
@@ -75,11 +71,9 @@ button{
 
 /* Chart */
 .chartBox{
-  height:320px;
-  background:white;
-  padding:15px;
+  height:350px;
+  padding:10px;
   margin-top:15px;
-  border-radius:10px;
 }
 
 /* Cards */
@@ -103,10 +97,7 @@ button{
 
 .section{font-weight:bold;margin-top:5px;}
 
-textarea{
-  width:100%;
-  margin-top:5px;
-}
+textarea{width:100%;margin-top:5px;}
 
 .takeaway{
   background:#0c4a6e;
@@ -158,6 +149,7 @@ textarea{
 <br><br>
 
 <div class="row">
+
 <div style="flex:1">
 <div class="section">Before</div>
 <input type="file" id="before"><br>
@@ -171,6 +163,7 @@ textarea{
 <img id="aImg">
 <textarea id="afterDesc" placeholder="After Description"></textarea>
 </div>
+
 </div>
 
 <div class="section">Impact</div>
@@ -198,7 +191,7 @@ firebase.initializeApp({
 });
 const db=firebase.firestore();
 
-/* Image */
+/* Images */
 let beforeData="",afterData="";
 
 before.onchange=e=>{
@@ -265,18 +258,16 @@ db.collection("rex").onSnapshot(snap=>{
  <div class="summaryHeader">`;
 
  for(let c in count){
-  html+=`<div class="catCard" onclick="filterCategory('${c}',this)">
-  ${c}<br>${count[c]}</div>`;
+  html+=`<div class="catCard">${c}<br>${count[c]}</div>`;
  }
 
  html+=`</div>
 
  <div class="chartBox">
- <canvas id="barChart"></canvas>
+  <canvas id="barChart"></canvas>
  </div>
 
  <div style="text-align:center">
-  <button onclick="showAll()">Show All</button>
   <button onclick="exportPDF()">Export PDF</button>
  </div>
 
@@ -284,62 +275,73 @@ db.collection("rex").onSnapshot(snap=>{
 
  summaryPage.innerHTML=html;
 
- window.allData=data;
-
  renderList(data);
  createChart(count);
  }
 });
 
-/* ✅ PROFESSIONAL BAR CHART */
+/* ✅ FINAL PROFESSIONAL BAR CHART */
 function createChart(count){
 
- let labels=Object.keys(count);
- let values=Object.values(count);
+ let labels = Object.keys(count);
+ let values = Object.values(count);
 
- let max=Math.max(...values);
- let suggestedMax=max+Math.ceil(max*0.2);
+ let colors = [
+  '#3b82f6','#10b981','#f59e0b','#ef4444',
+  '#8b5cf6','#14b8a6','#f97316','#6366f1'
+ ];
+
+ let max = Math.max(...values);
+ let suggestedMax = Math.ceil(max * 1.25);
 
  let ctx=document.getElementById("barChart");
 
  if(window.chartObj) window.chartObj.destroy();
 
  window.chartObj=new Chart(ctx,{
-  type:"bar",
+  type:'bar',
   data:{
    labels:labels,
    datasets:[{
      data:values,
-     backgroundColor:"#3b82f6",
-     borderRadius:8,
-     barThickness:35
+     backgroundColor:colors.slice(0,values.length),
+     borderRadius:10,
+     barPercentage:0.6,
+     categoryPercentage:0.6
    }]
   },
   plugins:[ChartDataLabels],
   options:{
-    responsive:true,
-    maintainAspectRatio:false,
+   responsive:true,
+   maintainAspectRatio:false,
 
-    plugins:{
-      legend:{display:false},
-      datalabels:{
-        anchor:'end',
-        align:'top',
-        font:{weight:'bold'}
+   plugins:{
+     legend:{display:false},
+     datalabels:{
+       anchor:'end',
+       align:'top',
+       font:{weight:'bold'},
+       formatter:v=>v
+     }
+   },
+
+   scales:{
+    x:{
+      grid:{display:false},
+      ticks:{
+        font:{size:11,weight:'bold'},
+        callback:function(val){
+          let label=this.getLabelForValue(val);
+          return label.length>15 ? label.split(" ") : label;
+        }
       }
     },
-
-    scales:{
-      x:{
-        grid:{display:false},
-        ticks:{font:{weight:'bold'}}
-      },
-      y:{
-        beginAtZero:true,
-        suggestedMax:suggestedMax,
-        ticks:{stepSize:Math.ceil(max/5)||1}
-      }
+    y:{
+      beginAtZero:true,
+      suggestedMax:suggestedMax,
+      ticks:{stepSize:Math.ceil(max/5)||1}
     }
+   }
   }
  });
 }
@@ -353,13 +355,13 @@ function renderList(data){
 
  <div class="row">
  <div style="flex:1">
- <div class="section">Before</div>
+ Before
  <div class="box">${d.before?'<img src="'+d.before+'">':''}</div>
  <div>${d.beforeDesc||""}</div>
  </div>
 
  <div style="flex:1">
- <div class="section">After</div>
+ After
  <div class="box">${d.after?'<img src="'+d.after+'">':''}</div>
  <div>${d.afterDesc||""}</div>
  </div>
@@ -373,31 +375,19 @@ function renderList(data){
  rexList.innerHTML=html;
 }
 
-/* Filter */
-function filterCategory(cat,el){
- document.querySelectorAll('.catCard').forEach(x=>x.classList.remove("activeCat"));
- el.classList.add("activeCat");
- renderList(allData.filter(d=>d.cat===cat));
-}
-
-function showAll(){
- renderList(allData);
-}
-
-/* ✅ PDF EXPORT */
+/* ✅ PDF */
 async function exportPDF(){
-
  const { jsPDF } = window.jspdf;
 
- const canvas = await html2canvas(document.getElementById("rexList"),{scale:2});
- const imgData = canvas.toDataURL("image/png");
+ let canvas = await html2canvas(document.getElementById("rexList"),{scale:2});
+ let img = canvas.toDataURL("image/png");
 
  let pdf = new jsPDF("p","mm","a4");
 
  let w=210;
  let h=canvas.height*w/canvas.width;
 
- pdf.addImage(imgData,"PNG",0,0,w,h);
+ pdf.addImage(img,"PNG",0,0,w,h);
  pdf.save("REX_Report.pdf");
 }
 
