@@ -22,7 +22,7 @@ button{padding:10px 15px;background:#155e95;color:white;border:none;margin:5px;c
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-<!-- ✅ PDF -->
+<!-- ✅ ✅ PDF Libraries (CORRECT LINKS) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -85,7 +85,7 @@ button{padding:10px 15px;background:#155e95;color:white;border:none;margin:5px;c
 
 <script>
 
-/* ✅ FIREBASE */
+/* ✅ FIREBASE INIT */
 firebase.initializeApp({
  apiKey: "AIzaSyCPUL-TGaO2PY7zYC3d1Eyx6J2oHjHWoyE",
  authDomain: "rex-multi-user-file.firebaseapp.com",
@@ -94,7 +94,7 @@ firebase.initializeApp({
 
 const db = firebase.firestore();
 
-/* ✅ IMAGE */
+/* ✅ IMAGE HANDLE */
 let beforeData="", afterData="";
 
 document.getElementById("before").onchange = function(e){
@@ -126,7 +126,7 @@ function save(){
 
  db.collection("rex").add({
    title:title,
-   cat:document.getElementById("cat").value.trim(),  // ✅ FIX
+   cat:(document.getElementById("cat").value || "Others").trim(),
    before:beforeData,
    after:afterData,
    beforeDesc:document.getElementById("beforeDesc").value,
@@ -134,11 +134,11 @@ function save(){
    impact:document.getElementById("impact").value,
    takeaway:document.getElementById("takeaway").value
  }).then(function(){
-   alert("✅ Saved");
+   alert("✅ Saved Successfully");
  });
 }
 
-/* ✅ NAV */
+/* ✅ NAVIGATION */
 function showCreate(){
  document.getElementById("createPage").style.display="block";
  document.getElementById("summaryPage").style.display="none";
@@ -150,7 +150,7 @@ function showSummary(){
  loadData();
 }
 
-/* ✅ LOAD DATA */
+/* ✅ LOAD DATA (FINAL FIX FOR OTHERS) */
 function loadData(){
 
  db.collection("rex").get().then(function(snapshot){
@@ -161,12 +161,17 @@ function loadData(){
   snapshot.forEach(function(doc){
 
    let d=doc.data();
-   d.cat=(d.cat||"Others").trim(); // ✅ FIX
+
+   // ✅ STRICT CLEANING
+   let cleanCat = (d.cat || "").trim();
+   if(cleanCat === "" || cleanCat === null) cleanCat = "Others";
+
+   d.cat = cleanCat;
 
    data.push(d);
 
-   if(!count[d.cat]) count[d.cat]=0;
-   count[d.cat]++;
+   if(!count[cleanCat]) count[cleanCat]=0;
+   count[cleanCat]++;
   });
 
   let html="<h3>Category Summary</h3>";
@@ -223,12 +228,15 @@ function renderList(data){
  document.getElementById("rexList").innerHTML=html;
 }
 
-/* ✅ FILTER (FINAL FIX) */
+/* ✅ FILTER (FINAL FIXED) */
 function filterCategory(cat){
 
- let f = window.allData.filter(d =>
-   (d.cat || "").trim().toLowerCase() === cat.trim().toLowerCase()
- );
+ let f = window.allData.filter(d => {
+   let c = (d.cat || "").trim();
+   if(c === "" || c === null) c = "Others";
+
+   return c.toLowerCase() === cat.toLowerCase();
+ });
 
  window.currentFilter = f;
  renderList(f);
@@ -239,7 +247,7 @@ function showAll(){
  renderList(window.allData);
 }
 
-/* ✅ HIGH QUALITY PDF */
+/* ✅ ✅ HIGH QUALITY PDF */
 async function exportPDF(){
 
  const { jsPDF } = window.jspdf;
@@ -254,10 +262,9 @@ async function exportPDF(){
 
  let imgWidth=210;
  let pageHeight=295;
-
  let imgHeight=canvas.height*imgWidth/canvas.width;
- let heightLeft=imgHeight;
 
+ let heightLeft=imgHeight;
  let position=0;
 
  pdf.addImage(imgData,'PNG',0,position,imgWidth,imgHeight);
