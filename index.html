@@ -39,16 +39,11 @@ body{
  cursor:pointer;
  position:relative;
 }
-.timelineCard.active{ background:#22c55e; }
+.timelineCard.active{background:#22c55e;}
 .cornerCount{
- position:absolute;
- top:-6px;
- left:-6px;
- background:white;
- color:black;
- padding:3px 6px;
- border-radius:8px;
- font-size:12px;
+ position:absolute;top:-6px;left:-6px;
+ background:white;color:black;padding:3px 6px;
+ border-radius:8px;font-size:12px;
 }
 .chartWrapper{display:flex;justify-content:center;margin-top:10px;}
 .chartBox{width:50%;height:260px;}
@@ -60,11 +55,8 @@ body{
 }
 .row{display:flex;gap:10px;}
 .box{
- height:140px;
- border:1px dashed #aaa;
- display:flex;
- justify-content:center;
- align-items:center;
+ height:140px;border:1px dashed #aaa;
+ display:flex;justify-content:center;align-items:center;
  cursor:pointer;
 }
 .box img{max-width:100%;max-height:100%;}
@@ -73,14 +65,14 @@ body{
 .impactBox{background:#dbeafe;padding:8px;margin-top:5px;border-left:4px solid blue;}
 .takeaway{background:#0c4a6e;color:white;padding:8px;margin-top:5px;}
 #imgModal{
- display:none;
- position:fixed;
- width:100%;height:100%;
+ display:none;position:fixed;width:100%;height:100%;
  background:rgba(0,0,0,0.8);
- justify-content:center;
- align-items:center;
+ justify-content:center;align-items:center;
 }
 #imgModal img{max-width:90%;max-height:90%;}
+.btn{margin-top:8px;}
+.deleteBtn{background:red;color:white;}
+.editBtn{background:orange;color:white;}
 textarea{width:100%;}
 </style>
 
@@ -104,10 +96,11 @@ textarea{width:100%;}
  </div>
 </div>
 
-<!-- CREATE PAGE -->
+<!-- CREATE -->
 <div id="createPage" class="main">
 
 <input type="hidden" id="editId">
+
 <input id="title" placeholder="Title"><br><br>
 
 <select id="cat">
@@ -181,12 +174,14 @@ function showSummary(){
 
 /* IMAGE */
 let beforeData="",afterData="";
+
 before.onchange=e=>{
  if(!e.target.files[0]) return;
  let r=new FileReader();
  r.onload=x=>{beforeData=x.target.result;bImg.src=beforeData;}
  r.readAsDataURL(e.target.files[0]);
 };
+
 after.onchange=e=>{
  if(!e.target.files[0]) return;
  let r=new FileReader();
@@ -194,9 +189,10 @@ after.onchange=e=>{
  r.readAsDataURL(e.target.files[0]);
 };
 
-/* SAVE */
+/* ✅ SAVE (ADD + UPDATE) */
 async function save(){
- await db.collection("rex").add({
+
+ let data={
   title:title.value,
   cat:cat.value,
   before:beforeData,
@@ -205,7 +201,16 @@ async function save(){
   afterDesc:afterDesc.value,
   impact:impact.value,
   takeaway:takeaway.value
- });
+ };
+
+ if(editId.value){
+  await db.collection("rex").doc(editId.value).update(data);
+  alert("Updated ✅");
+ }else{
+  await db.collection("rex").add(data);
+  alert("Saved ✅");
+ }
+
  clearForm();
  showSummary();
 }
@@ -218,6 +223,7 @@ function clearForm(){
  takeaway.value="";
  beforeData=""; afterData="";
  bImg.src=""; aImg.src="";
+ editId.value="";
 }
 
 /* LOAD */
@@ -227,6 +233,7 @@ db.collection("rex").onSnapshot(snap=>{
 
  snap.forEach(doc=>{
   let d=doc.data();
+  d.id = doc.id;
   allData.push(d);
   count[d.cat]=(count[d.cat]||0)+1;
  });
@@ -242,7 +249,8 @@ function renderSummary(count){
  html+="<div class='summaryHeader'>";
  Object.keys(count).forEach(c=>{
  html+=`
- <div class="timelineCard ${selectedCategory===c?'active':''}" onclick="selectCategory('${c}')">
+ <div class="timelineCard ${selectedCategory===c?'active':''}"
+ onclick="selectCategory('${c}')">
  <div class="cornerCount">${count[c]}</div>${c}
  </div>`;
  });
@@ -281,7 +289,7 @@ function getCounts(){
  return c;
 }
 
-/* ✅ POWER BI STYLE GRAPH */
+/* GRAPH */
 function renderChart(count){
 
  let labels=Object.keys(count);
@@ -308,14 +316,16 @@ function renderChart(count){
  });
 }
 
-/* DISPLAY */
+/* ✅ DISPLAY WITH EDIT + DELETE */
 function renderList(){
+
  let list=selectedCategory
   ? allData.filter(d=>d.cat===selectedCategory)
   : allData;
 
  rexList.innerHTML=list.map(d=>`
  <div class="card">
+
  <b>${d.title}</b>
  <div>Category: ${d.cat}</div>
 
@@ -339,8 +349,43 @@ function renderList(){
 
  <div class="impactBox">${d.impact||""}</div>
  <div class="takeaway">${d.takeaway||""}</div>
+
+ <button class="btn editBtn" onclick="editREX('${d.id}')">Edit</button>
+ <button class="btn deleteBtn" onclick="deleteREX('${d.id}')">Delete</button>
+
  </div>
  `).join('');
+}
+
+/* ✅ EDIT */
+function editREX(id){
+
+ let d = allData.find(x => x.id === id);
+
+ title.value = d.title;
+ cat.value = d.cat;
+ beforeData = d.before;
+ afterData = d.after;
+ bImg.src = d.before;
+ aImg.src = d.after;
+ beforeDesc.value = d.beforeDesc;
+ afterDesc.value = d.afterDesc;
+ impact.value = d.impact;
+ takeaway.value = d.takeaway;
+
+ editId.value = id;
+
+ showCreate();
+}
+
+/* ✅ DELETE */
+async function deleteREX(id){
+
+ if(!confirm("Delete this REX?")) return;
+
+ await db.collection("rex").doc(id).delete();
+
+ alert("Deleted ✅");
 }
 
 /* ZOOM */
@@ -350,13 +395,12 @@ function zoom(src){
  imgModal.style.display="flex";
 }
 
-/* ✅ PDF EXPORT FIX */
+/* PDF */
 async function exportPDF(){
 
  const {jsPDF}=window.jspdf;
 
  let canvas=await html2canvas(rexList,{scale:2});
-
  let img=canvas.toDataURL("image/png");
 
  let pdf=new jsPDF("p","mm","a4");
