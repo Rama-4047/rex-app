@@ -35,21 +35,23 @@ button{
 
 textarea{width:100%;margin-top:5px;}
 
-/* ✅ CATEGORY STYLE (MATCH YOUR IMAGE) */
+/* ✅ PREMIUM CATEGORY UI */
 .summaryHeader{
   display:flex;
   flex-wrap:wrap;
-  gap:12px;
+  gap:16px;
   justify-content:center;
+  margin-top:15px;
 }
 
 .catCard{
-  background:#1e3a8a;
+  background:linear-gradient(145deg,#243b8a,#1e3a8a);
   color:white;
-  min-width:110px;
-  padding:12px 16px;
-  border-radius:30px;
-  cursor:pointer;
+
+  min-width:140px;
+  padding:14px 18px;
+
+  border-radius:40px;
 
   display:flex;
   flex-direction:column;
@@ -57,28 +59,34 @@ textarea{width:100%;margin-top:5px;}
   justify-content:center;
 
   text-align:center;
-  box-shadow:0 3px 8px rgba(0,0,0,0.25);
-  transition:0.3s;
+  cursor:pointer;
+
+  box-shadow:
+    4px 4px 12px rgba(0,0,0,0.25),
+    -2px -2px 6px rgba(255,255,255,0.1);
+
+  transition:all 0.3s ease;
 }
 
 .catCard:hover{
-  transform:scale(1.05);
-  background:#2563eb;
+  transform:translateY(-4px) scale(1.05);
+  box-shadow:6px 6px 15px rgba(0,0,0,0.3);
 }
 
 .activeCat{
-  background:#059669 !important;
+  background:linear-gradient(145deg,#059669,#047857) !important;
   transform:scale(1.08);
 }
 
 .catName{
-  font-weight:bold;
   font-size:14px;
+  font-weight:600;
 }
 
 .catCount{
-  font-size:16px;
-  margin-top:4px;
+  font-size:18px;
+  font-weight:bold;
+  margin-top:5px;
 }
 
 /* Chart */
@@ -257,7 +265,6 @@ function save(){
  }else{
   db.collection("rex").add(data).then(()=>alert("Saved"));
  }
-
 }
 
 /* LOAD */
@@ -332,10 +339,6 @@ function createChart(count){
   plugins:[ChartDataLabels],
   options:{
    maintainAspectRatio:false,
-   plugins:{
-    legend:{display:false},
-    datalabels:{anchor:'end',align:'top'}
-   },
    scales:{
     y:{
      beginAtZero:true,
@@ -388,9 +391,7 @@ function renderList(data){
 
  <div><b>Impact</b><br>${d.impact||""}</div>
 
- <div class="takeaway">
- <b>Takeaway</b><br>${d.takeaway||""}
- </div>
+ <div class="takeaway"><b>Takeaway</b><br>${d.takeaway||""}</div>
 
  <button onclick="edit('${d.id}')">Edit</button>
  <button class="deleteBtn" onclick="del('${d.id}')">Delete</button>
@@ -432,14 +433,11 @@ function del(id){
 
 /* PDF */
 async function exportPDF(){
-
  const { jsPDF } = window.jspdf;
-
  let canvas=await html2canvas(document.getElementById("rexList"),{scale:2});
  let img=canvas.toDataURL("image/png");
 
  let pdf=new jsPDF("p","mm","a4");
-
  let w=210;
  let h=canvas.height*w/canvas.width;
 
