@@ -35,58 +35,60 @@ button{
 
 textarea{width:100%;margin-top:5px;}
 
-/* ✅ PREMIUM CATEGORY UI */
+/* ✅ TIMELINE CATEGORY UI */
 .summaryHeader{
   display:flex;
   flex-wrap:wrap;
-  gap:16px;
+  gap:20px;
   justify-content:center;
-  margin-top:15px;
 }
 
-.catCard{
-  background:linear-gradient(145deg,#243b8a,#1e3a8a);
+.timelineCard{
+  position:relative;
+  width:180px;
+  height:110px;
+  background:#1e3a8a;
   color:white;
-
-  min-width:140px;
-  padding:14px 18px;
-
-  border-radius:40px;
-
+  border-radius:15px;
   display:flex;
-  flex-direction:column;
   align-items:center;
   justify-content:center;
-
-  text-align:center;
+  box-shadow:0 6px 15px rgba(0,0,0,0.3);
   cursor:pointer;
-
-  box-shadow:
-    4px 4px 12px rgba(0,0,0,0.25),
-    -2px -2px 6px rgba(255,255,255,0.1);
-
-  transition:all 0.3s ease;
+  transition:0.3s;
 }
 
-.catCard:hover{
-  transform:translateY(-4px) scale(1.05);
-  box-shadow:6px 6px 15px rgba(0,0,0,0.3);
+.timelineCard:hover{
+ transform:translateY(-5px) scale(1.05);
+}
+
+.cornerCount{
+  position:absolute;
+  top:0;
+  left:0;
+  background:#e5e7eb;
+  color:#111;
+  padding:6px 10px;
+  font-weight:bold;
+  border-radius:15px 0 10px 0;
+}
+
+.timelineContent{
+ text-align:center;
+}
+
+.timelineTitle{
+ font-size:16px;
+ font-weight:bold;
+}
+
+.timelineText{
+ font-size:12px;
+ opacity:0.8;
 }
 
 .activeCat{
-  background:linear-gradient(145deg,#059669,#047857) !important;
-  transform:scale(1.08);
-}
-
-.catName{
-  font-size:14px;
-  font-weight:600;
-}
-
-.catCount{
-  font-size:18px;
-  font-weight:bold;
-  margin-top:5px;
+  background:#059669 !important;
 }
 
 /* Chart */
@@ -155,9 +157,7 @@ textarea{width:100%;margin-top:5px;}
 
 <!-- CREATE -->
 <div id="createPage" class="main">
-
 <input type="hidden" id="editId">
-
 <input id="title" placeholder="Title"><br><br>
 
 <select id="cat">
@@ -174,7 +174,6 @@ textarea{width:100%;margin-top:5px;}
 <br><br>
 
 <div class="row">
-
 <div style="flex:1">
 <div class="section">Before</div>
 <input type="file" id="before"><br>
@@ -188,7 +187,6 @@ textarea{width:100%;margin-top:5px;}
 <img id="aImg">
 <textarea id="afterDesc"></textarea>
 </div>
-
 </div>
 
 <div class="section">Impact</div>
@@ -199,7 +197,6 @@ textarea{width:100%;margin-top:5px;}
 </div>
 
 <button onclick="save()">Save</button>
-
 </div>
 
 <!-- SUMMARY -->
@@ -216,11 +213,7 @@ firebase.initializeApp({
 const db=firebase.firestore();
 
 /* NAV */
-function showCreate(){
- createPage.style.display="block";
- summaryPage.style.display="none";
-}
-
+function showCreate(){createPage.style.display="block";summaryPage.style.display="none";}
 function showSummary(){
  createPage.style.display="none";
  summaryPage.style.display="block";
@@ -229,13 +222,11 @@ function showSummary(){
 
 /* IMAGE */
 let beforeData="",afterData="";
-
 before.onchange=e=>{
  let r=new FileReader();
  r.onload=x=>{beforeData=x.target.result;bImg.src=beforeData;}
  r.readAsDataURL(e.target.files[0]);
 };
-
 after.onchange=e=>{
  let r=new FileReader();
  r.onload=x=>{afterData=x.target.result;aImg.src=afterData;}
@@ -244,7 +235,6 @@ after.onchange=e=>{
 
 /* SAVE */
 function save(){
-
  if(!title.value) return alert("Enter Title");
 
  let id=editId.value;
@@ -269,13 +259,10 @@ function save(){
 
 /* LOAD */
 db.collection("rex").onSnapshot(snap=>{
-
  let data=[],count={};
 
  snap.forEach(doc=>{
-  let d=doc.data();
-  d.id=doc.id;
-
+  let d=doc.data(); d.id=doc.id;
   data.push(d);
   count[d.cat]=(count[d.cat]||0)+1;
  });
@@ -283,28 +270,28 @@ db.collection("rex").onSnapshot(snap=>{
  if(summaryPage.style.display==="block"){
 
  let html=`<h3 style="text-align:center">Dashboard</h3>
-
  <div class="summaryHeader">`;
 
  for(let c in count){
  html+=`
-  <div class="catCard" onclick="filterCategory('${c}',this)">
-   <div class="catName">${c}</div>
-   <div class="catCount">${count[c]}</div>
-  </div>`;
+ <div class="timelineCard" onclick="filterCategory('${c}',this)">
+   <div class="cornerCount">${count[c]}</div>
+   <div class="timelineContent">
+     <div class="timelineTitle">${c}</div>
+     <div class="timelineText">REX Category</div>
+   </div>
+ </div>`;
  }
 
  html+=`</div>
 
  <div class="chartWrapper">
-  <div class="chartBox">
-   <canvas id="barChart"></canvas>
-  </div>
+ <div class="chartBox"><canvas id="barChart"></canvas></div>
  </div>
 
  <div style="text-align:center">
-  <button onclick="showAll()">Show All</button>
-  <button onclick="exportPDF()">Export PDF</button>
+ <button onclick="showAll()">Show All</button>
+ <button onclick="exportPDF()">Export PDF</button>
  </div>
 
  <div id="rexList"></div>`;
@@ -320,7 +307,6 @@ db.collection("rex").onSnapshot(snap=>{
 
 /* CHART */
 function createChart(count){
-
  let values=Object.values(count);
  let max=Math.max(...values)||1;
 
@@ -352,60 +338,47 @@ function createChart(count){
 
 /* FILTER */
 function filterCategory(cat,el){
- document.querySelectorAll('.catCard').forEach(x=>x.classList.remove("activeCat"));
+ document.querySelectorAll('.timelineCard').forEach(x=>x.classList.remove("activeCat"));
  el.classList.add("activeCat");
  renderList(allData.filter(d=>d.cat===cat));
 }
 
 function showAll(){
- document.querySelectorAll('.catCard').forEach(x=>x.classList.remove("activeCat"));
+ document.querySelectorAll('.timelineCard').forEach(x=>x.classList.remove("activeCat"));
  renderList(allData);
 }
 
 /* RENDER */
 function renderList(data){
-
  let html="";
-
  data.forEach(d=>{
  html+=`
  <div class="card">
-
  <b>${d.title} (${d.cat})</b>
 
  <div class="row">
-
  <div style="flex:1">
- <div class="section">Before</div>
  <div class="box">${d.before?'<img src="'+d.before+'">':''}</div>
- <div>${d.beforeDesc||""}</div>
  </div>
 
  <div style="flex:1">
- <div class="section">After</div>
  <div class="box">${d.after?'<img src="'+d.after+'">':''}</div>
- <div>${d.afterDesc||""}</div>
+ </div>
  </div>
 
- </div>
-
- <div><b>Impact</b><br>${d.impact||""}</div>
-
- <div class="takeaway"><b>Takeaway</b><br>${d.takeaway||""}</div>
+ <div>${d.impact||""}</div>
+ <div class="takeaway">${d.takeaway||""}</div>
 
  <button onclick="edit('${d.id}')">Edit</button>
  <button class="deleteBtn" onclick="del('${d.id}')">Delete</button>
-
  </div>`;
  });
-
  rexList.innerHTML=html;
 }
 
 /* EDIT */
 function edit(id){
  let d=allData.find(x=>x.id===id);
-
  showCreate();
 
  editId.value=id;
@@ -433,7 +406,7 @@ function del(id){
 
 /* PDF */
 async function exportPDF(){
- const { jsPDF } = window.jspdf;
+ const {jsPDF}=window.jspdf;
  let canvas=await html2canvas(document.getElementById("rexList"),{scale:2});
  let img=canvas.toDataURL("image/png");
 
