@@ -99,6 +99,10 @@ textarea{width:100%;margin-top:5px;}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 
+<!-- ✅ PDF (RESTORED) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 </head>
 
 <body>
@@ -128,7 +132,6 @@ textarea{width:100%;margin-top:5px;}
 <br><br>
 
 <div class="row">
-
 <div style="flex:1">
 <div class="section">Before</div>
 <input type="file" id="before"><br>
@@ -142,7 +145,6 @@ textarea{width:100%;margin-top:5px;}
 <img id="aImg">
 <textarea id="afterDesc"></textarea>
 </div>
-
 </div>
 
 <div class="section">Impact</div>
@@ -182,7 +184,7 @@ function showSummary(){
  summaryPage.innerHTML="<h3 style='text-align:center'>Loading...</h3>";
 }
 
-/* IMAGE */
+/* Image */
 let beforeData="",afterData="";
 
 before.onchange=e=>{
@@ -217,25 +219,12 @@ function save(){
 
  if(id){
   db.collection("rex").doc(id).update(data)
-    .then(()=>{alert("Updated"); resetForm();});
+   .then(()=>alert("Updated"));
  }else{
   db.collection("rex").add(data)
-    .then(()=>{alert("Saved"); resetForm();});
+   .then(()=>alert("Saved"));
  }
-}
 
-/* RESET */
-function resetForm(){
- editId.value="";
- title.value="";
- beforeData="";
- afterData="";
- bImg.src="";
- aImg.src="";
- beforeDesc.value="";
- afterDesc.value="";
- impact.value="";
- takeaway.value="";
 }
 
 /* LOAD */
@@ -259,18 +248,21 @@ db.collection("rex").onSnapshot(snap=>{
 
  for(let c in count){
   html+=`<div class="catCard" onclick="filterCategory('${c}',this)">
-  ${c}<br>${count[c]}</div>`;
+   ${c}<br>${count[c]}</div>`;
  }
 
  html+=`</div>
 
  <div class="chartWrapper">
   <div class="chartBox">
-  <canvas id="barChart"></canvas>
+   <canvas id="barChart"></canvas>
   </div>
  </div>
 
- <button onclick="showAll()">Show All</button>
+ <div style="text-align:center">
+  <button onclick="showAll()">Show All</button>
+  <button onclick="exportPDF()">Export PDF</button>
+ </div>
 
  <div id="rexList"></div>`;
 
@@ -283,22 +275,25 @@ db.collection("rex").onSnapshot(snap=>{
  }
 });
 
-/* CHART */
+/* BAR CHART */
 function createChart(count){
 
  let values=Object.values(count);
+ let labels=Object.keys(count);
  let max=Math.max(...values)||1;
+
+ let colors=[
+ '#3b82f6','#10b981','#f59e0b','#ef4444',
+ '#8b5cf6','#14b8a6','#f97316','#6366f1'
+ ];
 
  new Chart(document.getElementById("barChart"),{
   type:'bar',
   data:{
-   labels:Object.keys(count),
+   labels:labels,
    datasets:[{
     data:values,
-    backgroundColor:[
-     '#3b82f6','#10b981','#f59e0b','#ef4444',
-     '#8b5cf6','#14b8a6','#f97316'
-    ],
+    backgroundColor:colors.slice(0,labels.length),
     borderRadius:6
    }]
   },
@@ -313,7 +308,7 @@ function createChart(count){
     y:{
      beginAtZero:true,
      suggestedMax:Math.ceil(max*1.2),
-     ticks:{stepSize:Math.ceil(max/5)||1}
+     ticks:{stepSize:Math.ceil(max/5)}
     }
    }
   }
@@ -324,7 +319,6 @@ function createChart(count){
 function filterCategory(cat,el){
  document.querySelectorAll('.catCard').forEach(x=>x.classList.remove("activeCat"));
  el.classList.add("activeCat");
-
  renderList(allData.filter(d=>d.cat===cat));
 }
 
@@ -333,12 +327,12 @@ function showAll(){
  renderList(allData);
 }
 
-/* ✅ FULL DATA DISPLAY */
+/* FULL DATA DISPLAY */
 function renderList(data){
 
  let html="";
-
  data.forEach(d=>{
+
  html+=`
  <div class="card">
 
@@ -360,12 +354,10 @@ function renderList(data){
 
  </div>
 
- <div class="section">Impact</div>
- <div>${d.impact||""}</div>
+ <div><b>Impact</b><br>${d.impact||""}</div>
 
  <div class="takeaway">
- <b>Takeaway</b>
- <div>${d.takeaway||""}</div>
+ <b>Takeaway</b><br>${d.takeaway||""}
  </div>
 
  <button onclick="edit('${d.id}')">Edit</button>
@@ -387,16 +379,16 @@ function edit(id){
  title.value=d.title;
  cat.value=d.cat;
 
- beforeData=d.before || "";
- afterData=d.after || "";
+ beforeData=d.before||"";
+ afterData=d.after||"";
 
  bImg.src=beforeData;
  aImg.src=afterData;
 
- beforeDesc.value=d.beforeDesc || "";
- afterDesc.value=d.afterDesc || "";
- impact.value=d.impact || "";
- takeaway.value=d.takeaway || "";
+ beforeDesc.value=d.beforeDesc||"";
+ afterDesc.value=d.afterDesc||"";
+ impact.value=d.impact||"";
+ takeaway.value=d.takeaway||"";
 }
 
 /* DELETE */
@@ -404,6 +396,30 @@ function del(id){
  if(confirm("Delete?")){
   db.collection("rex").doc(id).delete();
  }
+}
+
+/* ✅ PDF EXPORT (RESTORED EXACTLY) */
+async function exportPDF(){
+
+ const { jsPDF } = window.jspdf;
+
+ let element=document.getElementById("rexList");
+
+ if(!element){
+  alert("No data");
+  return;
+ }
+
+ let canvas=await html2canvas(element,{scale:2});
+ let img=canvas.toDataURL("image/png");
+
+ let pdf=new jsPDF("p","mm","a4");
+
+ let w=210;
+ let h=canvas.height*w/canvas.width;
+
+ pdf.addImage(img,"PNG",0,0,w,h);
+ pdf.save("REX_Report.pdf");
 }
 
 </script>
