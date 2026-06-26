@@ -12,7 +12,6 @@ body{
   padding:20px;
 }
 
-/* Main */
 .main{
   background:white;
   border-radius:12px;
@@ -33,6 +32,8 @@ button{
   cursor:pointer;
 }
 .deleteBtn{background:#dc2626;}
+
+textarea{width:100%;margin-top:5px;}
 
 /* KPI */
 .kpiContainer{
@@ -97,22 +98,18 @@ button{
 }
 .box img{max-width:100%;max-height:100%;}
 
-.section{font-weight:bold;margin-top:5px;}
-
-textarea{width:100%;margin-top:5px;}
-
 .takeaway{background:#0c4a6e;color:white;padding:10px;margin-top:10px;}
 </style>
 
 <!-- ✅ FIREBASE -->
-<script src="https://www.gstatic.com/firebasejsase-app.js</script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-<!-- ✅ CHART FIXED -->
+<!-- ✅ CHART -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 
-<!-- ✅ PDF FIXED -->
+<!-- ✅ PDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -125,7 +122,7 @@ textarea{width:100%;margin-top:5px;}
 <button onclick="showCreate()">New REX</button>
 <button onclick="showSummary()">Summary</button>
 
-<!-- CREATE -->
+<!-- CREATE PAGE -->
 <div id="createPage" class="main">
 
 <input type="hidden" id="editId">
@@ -148,14 +145,14 @@ textarea{width:100%;margin-top:5px;}
 <div class="row">
 
 <div style="flex:1">
-<div class="section">Before</div>
+Before<br>
 <input type="file" id="before"><br>
 <img id="bImg">
 <textarea id="beforeDesc"></textarea>
 </div>
 
 <div style="flex:1">
-<div class="section">After</div>
+After<br>
 <input type="file" id="after"><br>
 <img id="aImg">
 <textarea id="afterDesc"></textarea>
@@ -163,7 +160,6 @@ textarea{width:100%;margin-top:5px;}
 
 </div>
 
-<div class="section">Impact</div>
 <textarea id="impact"></textarea>
 
 <div class="takeaway">
@@ -179,7 +175,6 @@ textarea{width:100%;margin-top:5px;}
 
 <script>
 
-/* Firebase */
 firebase.initializeApp({
  apiKey:"AIzaSyCPUL-TGaO2PY7zYC3d1Eyx6J2oHjHWoyE",
  authDomain:"rex-multi-user-file.firebaseapp.com",
@@ -218,6 +213,8 @@ after.onchange=e=>{
 /* SAVE */
 function save(){
 
+ if(!title.value) return alert("Enter title");
+
  let id=editId.value;
 
  let data={
@@ -232,12 +229,11 @@ function save(){
  };
 
  if(id){
-  db.collection("rex").doc(id).update(data);
+  db.collection("rex").doc(id).update(data).then(()=>alert("Updated"));
  }else{
-  db.collection("rex").add(data);
+  db.collection("rex").add(data).then(()=>alert("Saved"));
  }
 
- alert("Saved");
  editId.value="";
 }
 
@@ -306,45 +302,36 @@ function showAll(){
  renderList(allData);
 }
 
-/* ✅ BAR CHART FINAL */
+/* CHART */
 function createChart(count){
 
- let labels = Object.keys(count);
- let values = Object.values(count);
+ let values=Object.values(count);
+ let max=Math.max(...values)||1;
 
- let max = Math.max(...values)||1;
-
- let colors = [
+ let colors=[
   '#3b82f6','#10b981','#f59e0b','#ef4444',
   '#8b5cf6','#14b8a6','#f97316'
  ];
 
  if(window.chartObj) window.chartObj.destroy();
 
- window.chartObj = new Chart(document.getElementById("barChart"),{
+ window.chartObj=new Chart(document.getElementById("barChart"),{
   type:'bar',
   data:{
-   labels:labels,
+   labels:Object.keys(count),
    datasets:[{
-     data:values,
-     backgroundColor:colors.slice(0,labels.length),
-     borderRadius:8,
-     barPercentage:0.6
+    data:values,
+    backgroundColor:colors,
+    borderRadius:8
    }]
   },
   plugins:[ChartDataLabels],
   options:{
    maintainAspectRatio:false,
-
    plugins:{
      legend:{display:false},
-     datalabels:{
-       anchor:'end',
-       align:'top',
-       formatter:v=>v
-     }
+     datalabels:{anchor:'end',align:'top'}
    },
-
    scales:{
      y:{
        beginAtZero:true,
@@ -392,6 +379,7 @@ function renderList(data){
 /* EDIT */
 function edit(id){
  let d=allData.find(x=>x.id===id);
+
  showCreate();
 
  editId.value=id;
@@ -425,9 +413,8 @@ async function exportPDF(){
  let h=canvas.height*w/canvas.width;
 
  pdf.addImage(img,"PNG",0,0,w,h);
- pdf.save("REX_Report.pdf");
+ pdf.save("REX.pdf");
 }
-
 </script>
 
 </body>
