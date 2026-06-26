@@ -1,8 +1,9 @@
+
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
-<title>REX Management System</title>
+<title>REX Dashboard</title>
 
 <style>
 body{
@@ -11,114 +12,74 @@ body{
   padding:20px;
 }
 
-/* Main container */
 .main{
-  background:rgba(255,255,255,0.95);
+  background:white;
   border-radius:12px;
   padding:20px;
   max-width:1100px;
   margin:auto;
-  box-shadow:0 10px 25px rgba(0,0,0,0.25);
 }
 
-/* Title */
-h2{
-  color:white;
-  text-align:center;
-}
+h2{text-align:center;color:white;}
 
-/* Buttons */
 button{
   padding:10px 15px;
+  margin:5px;
   background:#2563eb;
   color:white;
   border:none;
-  margin:5px;
-  cursor:pointer;
   border-radius:6px;
-  font-weight:bold;
-  transition:0.3s;
-}
-button:hover{
-  background:#1d4ed8;
-  transform:scale(1.05);
+  cursor:pointer;
 }
 .deleteBtn{background:#dc2626;}
 
-/* Category cards */
+textarea{width:100%;margin-top:5px;}
+
+/* Category */
 .summaryHeader{
   display:flex;
   flex-wrap:wrap;
-  gap:12px;
-  margin-bottom:15px;
+  gap:10px;
+  justify-content:center;
 }
-
 .catCard{
   background:#1e3a8a;
   color:white;
-  padding:14px;
-  border-radius:10px;
+  padding:8px 14px;
+  border-radius:25px;
   cursor:pointer;
-  min-width:130px;
-  text-align:center;
-  font-weight:bold;
-  box-shadow:0 4px 10px rgba(0,0,0,0.2);
 }
-.catCard:hover{
-  background:#2563eb;
-  transform:scale(1.1);
-}
-.activeCat{
-  background:#059669 !important;
-}
+.activeCat{background:#059669 !important;}
 
 /* Chart */
+.chartWrapper{
+  display:flex;
+  justify-content:center;
+  margin-top:20px;
+}
 .chartBox{
-  background:white;
-  border-radius:10px;
-  padding:15px;
-  margin-top:10px;
-  box-shadow:0 4px 12px rgba(0,0,0,0.15);
+  width:80%;
+  height:350px;
 }
 
 /* Cards */
 .card{
-  background:white;
-  border-radius:12px;
-  padding:15px;
-  margin-top:15px;
-  box-shadow:0 5px 12px rgba(0,0,0,0.15);
+  background:#f3f4f6;
+  padding:10px;
+  margin-top:10px;
+  border-radius:8px;
 }
 
-.card b{font-size:16px;color:#1e40af;}
-
-.row{display:flex;gap:20px;}
+.row{display:flex;gap:10px;}
 
 .box{
-  border:2px dashed #cbd5f5;
-  height:200px;
+  height:180px;
+  border:1px dashed #ccc;
   display:flex;
   align-items:center;
   justify-content:center;
-  border-radius:8px;
-  background:#f8fafc;
 }
 .box img{max-width:100%;max-height:100%;}
-
-.desc{border:1px solid #ddd;margin-top:5px;padding:6px;border-radius:5px;}
-
-.impact{margin-top:10px;padding:10px;background:#f1f5f9;border-radius:5px;}
-
-.takeaway{
-  background:#0c4a6e;
-  color:white;
-  margin-top:10px;
-  padding:10px;
-  text-align:center;
-  border-radius:5px;
-}
-
-.topActions{text-align:center;margin-top:10px;}
 </style>
 
 <!-- ✅ Firebase -->
@@ -129,15 +90,11 @@ button:hover{
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 
-<!-- ✅ PDF -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
 </head>
 
 <body>
 
-<h2>📘 REX Management System</h2>
+<h2>📊 REX Dashboard</h2>
 
 <button onclick="showCreate()">New REX</button>
 <button onclick="showSummary()">Summary</button>
@@ -146,6 +103,7 @@ button:hover{
 <div id="createPage" class="main">
 
 <input type="hidden" id="editId">
+
 <input id="title" placeholder="Title"><br><br>
 
 <select id="cat">
@@ -162,29 +120,31 @@ button:hover{
 <br><br>
 
 <div class="row">
+
 <div style="flex:1">
-<b>BEFORE</b><br>
+Before
 <input type="file" id="before"><br>
-<img id="bImg"><br>
+<img id="bImg">
 <textarea id="beforeDesc"></textarea>
 </div>
 
 <div style="flex:1">
-<b>AFTER</b><br>
+After
 <input type="file" id="after"><br>
-<img id="aImg"><br>
+<img id="aImg">
 <textarea id="afterDesc"></textarea>
 </div>
+
 </div>
 
-<div class="impact"><b>Impact</b><br>
-<textarea id="impact"></textarea></div>
+<textarea id="impact"></textarea>
 
-<div class="takeaway">
+<div>
 <textarea id="takeaway"></textarea>
 </div>
 
-<button onclick="save()">Save REX</button>
+<button onclick="save()">Save</button>
+
 </div>
 
 <!-- SUMMARY -->
@@ -198,89 +158,98 @@ firebase.initializeApp({
  authDomain:"rex-multi-user-file.firebaseapp.com",
  projectId:"rex-multi-user-file"
 });
+
 const db=firebase.firestore();
-
-/* Images */
-let beforeData="",afterData="";
-
-before.onchange=e=>{
- let r=new FileReader();
- r.onload=evt=>{beforeData=evt.target.result;bImg.src=beforeData;}
- r.readAsDataURL(e.target.files[0]);
-};
-after.onchange=e=>{
- let r=new FileReader();
- r.onload=evt=>{afterData=evt.target.result;aImg.src=afterData;}
- r.readAsDataURL(e.target.files[0]);
-};
-
-/* Save */
-function save(){
- let id=editId.value;
- let data={
-   title:title.value,
-   cat:(cat.value||"Others").trim(),
-   before:beforeData,
-   after:afterData,
-   beforeDesc:beforeDesc.value,
-   afterDesc:afterDesc.value,
-   impact:impact.value,
-   takeaway:takeaway.value
- };
- if(!data.title){alert("Enter title");return;}
-
- if(id){
-   db.collection("rex").doc(id).update(data).then(()=>alert("Updated"));
-   editId.value="";
- }else{
-   db.collection("rex").add(data).then(()=>alert("Saved"));
- }
-}
 
 /* Navigation */
 function showCreate(){
  createPage.style.display="block";
  summaryPage.style.display="none";
 }
+
 function showSummary(){
  createPage.style.display="none";
  summaryPage.style.display="block";
- summaryPage.innerHTML="Loading...";
+ summaryPage.innerHTML="<h3 style='text-align:center'>Loading...</h3>";
 }
 
-/* Data */
+/* Images */
+let beforeData="",afterData="";
+
+before.onchange=e=>{
+ let r=new FileReader();
+ r.onload=x=>{beforeData=x.target.result;bImg.src=beforeData;}
+ r.readAsDataURL(e.target.files[0]);
+};
+
+after.onchange=e=>{
+ let r=new FileReader();
+ r.onload=x=>{afterData=x.target.result;aImg.src=afterData;}
+ r.readAsDataURL(e.target.files[0]);
+};
+
+/* Save */
+function save(){
+
+ if(!title.value){
+  alert("Enter Title");
+  return;
+ }
+
+ let data={
+  title:title.value,
+  cat:cat.value,
+  before:beforeData,
+  after:afterData,
+  beforeDesc:beforeDesc.value,
+  afterDesc:afterDesc.value,
+  impact:impact.value,
+  takeaway:takeaway.value
+ };
+
+ db.collection("rex").add(data)
+ .then(()=>alert("Saved"))
+ .catch(err=>{
+  console.error(err);
+  alert("Save Failed");
+ });
+}
+
+/* Load Dashboard */
 db.collection("rex").onSnapshot(snap=>{
 
  let data=[],count={};
 
  snap.forEach(doc=>{
-   let d=doc.data();
-   d.id=doc.id;
-   let c=(d.cat||"").trim()||"Others";
-   d.cat=c;
-   data.push(d);
-   count[c]=(count[c]||0)+1;
+  let d=doc.data();
+  data.push(d);
+
+  let c=d.cat || "Others";
+  count[c]=(count[c]||0)+1;
  });
 
  if(summaryPage.style.display==="block"){
 
- let html="<h3 style='text-align:center'>📊 REX Dashboard</h3>";
+ let html=`<h3 style="text-align:center">Dashboard</h3>
 
- html+=`<div class="summaryHeader">`;
+ <div class="summaryHeader">`;
+
  for(let c in count){
   html+=`<div class="catCard" onclick="filterCategory('${c}',this)">
-           ${c}<br><span>${count[c]}</span>
-         </div>`;
+   ${c}<br>${count[c]}
+  </div>`;
  }
+
  html+=`</div>
 
- <div class="chartBox">
- <canvas id="barChart"></canvas>
+ <div class="chartWrapper">
+  <div class="chartBox">
+   <canvas id="barChart"></canvas>
+  </div>
  </div>
 
- <div class="topActions">
- <button onclick="showAll()">Show All</button>
- <button onclick="exportPDF()">Export PDF</button>
+ <div style="text-align:center">
+  <button onclick="showAll()">Show All</button>
  </div>
 
  <div id="rexList"></div>`;
@@ -297,33 +266,61 @@ db.collection("rex").onSnapshot(snap=>{
 /* Chart */
 function createChart(count){
 
- let ctx=document.getElementById('barChart');
+ let labels=Object.keys(count);
+ let values=Object.values(count);
 
- if(window.chartObj) window.chartObj.destroy();
+ let colors=[
+  '#3b82f6','#10b981','#f59e0b','#ef4444',
+  '#8b5cf6','#14b8a6','#f97316','#6366f1'
+ ];
 
- window.chartObj=new Chart(ctx,{
+ let max=Math.max(...values)||1;
+
+ new Chart(document.getElementById("barChart"),{
   type:'bar',
   data:{
-   labels:Object.keys(count),
+   labels:labels,
    datasets:[{
-     data:Object.values(count),
-     backgroundColor:'#3b82f6'
+    data:values,
+    backgroundColor:colors.slice(0,labels.length),
+    borderRadius:6
    }]
   },
+
   plugins:[ChartDataLabels],
+
   options:{
+   maintainAspectRatio:false,
    plugins:{
     legend:{display:false},
     datalabels:{
-      anchor:'end',
-      align:'top',
-      font:{weight:'bold'},
-      formatter:(v)=>v
+     anchor:'end',
+     align:'top',
+     formatter:v=>v
     }
    },
-   scales:{y:{beginAtZero:true}}
+   scales:{
+    y:{
+     beginAtZero:true,
+     suggestedMax: Math.ceil(max*1.2),   /* ✅ AUTO SCALE */
+     ticks:{
+       stepSize: Math.ceil(max/5) || 1   /* ✅ SMART STEP */
+     }
+    }
+   }
   }
  });
+}
+
+/* Filter */
+function filterCategory(cat,el){
+ document.querySelectorAll('.catCard').forEach(x=>x.classList.remove("activeCat"));
+ el.classList.add("activeCat");
+ renderList(allData.filter(d=>d.cat===cat));
+}
+
+function showAll(){
+ renderList(allData);
 }
 
 /* Render */
@@ -335,73 +332,17 @@ function renderList(data){
 
  <div class="row">
  <div style="flex:1">
- BEFORE
  <div class="box">${d.before?'<img src="'+d.before+'">':''}</div>
- <div class="desc">${d.beforeDesc||""}</div>
  </div>
 
  <div style="flex:1">
- AFTER
  <div class="box">${d.after?'<img src="'+d.after+'">':''}</div>
- <div class="desc">${d.afterDesc||""}</div>
  </div>
  </div>
 
- <div class="impact">${d.impact}</div>
- <div class="takeaway">${d.takeaway}</div>
-
- <button onclick="edit('${d.id}')">Edit</button>
- <button class="deleteBtn" onclick="del('${d.id}')">Delete</button>
  </div>`;
  });
  rexList.innerHTML=html;
-}
-
-/* Filter */
-function filterCategory(cat,el){
- document.querySelectorAll('.catCard').forEach(x=>x.classList.remove("activeCat"));
- el.classList.add("activeCat");
- renderList(allData.filter(d=>d.cat===cat));
-}
-function showAll(){
- document.querySelectorAll('.catCard').forEach(x=>x.classList.remove("activeCat"));
- renderList(allData);
-}
-
-/* Edit */
-function edit(id){
- let d=allData.find(x=>x.id===id);
- showCreate();
- editId.value=id;
- title.value=d.title;
- cat.value=d.cat;
- beforeData=d.before||"";
- afterData=d.after||"";
- bImg.src=beforeData;
- aImg.src=afterData;
- beforeDesc.value=d.beforeDesc;
- afterDesc.value=d.afterDesc;
- impact.value=d.impact;
- takeaway.value=d.takeaway;
-}
-
-/* Delete */
-function del(id){
- if(confirm("Delete?")){
-   db.collection("rex").doc(id).delete();
- }
-}
-
-/* PDF */
-async function exportPDF(){
- const {jsPDF}=window.jspdf;
- let canvas=await html2canvas(rexList,{scale:2});
- let img=canvas.toDataURL("image/png");
- let pdf=new jsPDF("p","mm","a4");
- let w=210;
- let h=canvas.height*w/canvas.width;
- pdf.addImage(img,"PNG",0,0,w,h);
- pdf.save("REX_Report.pdf");
 }
 
 </script>
