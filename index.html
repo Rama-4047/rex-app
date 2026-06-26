@@ -6,98 +6,62 @@
 <title>REX Dashboard</title>
 
 <style>
-
-/* ✅ BACKGROUND */
 body{
   font-family:Arial;
-  background:#0f1f4a;
+  background:linear-gradient(135deg,#1e3a8a,#0ea5e9);
   padding:20px;
 }
-
-/* ✅ HEADER */
-.header{
-  background:linear-gradient(90deg,#1e3a8a,#0ea5e9);
+.main{
+  background:white;
+  border-radius:12px;
   padding:20px;
-  border-radius:15px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
   max-width:1100px;
   margin:auto;
 }
+h2{text-align:center;color:white;}
 
-/* HEADER LEFT */
-.headerTitle{
-  display:flex;
-  align-items:center;
+button{
+  padding:10px;
+  margin:5px;
+  background:#2563eb;
   color:white;
-  font-size:22px;
-  font-weight:bold;
-}
-
-/* BUTTONS */
-.headerBtns button{
-  padding:10px 18px;
-  border-radius:10px;
   border:none;
-  margin-left:10px;
-  cursor:pointer;
-  font-weight:600;
+  border-radius:6px;
 }
+.deleteBtn{background:#dc2626;}
 
-/* ✅ BUTTON STYLES */
-.btnPrimary{
-  background:#e5e7eb;
-  color:#1e3a8a;
-}
+textarea{width:100%;}
 
-.btnOutline{
-  background:transparent;
-  border:2px solid white;
-  color:white;
-}
-
-/* ✅ MAIN */
-.main{
-  background:#f3f4f6;
-  border-radius:15px;
-  padding:20px;
-  max-width:1100px;
-  margin:20px auto;
-}
-
-/* ✅ CATEGORY */
+/* CATEGORY */
 .summaryHeader{
  display:flex;
  flex-wrap:wrap;
- gap:15px;
+ gap:10px;
  justify-content:center;
 }
 
 .timelineCard{
- background:#2b3f8f;
+ background:#1e3a8a;
  color:white;
- padding:20px;
- border-radius:15px;
+ padding:12px;
+ border-radius:20px;
  cursor:pointer;
- text-align:center;
  position:relative;
- min-width:160px;
- box-shadow:0 5px 15px rgba(0,0,0,0.3);
+ text-align:center;
 }
+.timelineCard:hover{background:#2563eb;}
 
 .cornerCount{
  position:absolute;
- top:-10px;
- left:-10px;
- background:#d1d5db;
+ top:-5px;
+ left:-5px;
+ background:white;
  color:black;
- padding:5px 10px;
+ padding:4px 8px;
  border-radius:10px;
- font-weight:bold;
 }
 
-/* ✅ CHART */
+/* CHART */
 .chartWrapper{
  display:flex;
  justify-content:center;
@@ -107,12 +71,12 @@ body{
  height:350px;
 }
 
-/* ✅ CARDS */
+/* CARDS */
 .card{
- background:white;
- padding:15px;
+ background:#f3f4f6;
+ padding:10px;
  margin-top:10px;
- border-radius:10px;
+ border-radius:8px;
 }
 
 .row{
@@ -121,50 +85,33 @@ body{
 }
 
 .box{
- height:160px;
- border:1px dashed #ccc;
+ height:150px;
+ border:1px dashed #aaa;
  display:flex;
- justify-content:center;
  align-items:center;
+ justify-content:center;
 }
-.box img{
- max-width:100%;
- max-height:100%;
-}
+.box img{max-width:100%;max-height:100%;}
 
-.desc{
- font-size:13px;
- margin-top:5px;
-}
+.desc{font-size:13px;}
 
 .takeaway{
- background:#1e3a8a;
+ background:#0c4a6e;
  color:white;
- padding:8px;
- margin-top:6px;
- border-radius:6px;
-}
-
-button{
+ padding:6px;
  margin-top:5px;
 }
-
-.deleteBtn{
- background:#dc2626;
- color:white;
-}
-
-textarea{width:100%;margin-top:5px;}
-
 </style>
 
-<!-- ✅ LIBRARIES -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
+<!-- Chart -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 
+<!-- PDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -172,19 +119,10 @@ textarea{width:100%;margin-top:5px;}
 
 <body>
 
-<!-- ✅ HEADER -->
-<div class="header">
+<h2>📊 REX Dashboard</h2>
 
-  <div class="headerTitle">
-    📊 REX Dashboard
-  </div>
-
-  <div class="headerBtns">
-    <button class="btnPrimary" onclick="showCreate()">+ New REX</button>
-    <button class="btnOutline" onclick="showSummary()">Summary</button>
-  </div>
-
-</div>
+<button onclick="showCreate()">New REX</button>
+<button onclick="showSummary()">Summary</button>
 
 <!-- CREATE -->
 <div id="createPage" class="main">
@@ -200,11 +138,10 @@ textarea{width:100%;margin-top:5px;}
 <option>Automation</option>
 <option>Digitization</option>
 <option>Others</option>
-</select>
-
-<br><br>
+</select><br><br>
 
 <div class="row">
+
 <div style="flex:1">
 Before <input type="file" id="before"><br>
 <img id="bImg">
@@ -216,6 +153,7 @@ After <input type="file" id="after"><br>
 <img id="aImg">
 <textarea id="afterDesc"></textarea>
 </div>
+
 </div>
 
 <textarea id="impact"></textarea>
@@ -233,7 +171,7 @@ After <input type="file" id="after"><br>
 
 <script>
 
-/* Firebase */
+/* FIREBASE */
 firebase.initializeApp({
  apiKey:"AIzaSyCPUL-TGaO2PY7zYC3d1Eyx6J2oHjHWoyE",
  authDomain:"rex-multi-user-file.firebaseapp.com",
@@ -253,14 +191,42 @@ function showSummary(){
  summaryPage.innerHTML="<h3>Loading...</h3>";
 }
 
+/* IMAGE LOAD */
+let beforeData="",afterData="";
+
+before.onchange=e=>{
+ let r=new FileReader();
+ r.onload=x=>{
+  beforeData=x.target.result;
+  bImg.src=beforeData;
+ };
+ r.readAsDataURL(e.target.files[0]);
+};
+
+after.onchange=e=>{
+ let r=new FileReader();
+ r.onload=x=>{
+  afterData=x.target.result;
+  aImg.src=afterData;
+ };
+ r.readAsDataURL(e.target.files[0]);
+};
+
 /* SAVE */
 function save(){
+
+ if(!title.value) return alert("Enter title");
 
  let id=editId.value;
 
  let data={
   title:title.value,
   cat:cat.value,
+
+  /* ✅ IMAGE SAVED */
+  before:beforeData,
+  after:afterData,
+
   beforeDesc:beforeDesc.value,
   afterDesc:afterDesc.value,
   impact:impact.value,
@@ -282,16 +248,16 @@ db.collection("rex").onSnapshot(snap=>{
  snap.forEach(doc=>{
   let d=doc.data();
   d.id=doc.id;
+
   data.push(d);
   count[d.cat]=(count[d.cat]||0)+1;
  });
 
  if(summaryPage.style.display==="block"){
 
- let html="<h3 style='text-align:center'>Dashboard</h3>";
+ let html="<h3>Dashboard</h3>";
 
  html+="<div class='summaryHeader'>";
-
  for(let c in count){
  html+=`
  <div class="timelineCard" onclick="filter('${c}')">
@@ -299,7 +265,6 @@ db.collection("rex").onSnapshot(snap=>{
   ${c}
  </div>`;
  }
-
  html+="</div>";
 
  html+=`
@@ -324,16 +289,38 @@ db.collection("rex").onSnapshot(snap=>{
 
 });
 
-/* CHART */
+/* ✅ MULTI COLOR CHART */
 function createChart(count){
 
  let labels=Object.keys(count);
  let values=Object.values(count);
 
+ let colors=[
+ '#3b82f6','#10b981','#f59e0b','#ef4444',
+ '#8b5cf6','#14b8a6','#f97316','#6366f1'
+ ];
+
  new Chart(barChart,{
   type:'bar',
-  data:{labels:labels,datasets:[{data:values}]},
-  plugins:[ChartDataLabels]
+  data:{
+   labels:labels,
+   datasets:[{
+    data:values,
+    backgroundColor:colors.slice(0,labels.length)
+   }]
+  },
+  plugins:[ChartDataLabels],
+  options:{
+   plugins:{
+    datalabels:{anchor:'end',align:'top'}
+   },
+   onClick:(e,el)=>{
+    if(el.length){
+     let cat=labels[el[0].index];
+     filter(cat);
+    }
+   }
+  }
  });
 }
 
@@ -341,20 +328,36 @@ function createChart(count){
 function filter(cat){
  renderList(allData.filter(d=>d.cat===cat));
 }
-function showAll(){renderList(allData);}
+
+function showAll(){
+ renderList(allData);
+}
 
 /* DISPLAY */
 function renderList(data){
 
  rexList.innerHTML=data.map(d=>`
  <div class="card">
+
  <b>${d.title} (${d.cat})</b>
 
- <div>${d.beforeDesc||""}</div>
- <div>${d.afterDesc||""}</div>
- <div>${d.impact||""}</div>
+ <div class="row">
 
- <div class="takeaway">${d.takeaway||""}</div>
+ <div style="flex:1">
+ <div class="box">${d.before?'<img src="'+d.before+'">':''}</div>
+ <div class="desc">${d.beforeDesc||""}</div>
+ </div>
+
+ <div style="flex:1">
+ <div class="box">${d.after?'<img src="'+d.after+'">':''}</div>
+ <div class="desc">${d.afterDesc||""}</div>
+ </div>
+
+ </div>
+
+ <div><b>Impact:</b> ${d.impact||""}</div>
+
+ <div class="takeaway"><b>Takeaway:</b> ${d.takeaway||""}</div>
 
  <button onclick="edit('${d.id}')">Edit</button>
  <button class="deleteBtn" onclick="del('${d.id}')">Delete</button>
@@ -366,11 +369,19 @@ function renderList(data){
 /* EDIT */
 function edit(id){
  let d=allData.find(x=>x.id===id);
+
  showCreate();
 
  editId.value=id;
  title.value=d.title;
  cat.value=d.cat;
+
+ beforeData=d.before||"";
+ afterData=d.after||"";
+
+ bImg.src=beforeData;
+ aImg.src=afterData;
+
  beforeDesc.value=d.beforeDesc||"";
  afterDesc.value=d.afterDesc||"";
  impact.value=d.impact||"";
@@ -384,12 +395,14 @@ function del(id){
  }
 }
 
-/* PDF */
+/* ✅ PDF */
 async function exportPDF(){
  const {jsPDF}=window.jspdf;
  let canvas=await html2canvas(rexList);
+ let img=canvas.toDataURL("image/png");
+
  let pdf=new jsPDF();
- pdf.addImage(canvas,"PNG",0,0);
+ pdf.addImage(img,"PNG",0,0);
  pdf.save("REX_Report.pdf");
 }
 
