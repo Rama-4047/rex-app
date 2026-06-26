@@ -44,20 +44,18 @@ body{
  cursor:pointer;
  position:relative;
 }
-
 .timelineCard.active{
  background:#22c55e;
 }
-
 .cornerCount{
  position:absolute;
  top:-6px;
  left:-6px;
  background:white;
  color:black;
- font-size:12px;
  padding:3px 6px;
  border-radius:8px;
+ font-size:12px;
 }
 
 /* GRAPH */
@@ -66,7 +64,6 @@ body{
  justify-content:center;
  margin-top:10px;
 }
-
 .chartBox{
  width:50%;
  height:260px;
@@ -79,7 +76,6 @@ body{
  margin-top:10px;
  border-radius:8px;
 }
-
 .row{display:flex;gap:10px;}
 
 .box{
@@ -90,33 +86,17 @@ body{
  align-items:center;
  cursor:pointer;
 }
-
 .box img{max-width:100%;max-height:100%;}
 
-.sectionTitle{
- font-weight:bold;
- color:#1e3a8a;
-}
+.sectionTitle{font-weight:bold;color:#1e3a8a;}
+.descBox{background:#eef2ff;padding:8px;margin-top:5px;}
+.impactBox{background:#dbeafe;padding:8px;margin-top:5px;border-left:4px solid blue;}
+.takeaway{background:#0c4a6e;color:white;padding:8px;margin-top:5px;}
 
-.descBox{
- background:#eef2ff;
- padding:8px;
- margin-top:5px;
-}
+textarea{width:100%;}
+#impact,#takeaway{height:120px;}
 
-.impactBox{
- background:#dbeafe;
- padding:8px;
- margin-top:5px;
- border-left:4px solid blue;
-}
-
-.takeaway{
- background:#0c4a6e;
- color:white;
- padding:8px;
- margin-top:5px;
-}
+.deleteBtn{background:red;color:white;}
 
 /* ZOOM */
 #imgModal{
@@ -128,19 +108,14 @@ body{
  justify-content:center;
  align-items:center;
 }
-#imgModal img{
- max-width:90%;
- max-height:90%;
-}
+#imgModal img{max-width:90%;max-height:90%;}
 </style>
 
 <!-- LIBRARIES -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -156,69 +131,155 @@ body{
  </div>
 </div>
 
-<div id="summaryPage" class="main"></div>
+<!-- CREATE PAGE -->
+<div id="createPage" class="main">
 
+<input type="hidden" id="editId">
+
+<input id="title" placeholder="Title"><br><br>
+
+<select id="cat">
+<option>5S</option>
+<option>Safety</option>
+<option>Skill Development</option>
+<option>Process Capability Improvement</option>
+<option>QMS</option>
+<option>Automation</option>
+<option>Digitization</option>
+<option>Others</option>
+</select><br><br>
+
+<div class="row">
+<div style="flex:1">
+Before <input type="file" id="before"><br>
+<img id="bImg">
+<textarea id="beforeDesc"></textarea>
+</div>
+
+<div style="flex:1">
+After <input type="file" id="after"><br>
+<img id="aImg">
+<textarea id="afterDesc"></textarea>
+</div>
+</div>
+
+<div class="sectionTitle">Impact</div>
+<textarea id="impact"></textarea>
+
+<div class="sectionTitle">Takeaway</div>
+<div class="takeaway">
+<textarea id="takeaway"></textarea>
+</div>
+
+<button onclick="save()">Save</button>
+
+</div>
+
+<!-- SUMMARY PAGE -->
+<div id="summaryPage" class="main" style="display:none"></div>
+
+<!-- IMAGE ZOOM -->
 <div id="imgModal" onclick="this.style.display='none'">
 <img id="zoomImg">
 </div>
 
 <script>
 
+/* Firebase */
 firebase.initializeApp({
  apiKey:"AIzaSyCPUL-TGaO2PY7zYC3d1Eyx6J2oHjHWoyE",
  projectId:"rex-multi-user-file"
 });
 const db=firebase.firestore();
 
-let allData = [];
-let selectedCategory = null;
-let chartInstance = null;
+let allData=[];
+let selectedCategory=null;
+let chartInstance=null;
 
-/* LOAD */
+/* NAV */
+function showCreate(){
+ createPage.style.display="block";
+ summaryPage.style.display="none";
+}
+
+function showSummary(){
+ createPage.style.display="none";
+ summaryPage.style.display="block";
+}
+
+/* IMAGE */
+let beforeData="",afterData="";
+before.onchange=e=>{
+ let r=new FileReader();
+ r.onload=x=>{beforeData=x.target.result;bImg.src=beforeData;}
+ r.readAsDataURL(e.target.files[0]);
+};
+after.onchange=e=>{
+ let r=new FileReader();
+ r.onload=x=>{afterData=x.target.result;aImg.src=afterData;}
+ r.readAsDataURL(e.target.files[0]);
+};
+
+/* SAVE */
+function save(){
+ db.collection("rex").add({
+  title:title.value,
+  cat:cat.value,
+  before:beforeData,
+  after:afterData,
+  beforeDesc:beforeDesc.value,
+  afterDesc:afterDesc.value,
+  impact:impact.value,
+  takeaway:takeaway.value
+ });
+}
+
+/* LOAD DATA */
 db.collection("rex").onSnapshot(snap=>{
- allData = [];
- let count = {};
+ allData=[];
+ let count={};
 
  snap.forEach(doc=>{
-  let d = doc.data();
-  d.id = doc.id;
+  let d=doc.data();
+  d.id=doc.id;
   allData.push(d);
-  count[d.cat] = (count[d.cat] || 0) + 1;
+  count[d.cat]=(count[d.cat]||0)+1;
  });
 
- renderDashboard(count);
+ if(summaryPage.style.display==="block"){
+  renderSummary(count);
+ }
 });
 
-/* MAIN RENDER */
-function renderDashboard(count){
+/* SUMMARY */
+function renderSummary(count){
 
- let html = "<h3>Dashboard</h3>";
+ let html="<h3>Dashboard</h3>";
 
  /* CATEGORY */
- html += "<div class='summaryHeader'>";
+ html+="<div class='summaryHeader'>";
  Object.keys(count).forEach(c=>{
  html+=`
  <div class="timelineCard ${selectedCategory===c?'active':''}" onclick="selectCategory('${c}')">
-   <div class="cornerCount">${count[c]}</div>
-   ${c}
+  <div class="cornerCount">${count[c]}</div>${c}
  </div>`;
  });
  html+="</div>";
 
  /* GRAPH */
- html += `
+ html+=`
  <div class="chartWrapper">
-   <div class="chartBox">
-     <canvas id="barChart"></canvas>
-   </div>
+  <div class="chartBox">
+   <canvas id="barChart"></canvas>
+  </div>
  </div>
 
- <button onclick="resetFilter()">Show All</button>
+ <button onclick="clearFilter()">Show All</button>
  <button onclick="exportPDF()">Export PDF</button>
 
  <div id="rexList"></div>`;
 
- summaryPage.innerHTML = html;
+ summaryPage.innerHTML=html;
 
  renderChart(count);
  renderList();
@@ -226,65 +287,44 @@ function renderDashboard(count){
 
 /* SELECT */
 function selectCategory(cat){
- selectedCategory = cat;
- renderDashboard(getCounts());
+ selectedCategory=cat;
+ renderSummary(getCounts());
 }
 
 /* RESET */
-function resetFilter(){
- selectedCategory = null;
- renderDashboard(getCounts());
+function clearFilter(){
+ selectedCategory=null;
+ renderSummary(getCounts());
 }
 
 /* COUNT */
 function getCounts(){
- let count={};
- allData.forEach(d=>{
-  count[d.cat] = (count[d.cat]||0)+1;
- });
- return count;
+ let c={};
+ allData.forEach(d=>c[d.cat]=(c[d.cat]||0)+1);
+ return c;
 }
 
 /* GRAPH */
 function renderChart(count){
 
- let labels = Object.keys(count);
- let values = Object.values(count);
+ let labels=Object.keys(count);
+ let values=Object.values(count);
 
- let colorMap={
-  "5S":"#f59e0b",
-  "Safety":"#3b82f6",
-  "Skill Development":"#10b981",
-  "Process Capability Improvement":"#ef4444",
-  "Automation":"#8b5cf6",
-  "Digitization":"#14b8a6",
-  "QMS":"#f97316"
- };
-
- let colors = labels.map(l=>{
-  return selectedCategory && l !== selectedCategory
-    ? "#cbd5e1"
-    : colorMap[l];
+ let colors=labels.map(l=>{
+  return selectedCategory && l!==selectedCategory ? "#cbd5e1" : "#2563eb";
  });
 
  if(chartInstance) chartInstance.destroy();
 
- chartInstance = new Chart(barChart,{
+ chartInstance=new Chart(barChart,{
   type:'bar',
-  data:{
-   labels:labels,
-   datasets:[{
-     data:values,
-     backgroundColor:colors
-   }]
-  },
+  data:{labels:labels,datasets:[{data:values,backgroundColor:colors}]},
   plugins:[ChartDataLabels],
   options:{
    plugins:{legend:{display:false}},
    onClick:(e,el)=>{
     if(el.length){
-     let cat = labels[el[0].index];
-     selectCategory(cat);
+     selectCategory(labels[el[0].index]);
     }
    }
   }
@@ -293,47 +333,18 @@ function renderChart(count){
 
 /* LIST */
 function renderList(){
+ let list=selectedCategory?allData.filter(d=>d.cat===selectedCategory):allData;
 
- let list = selectedCategory
-   ? allData.filter(d=>d.cat===selectedCategory)
-   : allData;
-
- rexList.innerHTML = list.map(d=>`
+ rexList.innerHTML=list.map(d=>`
  <div class="card">
-
  <b>${d.title}</b>
  <div>Category: ${d.cat}</div>
-
- <div class="row">
-
- <div style="flex:1">
- <div class="sectionTitle">Before</div>
- <div class="box" onclick="zoom('${d.before}')">
- ${d.before?'<img src="'+d.before+'">':''}
- </div>
- <div class="descBox">${d.beforeDesc||""}</div>
- </div>
-
- <div style="flex:1">
- <div class="sectionTitle">After</div>
- <div class="box" onclick="zoom('${d.after}')">
- ${d.after?'<img src="'+d.after+'">':''}
- </div>
- <div class="descBox">${d.afterDesc||""}</div>
- </div>
-
- </div>
-
- <div class="impactBox">${d.impact||""}</div>
- <div class="takeaway">${d.takeaway||""}</div>
-
- </div>
- `).join('');
+ </div>`).join('');
 }
 
 /* ZOOM */
 function zoom(src){
- zoomImg.src = src;
+ zoomImg.src=src;
  imgModal.style.display="flex";
 }
 
