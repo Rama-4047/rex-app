@@ -44,7 +44,6 @@ body{
  cursor:pointer;
  position:relative;
 }
-
 .timelineCard.active{
  background:#22c55e;
 }
@@ -66,66 +65,54 @@ body{
  justify-content:center;
  margin-top:10px;
 }
-
 .chartBox{
  width:50%;
  height:260px;
 }
 
-/* ✅ REX CARD STRUCTURE FIXED */
+/* CARD */
 .card{
  background:#f3f4f6;
  padding:12px;
- margin-top:12px;
+ margin-top:10px;
  border-radius:8px;
 }
 
 .row{
  display:flex;
- gap:15px;
+ gap:10px;
 }
 
 .box{
- height:150px;
+ height:140px;
  border:1px dashed #aaa;
  display:flex;
  justify-content:center;
  align-items:center;
  cursor:pointer;
 }
-.box img{
- max-width:100%;
- max-height:100%;
-}
+.box img{max-width:100%;max-height:100%;}
 
-/* TEXT */
 .sectionTitle{
  font-weight:bold;
  color:#1e3a8a;
- margin-top:5px;
 }
-
 .descBox{
  background:#eef2ff;
  padding:8px;
  margin-top:5px;
- border-radius:5px;
 }
-
 .impactBox{
  background:#dbeafe;
- padding:10px;
- margin-top:10px;
+ padding:8px;
+ margin-top:5px;
  border-left:4px solid blue;
- border-radius:5px;
 }
-
 .takeaway{
  background:#0c4a6e;
  color:white;
- padding:10px;
- margin-top:10px;
- border-radius:5px;
+ padding:8px;
+ margin-top:5px;
 }
 
 /* ZOOM */
@@ -174,6 +161,7 @@ textarea{width:100%;}
 
 <!-- CREATE PAGE -->
 <div id="createPage" class="main">
+
 <input type="hidden" id="editId">
 
 <input id="title" placeholder="Title"><br><br>
@@ -193,14 +181,14 @@ textarea{width:100%;}
 
 <div style="flex:1">
 <div class="sectionTitle">Before</div>
-Before <input type="file" id="before"><br>
+<input type="file" id="before"><br>
 <img id="bImg">
 <textarea id="beforeDesc"></textarea>
 </div>
 
 <div style="flex:1">
 <div class="sectionTitle">After</div>
-After <input type="file" id="after"><br>
+<input type="file" id="after"><br>
 <img id="aImg">
 <textarea id="afterDesc"></textarea>
 </div>
@@ -222,6 +210,7 @@ After <input type="file" id="after"><br>
 <!-- SUMMARY -->
 <div id="summaryPage" class="main" style="display:none"></div>
 
+<!-- ZOOM -->
 <div id="imgModal" onclick="this.style.display='none'">
 <img id="zoomImg">
 </div>
@@ -243,7 +232,6 @@ function showCreate(){
  createPage.style.display="block";
  summaryPage.style.display="none";
 }
-
 function showSummary(){
  createPage.style.display="none";
  summaryPage.style.display="block";
@@ -325,7 +313,7 @@ function renderSummary(count){
  renderList();
 }
 
-/* SELECT */
+/* FILTER */
 function selectCategory(cat){
  selectedCategory=cat;
  renderSummary(getCounts());
@@ -370,7 +358,7 @@ function renderChart(count){
  });
 }
 
-/* ✅ FULL REX DISPLAY FIXED */
+/* DISPLAY */
 function renderList(){
 
  let list=selectedCategory
@@ -384,7 +372,6 @@ function renderList(){
  <div>Category: ${d.cat}</div>
 
  <div class="row">
-
  <div style="flex:1">
  <div class="sectionTitle">Before</div>
  <div class="box" onclick="zoom('${d.before}')">
@@ -400,11 +387,9 @@ function renderList(){
  </div>
  <div class="descBox">${d.afterDesc||""}</div>
  </div>
-
  </div>
 
  <div class="impactBox">${d.impact||""}</div>
-
  <div class="takeaway">${d.takeaway||""}</div>
 
  </div>
@@ -413,17 +398,42 @@ function renderList(){
 
 /* ZOOM */
 function zoom(src){
+ if(!src) return;
  zoomImg.src=src;
  imgModal.style.display="flex";
 }
 
-/* PDF */
+/* ✅ IMPROVED PDF ONLY */
 async function exportPDF(){
+
  const {jsPDF}=window.jspdf;
- let canvas=await html2canvas(rexList,{scale:2});
- let pdf=new jsPDF();
- pdf.addImage(canvas,"PNG",0,0);
- pdf.save("REX.pdf");
+
+ let canvas=await html2canvas(rexList,{
+  scale:3,
+  useCORS:true
+ });
+
+ let img=canvas.toDataURL("image/png");
+
+ let pdf=new jsPDF("p","mm","a4");
+
+ let imgWidth=210;
+ let imgHeight=(canvas.height*imgWidth)/canvas.width;
+
+ let heightLeft=imgHeight;
+ let position=0;
+
+ pdf.addImage(img,"PNG",0,position,imgWidth,imgHeight);
+ heightLeft-=297;
+
+ while(heightLeft>0){
+  position=heightLeft-imgHeight;
+  pdf.addPage();
+  pdf.addImage(img,"PNG",0,position,imgWidth,imgHeight);
+  heightLeft-=297;
+ }
+
+ pdf.save("REX_Report.pdf");
 }
 
 </script>
