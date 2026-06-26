@@ -13,7 +13,6 @@ body{
   background:linear-gradient(135deg,#1e3a8a,#0ea5e9);
 }
 
-/* Main */
 .main{
   background:rgba(255,255,255,0.9);
   backdrop-filter: blur(12px);
@@ -38,21 +37,33 @@ button{
 button:hover{background:#1d4ed8;}
 .deleteBtn{background:#dc2626;}
 
+textarea{
+  width:100%;
+  padding:6px;
+  border-radius:6px;
+  border:1px solid #ccc;
+  margin-top:5px;
+}
+
 /* KPI */
 .kpiContainer{display:flex;gap:15px;flex-wrap:wrap;}
 .kpi{
-  flex:1; min-width:150px;
-  padding:15px;border-radius:10px;color:white;text-align:center;
+  flex:1;
+  min-width:150px;
+  padding:15px;
+  border-radius:10px;
+  color:white;
+  text-align:center;
 }
 .kpi1{background:#3b82f6;}
 .kpi2{background:#10b981;}
 .kpi3{background:#f59e0b;}
 
-/* Categories */
+/* Category */
 .summaryHeader{display:flex;flex-wrap:wrap;gap:10px;}
 .catCard{
   background:#1e3a8a;color:white;padding:12px;border-radius:10px;
-  cursor:pointer;text-align:center;min-width:120px;
+  cursor:pointer;min-width:120px;text-align:center;
 }
 .catCard:hover{background:#2563eb;}
 .activeCat{background:#059669 !important;}
@@ -67,15 +78,14 @@ button:hover{background:#1d4ed8;}
   background:white;border-radius:10px;padding:15px;margin-top:15px;
 }
 
-/* Layout */
 .row{display:flex;gap:20px;}
+
 .box{
   border:2px dashed #ddd;height:200px;
   display:flex;align-items:center;justify-content:center;
 }
 .box img{max-width:100%;max-height:100%;}
 
-/* Section */
 .section{font-weight:bold;margin-top:10px;}
 
 .takeaway{
@@ -113,8 +123,11 @@ button:hover{background:#1d4ed8;}
 <input id="title" placeholder="Title"><br><br>
 
 <select id="cat">
-<option>5S</option><option>Safety</option><option>QMS</option>
-<option>Automation</option><option>Digitization</option>
+<option>5S</option>
+<option>Safety</option>
+<option>QMS</option>
+<option>Automation</option>
+<option>Digitization</option>
 <option>Skill Development</option>
 <option>Process Capability Improvement</option>
 <option>Others</option>
@@ -123,24 +136,30 @@ button:hover{background:#1d4ed8;}
 <br><br>
 
 <div class="row">
+
+<!-- BEFORE -->
 <div style="flex:1">
 <div class="section">Before</div>
 <input type="file" id="before"><br>
 <img id="bImg"><br>
+<textarea id="beforeDesc" placeholder="Before Description"></textarea>
 </div>
 
+<!-- AFTER -->
 <div style="flex:1">
 <div class="section">After</div>
 <input type="file" id="after"><br>
 <img id="aImg"><br>
+<textarea id="afterDesc" placeholder="After Description"></textarea>
 </div>
+
 </div>
 
 <div class="section">Impact</div>
 <textarea id="impact"></textarea>
 
 <div class="takeaway">
-<textarea id="takeaway"></textarea>
+<textarea id="takeaway" placeholder="Key Takeaway"></textarea>
 </div>
 
 <br>
@@ -159,16 +178,18 @@ firebase.initializeApp({
  authDomain:"rex-multi-user-file.firebaseapp.com",
  projectId:"rex-multi-user-file"
 });
+
 const db=firebase.firestore();
 
-/* Images */
-let beforeData="",afterData="";
+/* Image */
+let beforeData="", afterData="";
 
 before.onchange=e=>{
  let r=new FileReader();
  r.onload=evt=>{beforeData=evt.target.result;bImg.src=beforeData;}
  r.readAsDataURL(e.target.files[0]);
 };
+
 after.onchange=e=>{
  let r=new FileReader();
  r.onload=evt=>{afterData=evt.target.result;aImg.src=afterData;}
@@ -184,6 +205,8 @@ function save(){
   cat:(cat.value||"Others").trim(),
   before:beforeData,
   after:afterData,
+  beforeDesc:beforeDesc.value,
+  afterDesc:afterDesc.value,
   impact:impact.value,
   takeaway:takeaway.value
  };
@@ -201,23 +224,28 @@ function save(){
 }
 
 /* Navigation */
-function showCreate(){createPage.style.display="block";summaryPage.style.display="none";}
+function showCreate(){
+ createPage.style.display="block";
+ summaryPage.style.display="none";
+}
 function showSummary(){
  createPage.style.display="none";
  summaryPage.style.display="block";
  summaryPage.innerHTML="Loading...";
 }
 
-/* Data */
+/* Load Data */
 db.collection("rex").onSnapshot(snap=>{
 
- let data=[],count={};
+ let data=[], count={};
 
  snap.forEach(doc=>{
    let d=doc.data();
    d.id=doc.id;
+
    let c=(d.cat||"").trim()||"Others";
    d.cat=c;
+
    data.push(d);
    count[c]=(count[c]||0)+1;
  });
@@ -229,9 +257,9 @@ db.collection("rex").onSnapshot(snap=>{
  let html=`<h3 style="text-align:center">📊 Dashboard</h3>
 
  <div class="kpiContainer">
-   <div class="kpi kpi1">Total REX<br>${total}</div>
-   <div class="kpi kpi2">Categories<br>${Object.keys(count).length}</div>
-   <div class="kpi kpi3">Displayed<br>${total}</div>
+  <div class="kpi kpi1">Total REX<br>${total}</div>
+  <div class="kpi kpi2">Categories<br>${Object.keys(count).length}</div>
+  <div class="kpi kpi3">Displayed<br>${total}</div>
  </div>
 
  <div class="summaryHeader">`;
@@ -243,7 +271,6 @@ db.collection("rex").onSnapshot(snap=>{
  }
 
  html+=`</div>
-
  <div class="chartBox"><canvas id="barChart"></canvas></div>
 
  <div style="text-align:center">
@@ -262,16 +289,11 @@ db.collection("rex").onSnapshot(snap=>{
  }
 });
 
-/* ✅ SMART CHART */
+/* Chart */
 function createChart(count){
 
  let values=Object.values(count);
- let max=Math.max(...values);
-
- let suggestedMax=max+1;
- let step=1;
- if(max>10) step=2;
- if(max>20) step=5;
+ let max=Math.max(...values)||1;
 
  let ctx=document.getElementById("barChart");
 
@@ -280,22 +302,22 @@ function createChart(count){
  window.chartObj=new Chart(ctx,{
   type:"bar",
   data:{
-    labels:Object.keys(count),
-    datasets:[{data:values,backgroundColor:"#3b82f6"}]
+   labels:Object.keys(count),
+   datasets:[{data:values,backgroundColor:"#3b82f6"}]
   },
   plugins:[ChartDataLabels],
   options:{
-    plugins:{
-      legend:{display:false},
-      datalabels:{anchor:"end",align:"top",formatter:v=>v}
-    },
-    scales:{
-      y:{
-        beginAtZero:true,
-        suggestedMax:suggestedMax,
-        ticks:{stepSize:step}
-      }
-    }
+   plugins:{
+     legend:{display:false},
+     datalabels:{anchor:'end',align:'top',formatter:v=>v}
+   },
+   scales:{
+     y:{
+       beginAtZero:true,
+       suggestedMax:max+1,
+       ticks:{stepSize:1}
+     }
+   }
   }
  });
 }
@@ -308,37 +330,52 @@ function renderList(data){
  <b>${d.title} (${d.cat})</b>
 
  <div class="row">
- <div style="flex:1"><div class="section">Before</div>
- <div class="box">${d.before?'<img src="'+d.before+'">':''}</div></div>
 
- <div style="flex:1"><div class="section">After</div>
- <div class="box">${d.after?'<img src="'+d.after+'">':''}</div></div>
+ <div style="flex:1">
+ <div class="section">Before</div>
+ <div class="box">${d.before?'<img src="'+d.before+'">':''}</div>
+ <div>${d.beforeDesc||""}</div>
+ </div>
+
+ <div style="flex:1">
+ <div class="section">After</div>
+ <div class="box">${d.after?'<img src="'+d.after+'">':''}</div>
+ <div>${d.afterDesc||""}</div>
+ </div>
+
  </div>
 
  <div class="section">Impact</div>
- <div>${d.impact}</div>
+ <div>${d.impact||""}</div>
 
- <div class="takeaway">${d.takeaway}</div>
+ <div class="takeaway">${d.takeaway||""}</div>
 
  <button onclick="edit('${d.id}')">Edit</button>
  <button class="deleteBtn" onclick="del('${d.id}')">Delete</button>
+
  </div>`;
  });
+
  rexList.innerHTML=html;
 }
 
 /* Filter */
 function filterCategory(cat,el){
- document.querySelectorAll('.catCard').forEach(e=>e.classList.remove("activeCat"));
+ document.querySelectorAll('.catCard').forEach(x=>x.classList.remove("activeCat"));
  el.classList.add("activeCat");
  renderList(allData.filter(d=>d.cat===cat));
 }
-function showAll(){renderList(allData);}
+
+function showAll(){
+ document.querySelectorAll('.catCard').forEach(x=>x.classList.remove("activeCat"));
+ renderList(allData);
+}
 
 /* Edit/Delete */
 function edit(id){
  let d=allData.find(x=>x.id===id);
  showCreate();
+
  editId.value=id;
  title.value=d.title;
  cat.value=d.cat;
@@ -346,9 +383,12 @@ function edit(id){
  afterData=d.after||"";
  bImg.src=beforeData;
  aImg.src=afterData;
- impact.value=d.impact;
- takeaway.value=d.takeaway;
+ beforeDesc.value=d.beforeDesc||"";
+ afterDesc.value=d.afterDesc||"";
+ impact.value=d.impact||"";
+ takeaway.value=d.takeaway||"";
 }
+
 function del(id){
  if(confirm("Delete?")) db.collection("rex").doc(id).delete();
 }
@@ -356,11 +396,13 @@ function del(id){
 /* PDF */
 async function exportPDF(){
  const {jsPDF}=window.jspdf;
+
  let canvas=await html2canvas(rexList);
  let img=canvas.toDataURL("image/png");
+
  let pdf=new jsPDF();
  pdf.addImage(img,"PNG",0,0);
- pdf.save("REX.pdf");
+ pdf.save("REX_Report.pdf");
 }
 
 </script>
