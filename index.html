@@ -24,9 +24,7 @@ button{padding:8px 12px;background:#155e95;color:white;border:none;margin:3px;cu
 .box{
   border:2px solid #ddd;
   height:200px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  display:flex;align-items:center;justify-content:center;
 }
 .box img{max-width:100%;max-height:100%;}
 
@@ -37,13 +35,8 @@ button{padding:8px 12px;background:#155e95;color:white;border:none;margin:3px;cu
 /* Dashboard */
 .summaryHeader{display:flex;flex-wrap:wrap;gap:10px;}
 .catCard{
-  background:#1e3a8a;
-  color:white;
-  padding:12px;
-  border-radius:8px;
-  cursor:pointer;
-  min-width:120px;
-  text-align:center;
+  background:#1e3a8a;color:white;padding:12px;border-radius:8px;
+  cursor:pointer;min-width:120px;text-align:center;font-weight:bold;
 }
 .catCard:hover{background:#2563eb;}
 .activeCat{background:#059669 !important;}
@@ -56,6 +49,9 @@ button{padding:8px 12px;background:#155e95;color:white;border:none;margin:3px;cu
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
+<!-- ✅ Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <!-- ✅ PDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -64,7 +60,7 @@ button{padding:8px 12px;background:#155e95;color:white;border:none;margin:3px;cu
 
 <body>
 
-<h2>REX Management System</h2>
+<h2>📘 REX Management System</h2>
 
 <button onclick="showCreate()">New REX</button>
 <button onclick="showSummary()">Summary</button>
@@ -124,7 +120,7 @@ button{padding:8px 12px;background:#155e95;color:white;border:none;margin:3px;cu
 
 <script>
 
-/* ✅ Firebase Init */
+/* Firebase */
 firebase.initializeApp({
  apiKey:"AIzaSyCPUL-TGaO2PY7zYC3d1Eyx6J2oHjHWoyE",
  authDomain:"rex-multi-user-file.firebaseapp.com",
@@ -148,9 +144,8 @@ after.onchange=e=>{
  r.readAsDataURL(e.target.files[0]);
 };
 
-/* Save / Update */
+/* Save */
 function save(){
-
  let id=editId.value;
 
  let data={
@@ -167,10 +162,8 @@ function save(){
  if(!data.title){alert("Enter title");return;}
 
  if(id){
-   db.collection("rex").doc(id).update(data).then(()=>{
-     alert("✅ Updated");
-     editId.value="";
-   });
+   db.collection("rex").doc(id).update(data).then(()=>alert("✅ Updated"));
+   editId.value="";
  }else{
    db.collection("rex").add(data).then(()=>alert("✅ Saved"));
  }
@@ -188,7 +181,7 @@ function showSummary(){
  loadData();
 }
 
-/* Load Data */
+/* Load */
 function loadData(){
 
  db.collection("rex").get().then(snap=>{
@@ -211,26 +204,58 @@ function loadData(){
   let html="<h3>📊 REX Dashboard</h3>";
 
   html+=`<div class="summaryHeader">`;
-
   for(let c in count){
     html+=`<div class="catCard" onclick="filterCategory('${c}',this)">
-            ${c}<br>${count[c]}
+             ${c}<br>${count[c]}
            </div>`;
   }
+  html+=`</div>`;
 
-  html+=`</div>
-          <div class="topActions">
+  html+=`<canvas id="barChart" height="100"></canvas>`;
+
+  html+=`<div class="topActions">
           <button onclick="showAll()">Show All</button>
           <button onclick="exportPDF()">Export PDF</button>
           </div>
+
           <div id="rexList"></div>`;
 
   summaryPage.innerHTML=html;
 
   window.allData=data;
-  window.currentFilter=data;
 
   renderList(data);
+  createChart(count);
+ });
+}
+
+/* Chart */
+function createChart(count){
+
+ let labels=Object.keys(count);
+ let values=Object.values(count);
+
+ let ctx=document.getElementById('barChart').getContext('2d');
+
+ if(window.chartObj){window.chartObj.destroy();}
+
+ window.chartObj=new Chart(ctx,{
+  type:'bar',
+  data:{
+    labels:labels,
+    datasets:[{
+      label:'REX Count',
+      data:values,
+      backgroundColor:[
+        '#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#14b8a6','#f43f5e'
+      ]
+    }]
+  },
+  options:{
+    responsive:true,
+    plugins:{legend:{display:false}},
+    scales:{y:{beginAtZero:true}}
+  }
  });
 }
 
@@ -240,35 +265,28 @@ function renderList(data){
  let html="";
 
  data.forEach(d=>{
-
- html+=`
- <div class="card">
-
+ html+=`<div class="card">
  <b>${d.title} (${d.cat})</b>
 
  <div class="row">
+   <div style="flex:1">
+     BEFORE
+     <div class="box">${d.before?'<img src="'+d.before+'">':''}</div>
+     <div class="desc">${d.beforeDesc||""}</div>
+   </div>
 
- <div style="flex:1">
- BEFORE
- <div class="box">${d.before?'<img src="'+d.before+'">':''}</div>
- <div class="desc">${d.beforeDesc||""}</div>
- </div>
-
- <div style="flex:1">
- AFTER
- <div class="box">${d.after?'<img src="'+d.after+'">':''}</div>
- <div class="desc">${d.afterDesc||""}</div>
- </div>
-
+   <div style="flex:1">
+     AFTER
+     <div class="box">${d.after?'<img src="'+d.after+'">':''}</div>
+     <div class="desc">${d.afterDesc||""}</div>
+   </div>
  </div>
 
  <div class="impact">${d.impact||""}</div>
  <div class="takeaway">${d.takeaway||""}</div>
 
- <div>
-   <button onclick="edit('${d.id}')">Edit</button>
-   <button class="deleteBtn" onclick="del('${d.id}')">Delete</button>
- </div>
+ <button onclick="edit('${d.id}')">Edit</button>
+ <button class="deleteBtn" onclick="del('${d.id}')">Delete</button>
 
  </div>`;
  });
@@ -276,30 +294,31 @@ function renderList(data){
  rexList.innerHTML=html;
 }
 
-/* Filter */
+/* Filters */
 function filterCategory(cat,el){
-
  document.querySelectorAll('.catCard').forEach(x=>x.classList.remove("activeCat"));
  el.classList.add("activeCat");
 
  let f=allData.filter(d=>d.cat.toLowerCase()===cat.toLowerCase());
-
- currentFilter=f;
  renderList(f);
 }
 
 function showAll(){
  document.querySelectorAll('.catCard').forEach(x=>x.classList.remove("activeCat"));
- currentFilter=allData;
  renderList(allData);
 }
 
-/* Edit */
+/* Edit/Delete */
 function edit(id){
-
  let d=allData.find(x=>x.id===id);
 
- 
+ showCreate();
+
+ editId.value=id;
+ title.value=d.title;
+ cat.value=d.cat;
+ beforeData=d.before||"";
+ afterData=d.after||"";
  bImg.src=beforeData;
  aImg.src=afterData;
  beforeDesc.value=d.beforeDesc;
@@ -308,14 +327,9 @@ function edit(id){
  takeaway.value=d.takeaway;
 }
 
-/* Delete */
 function del(id){
-
  if(confirm("Delete this REX?")){
-   db.collection("rex").doc(id).delete().then(()=>{
-     alert("Deleted");
-     loadData();
-   });
+   db.collection("rex").doc(id).delete().then(()=>loadData());
  }
 }
 
