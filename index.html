@@ -11,7 +11,6 @@ body{
   background:linear-gradient(135deg,#1e3a8a,#0ea5e9);
   padding:20px;
 }
-
 .main{
   background:white;
   border-radius:12px;
@@ -19,7 +18,6 @@ body{
   max-width:1100px;
   margin:auto;
 }
-
 h2{text-align:center;color:white;}
 
 button{
@@ -37,99 +35,75 @@ textarea{width:100%;margin-top:5px;}
 
 /* ✅ TITLE */
 .sectionTitle{
-  text-align:center;
-  font-size:20px;
-  font-weight:bold;
-  margin-top:10px;
+ text-align:center;
+ font-size:20px;
+ font-weight:bold;
+ margin-top:10px;
 }
 
-/* ✅ CATEGORY UI */
+/* ✅ CATEGORY */
 .summaryHeader{
-  display:flex;
-  flex-wrap:wrap;
-  gap:20px;
-  justify-content:center;
-  margin-top:15px;
+ display:flex;
+ flex-wrap:wrap;
+ gap:20px;
+ justify-content:center;
 }
 
 .timelineCard{
-  position:relative;
-  width:180px;
-  height:110px;
-  background:#1e3a8a;
-  color:white;
-  border-radius:15px;
-
-  display:flex;
-  align-items:center;
-  justify-content:center;
-
-  box-shadow:0 6px 15px rgba(0,0,0,0.3);
-  cursor:pointer;
-  transition:0.3s;
+ position:relative;
+ width:180px;
+ height:110px;
+ background:#1e3a8a;
+ color:white;
+ border-radius:15px;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ cursor:pointer;
+ box-shadow:0 5px 15px rgba(0,0,0,0.3);
 }
 
-.timelineCard:hover{
- transform:translateY(-5px) scale(1.05);
+.timelineCard.activeCat{
+ background:#059669;
 }
 
 .cornerCount{
-  position:absolute;
-  top:0;
-  left:0;
-  background:#e5e7eb;
-  color:#111;
-  padding:6px 10px;
-  font-weight:bold;
-  border-radius:15px 0 10px 0;
+ position:absolute;
+ top:0;
+ left:0;
+ background:#e5e7eb;
+ color:#000;
+ padding:6px 10px;
+ font-weight:bold;
+ border-radius:15px 0 10px 0;
 }
 
 .timelineTitle{
- font-size:16px;
  font-weight:bold;
  text-align:center;
 }
 
-.activeCat{
-  background:#059669 !important;
-}
-
 /* Chart */
-.chartWrapper{
-  display:flex;
-  justify-content:center;
-  margin-top:15px;
-}
-.chartBox{
-  width:80%;
-  height:350px;
-}
+.chartWrapper{display:flex;justify-content:center;margin-top:15px;}
+.chartBox{width:80%;height:350px;}
 
 /* Cards */
 .card{
-  background:#f3f4f6;
-  padding:10px;
-  margin-top:10px;
-  border-radius:8px;
+ background:#f3f4f6;
+ padding:10px;
+ margin-top:10px;
+ border-radius:8px;
 }
-
 .row{display:flex;gap:10px;}
-
 .box{
-  height:180px;
-  border:1px dashed #ccc;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+ height:180px;
+ border:1px dashed #ccc;
+ display:flex;
+ align-items:center;
+ justify-content:center;
 }
 .box img{max-width:100%;max-height:100%;}
-
-.takeaway{
-  background:#0c4a6e;
-  color:white;
-  padding:10px;
-  margin-top:10px;
-}
+.takeaway{background:#0c4a6e;color:white;padding:10px;margin-top:10px;}
 </style>
 
 <!-- Firebase -->
@@ -155,7 +129,6 @@ textarea{width:100%;margin-top:5px;}
 
 <!-- CREATE -->
 <div id="createPage" class="main">
-
 <input type="hidden" id="editId">
 <input id="title" placeholder="Title"><br><br>
 
@@ -174,28 +147,22 @@ textarea{width:100%;margin-top:5px;}
 
 <div class="row">
 <div style="flex:1">
-Before
-<input type="file" id="before"><br>
+Before <input type="file" id="before"><br>
 <img id="bImg">
 <textarea id="beforeDesc"></textarea>
 </div>
 
 <div style="flex:1">
-After
-<input type="file" id="after"><br>
+After <input type="file" id="after"><br>
 <img id="aImg">
 <textarea id="afterDesc"></textarea>
 </div>
 </div>
 
 <textarea id="impact"></textarea>
-
-<div class="takeaway">
-<textarea id="takeaway"></textarea>
-</div>
+<div class="takeaway"><textarea id="takeaway"></textarea></div>
 
 <button onclick="save()">Save</button>
-
 </div>
 
 <!-- SUMMARY -->
@@ -204,11 +171,10 @@ After
 <script>
 
 firebase.initializeApp({
- apiKey:"AIza...",
+ apiKey:"YOUR_API_KEY",
  authDomain:"rex-multi-user-file.firebaseapp.com",
  projectId:"rex-multi-user-file"
 });
-
 const db=firebase.firestore();
 
 /* NAV */
@@ -216,22 +182,19 @@ function showCreate(){
  createPage.style.display="block";
  summaryPage.style.display="none";
 }
-
 function showSummary(){
  createPage.style.display="none";
  summaryPage.style.display="block";
- summaryPage.innerHTML="<h3 style='text-align:center'>Loading...</h3>";
+ summaryPage.innerHTML="<h3>Loading...</h3>";
 }
 
 /* IMAGE */
 let beforeData="",afterData="";
-
 before.onchange=e=>{
  let r=new FileReader();
  r.onload=x=>{beforeData=x.target.result;bImg.src=beforeData;}
  r.readAsDataURL(e.target.files[0]);
 };
-
 after.onchange=e=>{
  let r=new FileReader();
  r.onload=x=>{afterData=x.target.result;aImg.src=afterData;}
@@ -242,16 +205,24 @@ after.onchange=e=>{
 function save(){
  if(!title.value) return alert("Enter Title");
 
- db.collection("rex").add({
+ let id=editId.value;
+
+ let data={
   title:title.value,
-  cat:cat.value,
+  cat:cat.value || "Others",
   before:beforeData,
   after:afterData,
   beforeDesc:beforeDesc.value,
   afterDesc:afterDesc.value,
   impact:impact.value,
   takeaway:takeaway.value
- }).then(()=>alert("Saved"));
+ };
+
+ if(id){
+   db.collection("rex").doc(id).update(data).then(()=>alert("Updated"));
+ } else {
+   db.collection("rex").add(data).then(()=>alert("Saved"));
+ }
 }
 
 /* LOAD */
@@ -261,7 +232,9 @@ db.collection("rex").onSnapshot(snap=>{
 
  snap.forEach(doc=>{
   let d=doc.data();
-  if(!d.cat) return;                     /* ✅ remove undefined */
+  d.id=doc.id;
+
+  if(!d.cat) return;   // remove undefined
 
   data.push(d);
   count[d.cat]=(count[d.cat]||0)+1;
@@ -269,15 +242,14 @@ db.collection("rex").onSnapshot(snap=>{
 
  if(summaryPage.style.display==="block"){
 
- let html=`<h3 style="text-align:center">Dashboard</h3>
-
+ let html=`
+ <h3 style="text-align:center">Dashboard</h3>
  <div class="sectionTitle">REX Category</div>
-
  <div class="summaryHeader">`;
 
  for(let c in count){
  html+=`
- <div class="timelineCard">
+ <div class="timelineCard" onclick="filterCategory('${c}',this)">
    <div class="cornerCount">${count[c]}</div>
    <div class="timelineTitle">${c}</div>
  </div>`;
@@ -289,33 +261,129 @@ db.collection("rex").onSnapshot(snap=>{
  <div class="chartBox"><canvas id="barChart"></canvas></div>
  </div>
 
+ <div style="text-align:center">
+ <button onclick="showAll()">Show All</button>
  <button onclick="exportPDF()">Export PDF</button>
+ </div>
 
  <div id="rexList"></div>`;
 
  summaryPage.innerHTML=html;
 
+ window.allData=data;
+
+ renderList(data);
  createChart(count);
  }
 });
 
-/* ✅ CLEAN CHART */
+/* ✅ FILTER (FIXED) */
+function filterCategory(cat,el){
+ document.querySelectorAll('.timelineCard').forEach(x=>x.classList.remove("activeCat"));
+ el.classList.add("activeCat");
+
+ let filtered=allData.filter(d=>d.cat===cat);
+ renderList(filtered);
+}
+
+/* SHOW ALL */
+function showAll(){
+ document.querySelectorAll('.timelineCard').forEach(x=>x.classList.remove("activeCat"));
+ renderList(allData);
+}
+
+/* ✅ RENDER FULL CONTENT */
+function renderList(data){
+ let html="";
+ data.forEach(d=>{
+ html+=`
+ <div class="card">
+ <b>${d.title} (${d.cat})</b>
+
+ <div class="row">
+ <div class="box">${d.before?'<img src="'+d.before+'">':''}</div>
+ <div class="box">${d.after?'<img src="'+d.after+'">':''}</div>
+ </div>
+
+ <div>${d.impact||""}</div>
+ <div class="takeaway">${d.takeaway||""}</div>
+
+ <button onclick="edit('${d.id}')">Edit</button>
+ <button class="deleteBtn" onclick="del('${d.id}')">Delete</button>
+ </div>`;
+ });
+
+ rexList.innerHTML=html;
+}
+
+/* ✅ EDIT */
+function edit(id){
+ let d=allData.find(x=>x.id===id);
+ showCreate();
+
+ editId.value=id;
+ title.value=d.title;
+ cat.value=d.cat;
+
+ beforeData=d.before||"";
+ afterData=d.after||"";
+
+ bImg.src=beforeData;
+ aImg.src=afterData;
+
+ beforeDesc.value=d.beforeDesc||"";
+ afterDesc.value=d.afterDesc||"";
+ impact.value=d.impact||"";
+ takeaway.value=d.takeaway||"";
+}
+
+/* ✅ DELETE */
+function del(id){
+ if(confirm("Delete?")){
+  db.collection("rex").doc(id).delete();
+ }
+}
+
+/* CHART */
 function createChart(count){
+ let values=Object.values(count);
+ let max=Math.max(...values)||1;
 
  new Chart(barChart,{
   type:'bar',
   data:{
    labels:Object.keys(count),
    datasets:[{
-    label:"REX Count",        /* ✅ remove undefined */
-    data:Object.values(count),
+    label:"REX Count",
+    data:values,
     backgroundColor:[
-     '#3b82f6','#10b981','#f59e0b',
-     '#ef4444','#8b5cf6','#14b8a6'
+     '#3b82f6','#10b981','#f59e0b','#ef4444',
+     '#8b5cf6','#14b8a6','#f97316'
     ]
    }]
+  },
+  options:{
+   scales:{
+    y:{
+     beginAtZero:true,
+     suggestedMax:Math.ceil(max*1.2),
+     ticks:{stepSize:Math.ceil(max/5)}
+    }
+   }
   }
  });
+}
+
+/* PDF */
+async function exportPDF(){
+ const {jsPDF}=window.jspdf;
+
+ let canvas=await html2canvas(rexList,{scale:2});
+ let img=canvas.toDataURL("image/png");
+
+ let pdf=new jsPDF();
+ pdf.addImage(img,"PNG",0,0,210,canvas.height*210/canvas.width);
+ pdf.save("REX.pdf");
 }
 
 </script>
