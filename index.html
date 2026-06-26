@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -10,7 +11,6 @@ body{
  background:linear-gradient(135deg,#1e3a8a,#0ea5e9);
  padding:20px;
 }
-
 .headerBox{
  background:linear-gradient(90deg,#1e3a8a,#0ea5e9);
  padding:12px;
@@ -19,22 +19,18 @@ body{
  justify-content:space-between;
  border-radius:10px;
 }
-
 .main{
  background:white;
  padding:20px;
  border-radius:10px;
  margin-top:15px;
 }
-
-/* CATEGORY */
 .summaryHeader{
  display:flex;
  gap:10px;
  flex-wrap:wrap;
  justify-content:center;
 }
-
 .timelineCard{
  background:#1e3a8a;
  color:white;
@@ -43,10 +39,7 @@ body{
  cursor:pointer;
  position:relative;
 }
-.timelineCard.active{
- background:#22c55e;
-}
-
+.timelineCard.active{ background:#22c55e; }
 .cornerCount{
  position:absolute;
  top:-6px;
@@ -57,31 +50,15 @@ body{
  border-radius:8px;
  font-size:12px;
 }
-
-/* GRAPH */
-.chartWrapper{
- display:flex;
- justify-content:center;
- margin-top:10px;
-}
-.chartBox{
- width:50%;
- height:260px;
-}
-
-/* CARD */
+.chartWrapper{text-align:center;}
+.chartBox{width:50%;margin:auto;height:260px;}
 .card{
  background:#f3f4f6;
  padding:12px;
  margin-top:10px;
  border-radius:8px;
 }
-
-.row{
- display:flex;
- gap:10px;
-}
-
+.row{display:flex;gap:10px;}
 .box{
  height:140px;
  border:1px dashed #aaa;
@@ -91,52 +68,24 @@ body{
  cursor:pointer;
 }
 .box img{max-width:100%;max-height:100%;}
-
-.sectionTitle{
- font-weight:bold;
- color:#1e3a8a;
-}
-.descBox{
- background:#eef2ff;
- padding:8px;
- margin-top:5px;
-}
-.impactBox{
- background:#dbeafe;
- padding:8px;
- margin-top:5px;
- border-left:4px solid blue;
-}
-.takeaway{
- background:#0c4a6e;
- color:white;
- padding:8px;
- margin-top:5px;
-}
-
-/* ZOOM */
+.sectionTitle{font-weight:bold;color:#1e3a8a;}
+.descBox{background:#eef2ff;padding:8px;margin-top:5px;}
+.impactBox{background:#dbeafe;padding:8px;margin-top:5px;border-left:4px solid blue;}
+.takeaway{background:#0c4a6e;color:white;padding:8px;margin-top:5px;}
 #imgModal{
  display:none;
  position:fixed;
- width:100%;
- height:100%;
+ width:100%;height:100%;
  background:rgba(0,0,0,0.8);
  justify-content:center;
  align-items:center;
 }
-#imgModal img{
- max-width:90%;
- max-height:90%;
-}
-
+#imgModal img{max-width:90%;max-height:90%;}
 textarea{width:100%;}
 #impact,#takeaway{height:120px;}
-
-.deleteBtn{background:red;color:white;}
-
 </style>
 
-<!-- LIBRARIES -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
@@ -158,7 +107,7 @@ textarea{width:100%;}
  </div>
 </div>
 
-<!-- CREATE PAGE -->
+<!-- CREATE -->
 <div id="createPage" class="main">
 
 <input type="hidden" id="editId">
@@ -217,10 +166,10 @@ textarea{width:100%;}
 <script>
 
 firebase.initializeApp({
- apiKey:"AIzaSyCPUL-TGaO2PY7zYC3d1Eyx6J2oHjHWoyE",
+ apiKey:"YOUR_API_KEY",
  projectId:"rex-multi-user-file"
 });
-const db=firebase.firestore();
+const db = firebase.firestore();
 
 let allData=[];
 let selectedCategory=null;
@@ -238,29 +187,73 @@ function showSummary(){
 
 /* IMAGE */
 let beforeData="",afterData="";
+
 before.onchange=e=>{
+ if(!e.target.files[0]) return;
  let r=new FileReader();
- r.onload=x=>{beforeData=x.target.result;bImg.src=beforeData;}
- r.readAsDataURL(e.target.files[0]);
-};
-after.onchange=e=>{
- let r=new FileReader();
- r.onload=x=>{afterData=x.target.result;aImg.src=afterData;}
+ r.onload=x=>{
+  beforeData=x.target.result;
+  bImg.src=beforeData;
+ }
  r.readAsDataURL(e.target.files[0]);
 };
 
-/* SAVE */
-function save(){
- db.collection("rex").add({
-  title:title.value,
-  cat:cat.value,
-  before:beforeData,
-  after:afterData,
-  beforeDesc:beforeDesc.value,
-  afterDesc:afterDesc.value,
-  impact:impact.value,
-  takeaway:takeaway.value
- });
+after.onchange=e=>{
+ if(!e.target.files[0]) return;
+ let r=new FileReader();
+ r.onload=x=>{
+  afterData=x.target.result;
+  aImg.src=afterData;
+ }
+ r.readAsDataURL(e.target.files[0]);
+};
+
+/* ✅ SAVE FIXED */
+async function save(){
+
+ try{
+
+  if(!title.value){
+    alert("Enter title");
+    return;
+  }
+
+  let data={
+    title:title.value,
+    cat:cat.value,
+    before:beforeData,
+    after:afterData,
+    beforeDesc:beforeDesc.value,
+    afterDesc:afterDesc.value,
+    impact:impact.value,
+    takeaway:takeaway.value,
+    createdAt:new Date()
+  };
+
+  await db.collection("rex").add(data);
+
+  alert("Saved ✅");
+
+  clearForm();
+  showSummary();
+
+ }catch(err){
+  console.error(err);
+  alert("Save failed ❌");
+ }
+}
+
+/* CLEAR */
+function clearForm(){
+ title.value="";
+ beforeDesc.value="";
+ afterDesc.value="";
+ impact.value="";
+ takeaway.value="";
+ beforeData="";
+ afterData="";
+ bImg.src="";
+ aImg.src="";
 }
 
 /* LOAD */
@@ -270,7 +263,6 @@ db.collection("rex").onSnapshot(snap=>{
 
  snap.forEach(doc=>{
   let d=doc.data();
-  d.id=doc.id;
   allData.push(d);
   count[d.cat]=(count[d.cat]||0)+1;
  });
@@ -302,7 +294,6 @@ function renderSummary(count){
  </div>
 
  <button onclick="clearFilter()">Show All</button>
- <button onclick="exportPDF()">Export PDF</button>
 
  <div id="rexList"></div>`;
 
@@ -312,7 +303,6 @@ function renderSummary(count){
  renderList();
 }
 
-/* FILTER */
 function selectCategory(cat){
  selectedCategory=cat;
  renderSummary(getCounts());
@@ -323,7 +313,6 @@ function clearFilter(){
  renderSummary(getCounts());
 }
 
-/* COUNT */
 function getCounts(){
  let c={};
  allData.forEach(d=>c[d.cat]=(c[d.cat]||0)+1);
@@ -336,22 +325,16 @@ function renderChart(count){
  let labels=Object.keys(count);
  let values=Object.values(count);
 
- let colors=labels.map(l=>{
-  return selectedCategory && l!==selectedCategory ? "#cbd5e1" : "#2563eb";
- });
-
  if(chartInstance) chartInstance.destroy();
 
  chartInstance=new Chart(barChart,{
   type:'bar',
-  data:{labels:labels,datasets:[{data:values,backgroundColor:colors}]},
+  data:{labels,datasets:[{data:values}]},
   plugins:[ChartDataLabels],
   options:{
    plugins:{legend:{display:false}},
    onClick:(e,el)=>{
-    if(el.length){
-     selectCategory(labels[el[0].index]);
-    }
+    if(el.length) selectCategory(labels[el[0].index]);
    }
   }
  });
@@ -366,7 +349,6 @@ function renderList(){
 
  rexList.innerHTML=list.map(d=>`
  <div class="card">
-
  <b>${d.title}</b>
  <div>Category: ${d.cat}</div>
 
@@ -390,7 +372,6 @@ function renderList(){
 
  <div class="impactBox">${d.impact||""}</div>
  <div class="takeaway">${d.takeaway||""}</div>
-
  </div>
  `).join('');
 }
@@ -400,39 +381,6 @@ function zoom(src){
  if(!src) return;
  zoomImg.src=src;
  imgModal.style.display="flex";
-}
-
-/* ✅ IMPROVED PDF ONLY */
-async function exportPDF(){
-
- const {jsPDF}=window.jspdf;
-
- let canvas=await html2canvas(rexList,{
-  scale:3,
-  useCORS:true
- });
-
- let img=canvas.toDataURL("image/png");
-
- let pdf=new jsPDF("p","mm","a4");
-
- let imgWidth=210;
- let imgHeight=(canvas.height*imgWidth)/canvas.width;
-
- let heightLeft=imgHeight;
- let position=0;
-
- pdf.addImage(img,"PNG",0,position,imgWidth,imgHeight);
- heightLeft-=297;
-
- while(heightLeft>0){
-  position=heightLeft-imgHeight;
-  pdf.addPage();
-  pdf.addImage(img,"PNG",0,position,imgWidth,imgHeight);
-  heightLeft-=297;
- }
-
- pdf.save("REX_Report.pdf");
 }
 
 </script>
