@@ -13,7 +13,7 @@ body{
   background:linear-gradient(135deg,#1e3a8a,#0ea5e9);
 }
 
-/* Main */
+/* Container */
 .main{
   background:white;
   border-radius:12px;
@@ -22,10 +22,15 @@ body{
   margin:auto;
 }
 
-h2{text-align:center;color:white;}
+/* Title */
+h2{
+  text-align:center;
+  color:white;
+}
 
+/* Buttons */
 button{
-  padding:10px;
+  padding:10px 15px;
   margin:5px;
   border:none;
   border-radius:6px;
@@ -35,30 +40,34 @@ button{
 }
 .deleteBtn{background:#dc2626;}
 
-textarea{
-  width:100%;
-  margin-top:5px;
-}
-
 /* KPI */
-.kpiContainer{display:flex;gap:10px;}
+.kpiContainer{
+  display:flex;
+  gap:15px;
+  margin-bottom:10px;
+}
 .kpi{
   flex:1;
-  padding:10px;
+  padding:15px;
   color:white;
   text-align:center;
-  border-radius:8px;
+  border-radius:10px;
+  font-size:16px;
 }
 .kpi1{background:#3b82f6;}
 .kpi2{background:#10b981;}
 .kpi3{background:#f59e0b;}
 
-/* Category */
-.summaryHeader{display:flex;flex-wrap:wrap;gap:10px;}
+/* Category cards */
+.summaryHeader{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
 .catCard{
   background:#1e3a8a;
   color:white;
-  padding:10px;
+  padding:10px 12px;
   border-radius:8px;
   cursor:pointer;
 }
@@ -66,6 +75,7 @@ textarea{
 
 /* Chart */
 .chartBox{
+  height:320px;
   background:white;
   padding:15px;
   margin-top:15px;
@@ -93,6 +103,11 @@ textarea{
 
 .section{font-weight:bold;margin-top:5px;}
 
+textarea{
+  width:100%;
+  margin-top:5px;
+}
+
 .takeaway{
   background:#0c4a6e;
   color:white;
@@ -108,7 +123,7 @@ textarea{
 <!-- ✅ Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<!-- ✅ Chart Labels -->
+<!-- ✅ Data Labels -->
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 
 <!-- ✅ PDF -->
@@ -143,7 +158,6 @@ textarea{
 <br><br>
 
 <div class="row">
-
 <div style="flex:1">
 <div class="section">Before</div>
 <input type="file" id="before"><br>
@@ -157,7 +171,6 @@ textarea{
 <img id="aImg">
 <textarea id="afterDesc" placeholder="After Description"></textarea>
 </div>
-
 </div>
 
 <div class="section">Impact</div>
@@ -183,7 +196,6 @@ firebase.initializeApp({
  authDomain:"rex-multi-user-file.firebaseapp.com",
  projectId:"rex-multi-user-file"
 });
-
 const db=firebase.firestore();
 
 /* Image */
@@ -191,19 +203,18 @@ let beforeData="",afterData="";
 
 before.onchange=e=>{
  let r=new FileReader();
- r.onload=x=>{beforeData=x.target.result;bImg.src=beforeData}
- r.readAsDataURL(e.target.files[0])
+ r.onload=x=>{beforeData=x.target.result;bImg.src=beforeData;}
+ r.readAsDataURL(e.target.files[0]);
 };
 
 after.onchange=e=>{
  let r=new FileReader();
- r.onload=x=>{afterData=x.target.result;aImg.src=afterData}
- r.readAsDataURL(e.target.files[0])
+ r.onload=x=>{afterData=x.target.result;aImg.src=afterData;}
+ r.readAsDataURL(e.target.files[0]);
 };
 
 /* Save */
 function save(){
-
  if(!title.value) return alert("Enter title");
 
  db.collection("rex").add({
@@ -220,12 +231,11 @@ function save(){
  alert("Saved");
 }
 
-/* Nav */
+/* Navigation */
 function showCreate(){
  createPage.style.display="block";
  summaryPage.style.display="none";
 }
-
 function showSummary(){
  createPage.style.display="none";
  summaryPage.style.display="block";
@@ -247,7 +257,7 @@ db.collection("rex").onSnapshot(snap=>{
  let html=`<h3>📊 Dashboard</h3>
 
  <div class="kpiContainer">
-  <div class="kpi kpi1">Total<br>${data.length}</div>
+  <div class="kpi kpi1">Total REX<br>${data.length}</div>
   <div class="kpi kpi2">Categories<br>${Object.keys(count).length}</div>
   <div class="kpi kpi3">Displayed<br>${data.length}</div>
  </div>
@@ -262,7 +272,7 @@ db.collection("rex").onSnapshot(snap=>{
  html+=`</div>
 
  <div class="chartBox">
-  <canvas id="barChart"></canvas>
+ <canvas id="barChart"></canvas>
  </div>
 
  <div style="text-align:center">
@@ -279,13 +289,17 @@ db.collection("rex").onSnapshot(snap=>{
  renderList(data);
  createChart(count);
  }
-
 });
 
-/* ✅ BAR CHART ONLY */
+/* ✅ PROFESSIONAL BAR CHART */
 function createChart(count){
 
+ let labels=Object.keys(count);
  let values=Object.values(count);
+
+ let max=Math.max(...values);
+ let suggestedMax=max+Math.ceil(max*0.2);
+
  let ctx=document.getElementById("barChart");
 
  if(window.chartObj) window.chartObj.destroy();
@@ -293,25 +307,39 @@ function createChart(count){
  window.chartObj=new Chart(ctx,{
   type:"bar",
   data:{
-   labels:Object.keys(count),
+   labels:labels,
    datasets:[{
-    data:values,
-    backgroundColor:"#3b82f6"
+     data:values,
+     backgroundColor:"#3b82f6",
+     borderRadius:8,
+     barThickness:35
    }]
   },
   plugins:[ChartDataLabels],
   options:{
-   plugins:{
-    legend:{display:false},
-    datalabels:{
-      anchor:'end',
-      align:'top',
-      formatter:v=>v
+    responsive:true,
+    maintainAspectRatio:false,
+
+    plugins:{
+      legend:{display:false},
+      datalabels:{
+        anchor:'end',
+        align:'top',
+        font:{weight:'bold'}
+      }
+    },
+
+    scales:{
+      x:{
+        grid:{display:false},
+        ticks:{font:{weight:'bold'}}
+      },
+      y:{
+        beginAtZero:true,
+        suggestedMax:suggestedMax,
+        ticks:{stepSize:Math.ceil(max/5)||1}
+      }
     }
-   },
-   scales:{
-    y:{beginAtZero:true}
-   }
   }
  });
 }
@@ -321,11 +349,9 @@ function renderList(data){
  let html="";
  data.forEach(d=>{
  html+=`<div class="card">
-
  <b>${d.title} (${d.cat})</b>
 
  <div class="row">
-
  <div style="flex:1">
  <div class="section">Before</div>
  <div class="box">${d.before?'<img src="'+d.before+'">':''}</div>
@@ -337,12 +363,10 @@ function renderList(data){
  <div class="box">${d.after?'<img src="'+d.after+'">':''}</div>
  <div>${d.afterDesc||""}</div>
  </div>
-
  </div>
 
  <div>${d.impact||""}</div>
  <div class="takeaway">${d.takeaway||""}</div>
-
  </div>`;
  });
 
@@ -365,19 +389,15 @@ async function exportPDF(){
 
  const { jsPDF } = window.jspdf;
 
- let element = document.getElementById("rexList");
+ const canvas = await html2canvas(document.getElementById("rexList"),{scale:2});
+ const imgData = canvas.toDataURL("image/png");
 
- const canvas = await html2canvas(element, {scale:2});
+ let pdf = new jsPDF("p","mm","a4");
 
- const imgData = canvas.toDataURL('image/png');
+ let w=210;
+ let h=canvas.height*w/canvas.width;
 
- let pdf = new jsPDF('p','mm','a4');
-
- let width = 210;
- let height = canvas.height * width / canvas.width;
-
- pdf.addImage(imgData,'PNG',0,0,width,height);
-
+ pdf.addImage(imgData,"PNG",0,0,w,h);
  pdf.save("REX_Report.pdf");
 }
 
