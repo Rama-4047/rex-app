@@ -22,7 +22,8 @@ button{padding:10px 15px;background:#155e95;color:white;border:none;margin:5px;c
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-<!-- ✅ ✅ FIXED jsPDF -->
+<!-- ✅ ✅ HIGH QUALITY PDF LIBRARIES -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 </head>
@@ -84,7 +85,7 @@ button{padding:10px 15px;background:#155e95;color:white;border:none;margin:5px;c
 
 <script>
 
-/* ✅ FIREBASE */
+/* ✅ FIREBASE INIT */
 firebase.initializeApp({
  apiKey: "AIzaSyCPUL-TGaO2PY7zYC3d1Eyx6J2oHjHWoyE",
  authDomain: "rex-multi-user-file.firebaseapp.com",
@@ -151,7 +152,7 @@ function showSummary(){
  loadData();
 }
 
-/* ✅ LOAD DATA + CATEGORY COUNT */
+/* ✅ LOAD DATA */
 function loadData(){
 
  db.collection("rex").get().then(function(snapshot){
@@ -238,31 +239,39 @@ function showAll(){
  renderList(window.allData);
 }
 
-/* ✅ PDF EXPORT */
-function exportPDF(){
+/* ✅ ✅ HIGH QUALITY PDF */
+async function exportPDF(){
 
- const { jsPDF } = window.jspdf;
- let doc=new jsPDF();
+  const { jsPDF } = window.jspdf;
 
- let data=window.currentFilter || window.allData;
+  let element = document.getElementById("rexList");
 
- let y=10;
+  const canvas = await html2canvas(element, { scale: 2 });
 
- data.forEach(function(d,i){
+  const imgData = canvas.toDataURL('image/png');
 
-  doc.text((i+1)+". "+(d.title||""),10,y); y+=6;
-  doc.text("Category: "+(d.cat||""),10,y); y+=6;
-  doc.text("Impact: "+(d.impact||""),10,y); y+=6;
-  doc.text("Takeaway: "+(d.takeaway||""),10,y); y+=10;
+  let pdf = new jsPDF('p', 'mm', 'a4');
 
-  if(y>270){
-   doc.addPage();
-   y=10;
+  let imgWidth = 210;
+  let pageHeight = 295;
+
+  let imgHeight = canvas.height * imgWidth / canvas.width;
+
+  let heightLeft = imgHeight;
+  let position = 0;
+
+  pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+
+  heightLeft -= pageHeight;
+
+  while (heightLeft > 0) {
+    position = heightLeft - imgHeight;
+    pdf.addPage();
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
   }
 
- });
-
- doc.save("REX_Report.pdf");
+  pdf.save("REX_Report.pdf");
 }
 
 </script>
