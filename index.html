@@ -13,8 +13,9 @@ body{
   background:linear-gradient(135deg,#1e3a8a,#0ea5e9);
 }
 
+/* Main */
 .main{
-  background:rgba(255,255,255,0.9);
+  background:white;
   border-radius:12px;
   padding:20px;
   max-width:1200px;
@@ -27,16 +28,27 @@ button{
   padding:10px;
   margin:5px;
   border:none;
+  border-radius:6px;
   background:#2563eb;
   color:white;
-  border-radius:5px;
   cursor:pointer;
 }
 .deleteBtn{background:#dc2626;}
 
+textarea{
+  width:100%;
+  margin-top:5px;
+}
+
 /* KPI */
 .kpiContainer{display:flex;gap:10px;}
-.kpi{flex:1;padding:10px;color:white;text-align:center;border-radius:8px;}
+.kpi{
+  flex:1;
+  padding:10px;
+  color:white;
+  text-align:center;
+  border-radius:8px;
+}
 .kpi1{background:#3b82f6;}
 .kpi2{background:#10b981;}
 .kpi3{background:#f59e0b;}
@@ -44,12 +56,15 @@ button{
 /* Category */
 .summaryHeader{display:flex;flex-wrap:wrap;gap:10px;}
 .catCard{
-  background:#1e3a8a;color:white;padding:10px;border-radius:8px;
+  background:#1e3a8a;
+  color:white;
+  padding:10px;
+  border-radius:8px;
   cursor:pointer;
 }
 .activeCat{background:#059669 !important;}
 
-/* Charts */
+/* Chart */
 .chartBox{
   background:white;
   padding:15px;
@@ -58,22 +73,32 @@ button{
 }
 
 /* Cards */
-.card{background:white;padding:10px;margin-top:10px;border-radius:8px;}
+.card{
+  background:#f8fafc;
+  padding:10px;
+  margin-top:10px;
+  border-radius:8px;
+}
 
 .row{display:flex;gap:10px;}
 
 .box{
   height:200px;
   border:1px dashed #ccc;
-  display:flex;align-items:center;justify-content:center;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 .box img{max-width:100%;max-height:100%;}
 
 .section{font-weight:bold;margin-top:5px;}
 
-textarea{width:100%;margin-top:5px;}
-
-.takeaway{background:#0c4a6e;color:white;padding:10px;margin-top:10px;}
+.takeaway{
+  background:#0c4a6e;
+  color:white;
+  padding:10px;
+  margin-top:10px;
+}
 </style>
 
 <!-- ✅ Firebase -->
@@ -83,7 +108,7 @@ textarea{width:100%;margin-top:5px;}
 <!-- ✅ Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<!-- ✅ Data Labels -->
+<!-- ✅ Chart Labels -->
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 
 <!-- ✅ PDF -->
@@ -118,6 +143,7 @@ textarea{width:100%;margin-top:5px;}
 <br><br>
 
 <div class="row">
+
 <div style="flex:1">
 <div class="section">Before</div>
 <input type="file" id="before"><br>
@@ -131,6 +157,7 @@ textarea{width:100%;margin-top:5px;}
 <img id="aImg">
 <textarea id="afterDesc" placeholder="After Description"></textarea>
 </div>
+
 </div>
 
 <div class="section">Impact</div>
@@ -152,10 +179,11 @@ textarea{width:100%;margin-top:5px;}
 
 /* Firebase */
 firebase.initializeApp({
- apiKey:"AIzaSy...",
+ apiKey:"AIzaSyCPUL-TGaO2PY7zYC3d1Eyx6J2oHjHWoyE",
  authDomain:"rex-multi-user-file.firebaseapp.com",
  projectId:"rex-multi-user-file"
 });
+
 const db=firebase.firestore();
 
 /* Image */
@@ -166,6 +194,7 @@ before.onchange=e=>{
  r.onload=x=>{beforeData=x.target.result;bImg.src=beforeData}
  r.readAsDataURL(e.target.files[0])
 };
+
 after.onchange=e=>{
  let r=new FileReader();
  r.onload=x=>{afterData=x.target.result;aImg.src=afterData}
@@ -174,6 +203,9 @@ after.onchange=e=>{
 
 /* Save */
 function save(){
+
+ if(!title.value) return alert("Enter title");
+
  db.collection("rex").add({
   title:title.value,
   cat:cat.value,
@@ -184,12 +216,20 @@ function save(){
   impact:impact.value,
   takeaway:takeaway.value
  });
+
  alert("Saved");
 }
 
 /* Nav */
-function showCreate(){createPage.style.display="block";summaryPage.style.display="none";}
-function showSummary(){createPage.style.display="none";summaryPage.style.display="block";}
+function showCreate(){
+ createPage.style.display="block";
+ summaryPage.style.display="none";
+}
+
+function showSummary(){
+ createPage.style.display="none";
+ summaryPage.style.display="block";
+}
 
 /* Load */
 db.collection("rex").onSnapshot(snap=>{
@@ -207,78 +247,71 @@ db.collection("rex").onSnapshot(snap=>{
  let html=`<h3>📊 Dashboard</h3>
 
  <div class="kpiContainer">
- <div class="kpi kpi1">Total<br>${data.length}</div>
- <div class="kpi kpi2">Categories<br>${Object.keys(count).length}</div>
- <div class="kpi kpi3">Displayed<br>${data.length}</div>
+  <div class="kpi kpi1">Total<br>${data.length}</div>
+  <div class="kpi kpi2">Categories<br>${Object.keys(count).length}</div>
+  <div class="kpi kpi3">Displayed<br>${data.length}</div>
  </div>
 
  <div class="summaryHeader">`;
 
  for(let c in count){
-  html+=`<div class="catCard">${c}<br>${count[c]}</div>`;
+  html+=`<div class="catCard" onclick="filterCategory('${c}',this)">
+  ${c}<br>${count[c]}</div>`;
  }
 
  html+=`</div>
 
- <!-- ✅ PIE -->
  <div class="chartBox">
- <h4>Distribution</h4>
- <canvas id="pieChart"></canvas>
+  <canvas id="barChart"></canvas>
  </div>
 
- <!-- ✅ BAR -->
- <div class="chartBox">
- <h4>Category Count</h4>
- <canvas id="barChart"></canvas>
+ <div style="text-align:center">
+  <button onclick="showAll()">Show All</button>
+  <button onclick="exportPDF()">Export PDF</button>
  </div>
 
  <div id="rexList"></div>`;
 
  summaryPage.innerHTML=html;
 
+ window.allData=data;
+
  renderList(data);
- createPieChart(count);
- createBarChart(count);
+ createChart(count);
  }
 
 });
 
-/* ✅ PIE */
-function createPieChart(count){
- new Chart(document.getElementById("pieChart"),{
-  type:'pie',
+/* ✅ BAR CHART ONLY */
+function createChart(count){
+
+ let values=Object.values(count);
+ let ctx=document.getElementById("barChart");
+
+ if(window.chartObj) window.chartObj.destroy();
+
+ window.chartObj=new Chart(ctx,{
+  type:"bar",
   data:{
    labels:Object.keys(count),
    datasets:[{
-    data:Object.values(count),
-    backgroundColor:['#3b82f6','#10b981','#f59e0b','#ef4444']
+    data:values,
+    backgroundColor:"#3b82f6"
    }]
   },
   plugins:[ChartDataLabels],
   options:{
    plugins:{
+    legend:{display:false},
     datalabels:{
-     color:"#fff",
-     formatter:(v,ctx)=>{
-      let total=Object.values(count).reduce((a,b)=>a+b,0);
-      return ((v/total)*100).toFixed(1)+"%";
-     }
+      anchor:'end',
+      align:'top',
+      formatter:v=>v
     }
+   },
+   scales:{
+    y:{beginAtZero:true}
    }
-  }
- });
-}
-
-/* ✅ BAR */
-function createBarChart(count){
- new Chart(document.getElementById("barChart"),{
-  type:'bar',
-  data:{
-   labels:Object.keys(count),
-   datasets:[{
-    data:Object.values(count),
-    backgroundColor:'#3b82f6'
-   }]
   }
  });
 }
@@ -287,9 +320,65 @@ function createBarChart(count){
 function renderList(data){
  let html="";
  data.forEach(d=>{
- html+=`<div class="card"><b>${d.title}</b></div>`;
+ html+=`<div class="card">
+
+ <b>${d.title} (${d.cat})</b>
+
+ <div class="row">
+
+ <div style="flex:1">
+ <div class="section">Before</div>
+ <div class="box">${d.before?'<img src="'+d.before+'">':''}</div>
+ <div>${d.beforeDesc||""}</div>
+ </div>
+
+ <div style="flex:1">
+ <div class="section">After</div>
+ <div class="box">${d.after?'<img src="'+d.after+'">':''}</div>
+ <div>${d.afterDesc||""}</div>
+ </div>
+
+ </div>
+
+ <div>${d.impact||""}</div>
+ <div class="takeaway">${d.takeaway||""}</div>
+
+ </div>`;
  });
+
  rexList.innerHTML=html;
+}
+
+/* Filter */
+function filterCategory(cat,el){
+ document.querySelectorAll('.catCard').forEach(x=>x.classList.remove("activeCat"));
+ el.classList.add("activeCat");
+ renderList(allData.filter(d=>d.cat===cat));
+}
+
+function showAll(){
+ renderList(allData);
+}
+
+/* ✅ PDF EXPORT */
+async function exportPDF(){
+
+ const { jsPDF } = window.jspdf;
+
+ let element = document.getElementById("rexList");
+
+ const canvas = await html2canvas(element, {scale:2});
+
+ const imgData = canvas.toDataURL('image/png');
+
+ let pdf = new jsPDF('p','mm','a4');
+
+ let width = 210;
+ let height = canvas.height * width / canvas.width;
+
+ pdf.addImage(imgData,'PNG',0,0,width,height);
+
+ pdf.save("REX_Report.pdf");
 }
 
 </script>
