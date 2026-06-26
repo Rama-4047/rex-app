@@ -13,7 +13,6 @@ body{
   background:linear-gradient(135deg,#1e3a8a,#0ea5e9);
 }
 
-/* Container */
 .main{
   background:white;
   border-radius:12px;
@@ -24,7 +23,6 @@ body{
 
 h2{text-align:center;color:white;}
 
-/* Buttons */
 button{
   padding:10px 15px;
   margin:5px;
@@ -36,11 +34,11 @@ button{
 }
 .deleteBtn{background:#dc2626;}
 
-/* KPI */
+textarea{width:100%;margin-top:5px;}
+
 .kpiContainer{
   display:flex;
   gap:15px;
-  margin-bottom:10px;
 }
 .kpi{
   flex:1;
@@ -48,13 +46,11 @@ button{
   color:white;
   text-align:center;
   border-radius:10px;
-  font-size:16px;
 }
 .kpi1{background:#3b82f6;}
 .kpi2{background:#10b981;}
 .kpi3{background:#f59e0b;}
 
-/* Category boxes */
 .summaryHeader{
   display:flex;
   flex-wrap:wrap;
@@ -63,20 +59,17 @@ button{
 .catCard{
   background:#1e3a8a;
   color:white;
-  padding:10px 12px;
+  padding:10px;
   border-radius:8px;
   cursor:pointer;
 }
 .activeCat{background:#059669 !important;}
 
-/* Chart */
 .chartBox{
   height:350px;
-  padding:10px;
   margin-top:15px;
 }
 
-/* Cards */
 .card{
   background:#f8fafc;
   padding:10px;
@@ -96,25 +89,17 @@ button{
 .box img{max-width:100%;max-height:100%;}
 
 .section{font-weight:bold;margin-top:5px;}
-
-textarea{width:100%;margin-top:5px;}
-
-.takeaway{
-  background:#0c4a6e;
-  color:white;
-  padding:10px;
-  margin-top:10px;
-}
+.takeaway{background:#0c4a6e;color:white;padding:10px;margin-top:10px;}
 </style>
 
 <!-- ✅ Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-<!-- ✅ Chart.js -->
+<!-- ✅ Chart -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<!-- ✅ Data Labels -->
+<!-- ✅ Labels -->
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 
 <!-- ✅ PDF -->
@@ -170,7 +155,7 @@ textarea{width:100%;margin-top:5px;}
 <textarea id="impact"></textarea>
 
 <div class="takeaway">
-<textarea id="takeaway" placeholder="Takeaway"></textarea>
+<textarea id="takeaway"></textarea>
 </div>
 
 <br>
@@ -191,7 +176,6 @@ firebase.initializeApp({
 });
 const db=firebase.firestore();
 
-/* Images */
 let beforeData="",afterData="";
 
 before.onchange=e=>{
@@ -199,7 +183,6 @@ before.onchange=e=>{
  r.onload=x=>{beforeData=x.target.result;bImg.src=beforeData;}
  r.readAsDataURL(e.target.files[0]);
 };
-
 after.onchange=e=>{
  let r=new FileReader();
  r.onload=x=>{afterData=x.target.result;aImg.src=afterData;}
@@ -212,7 +195,7 @@ function save(){
 
  db.collection("rex").add({
   title:title.value,
-  cat:cat.value,
+  cat:(cat.value||"Others").trim(),
   before:beforeData,
   after:afterData,
   beforeDesc:beforeDesc.value,
@@ -224,15 +207,9 @@ function save(){
  alert("Saved");
 }
 
-/* Navigation */
-function showCreate(){
- createPage.style.display="block";
- summaryPage.style.display="none";
-}
-function showSummary(){
- createPage.style.display="none";
- summaryPage.style.display="block";
-}
+/* Nav */
+function showCreate(){createPage.style.display="block";summaryPage.style.display="none";}
+function showSummary(){createPage.style.display="none";summaryPage.style.display="block";}
 
 /* Load */
 db.collection("rex").onSnapshot(snap=>{
@@ -242,7 +219,8 @@ db.collection("rex").onSnapshot(snap=>{
  snap.forEach(doc=>{
   let d=doc.data();
   data.push(d);
-  count[d.cat]=(count[d.cat]||0)+1;
+  let c=(d.cat||"Others").trim();
+  count[c]=(count[c]||0)+1;
  });
 
  if(summaryPage.style.display==="block"){
@@ -250,98 +228,110 @@ db.collection("rex").onSnapshot(snap=>{
  let html=`<h3>📊 Dashboard</h3>
 
  <div class="kpiContainer">
-  <div class="kpi kpi1">Total REX<br>${data.length}</div>
-  <div class="kpi kpi2">Categories<br>${Object.keys(count).length}</div>
-  <div class="kpi kpi3">Displayed<br>${data.length}</div>
+ <div class="kpi kpi1">Total<br>${data.length}</div>
+ <div class="kpi kpi2">Categories<br>${Object.keys(count).length}</div>
+ <div class="kpi kpi3">Displayed<br>${data.length}</div>
  </div>
 
  <div class="summaryHeader">`;
 
  for(let c in count){
-  html+=`<div class="catCard">${c}<br>${count[c]}</div>`;
+  html+=`<div class="catCard" onclick="filterCategory('${c}',this)">
+  ${c}<br>${count[c]}</div>`;
  }
 
  html+=`</div>
 
  <div class="chartBox">
-  <canvas id="barChart"></canvas>
+ <canvas id="barChart"></canvas>
  </div>
 
  <div style="text-align:center">
-  <button onclick="exportPDF()">Export PDF</button>
+ <button onclick="showAll()">Show All</button>
+ <button onclick="exportPDF()">Export PDF</button>
  </div>
 
  <div id="rexList"></div>`;
 
  summaryPage.innerHTML=html;
 
+ window.allData=data;
+
  renderList(data);
  createChart(count);
  }
 });
 
-/* ✅ FINAL PROFESSIONAL BAR CHART */
+/* ✅ FILTER FIX */
+function filterCategory(cat,el){
+ document.querySelectorAll('.catCard').forEach(x=>x.classList.remove("activeCat"));
+ el.classList.add("activeCat");
+
+ let filtered=allData.filter(d=>d.cat && d.cat.trim().toLowerCase()===cat.toLowerCase());
+
+ renderList(filtered);
+}
+
+function showAll(){
+ document.querySelectorAll('.catCard').forEach(x=>x.classList.remove("activeCat"));
+ renderList(allData);
+}
+
+/* ✅ PROFESSIONAL CHART */
 function createChart(count){
 
- let labels = Object.keys(count);
- let values = Object.values(count);
+ let labels=Object.keys(count);
+ let values=Object.values(count);
 
- let colors = [
-  '#3b82f6','#10b981','#f59e0b','#ef4444',
-  '#8b5cf6','#14b8a6','#f97316','#6366f1'
- ];
+ let colors=['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#14b8a6','#f97316'];
 
- let max = Math.max(...values);
- let suggestedMax = Math.ceil(max * 1.25);
-
+ let max=Math.max(...values);
  let ctx=document.getElementById("barChart");
 
  if(window.chartObj) window.chartObj.destroy();
 
  window.chartObj=new Chart(ctx,{
-  type:'bar',
+  type:"bar",
   data:{
    labels:labels,
    datasets:[{
      data:values,
-     backgroundColor:colors.slice(0,values.length),
-     borderRadius:10,
-     barPercentage:0.6,
-     categoryPercentage:0.6
+     backgroundColor:colors.slice(0,labels.length),
+     borderRadius:8,
+     barPercentage:0.6
    }]
   },
   plugins:[ChartDataLabels],
   options:{
-   responsive:true,
-   maintainAspectRatio:false,
+    responsive:true,
+    maintainAspectRatio:false,
 
-   plugins:{
+    plugins:{
      legend:{display:false},
      datalabels:{
-       anchor:'end',
-       align:'top',
-       font:{weight:'bold'},
-       formatter:v=>v
+      anchor:'end',
+      align:'top',
+      font:{weight:'bold'},
+      formatter:v=>v
      }
-   },
+    },
 
-   scales:{
-    x:{
+    scales:{
+     x:{
       grid:{display:false},
       ticks:{
-        font:{size:11,weight:'bold'},
-        callback:function(val){
-          let label=this.getLabelForValue(val);
-          return label.length>15 ? label.split(" ") : label;
-        }
+       callback:function(val){
+         let label=this.getLabelForValue(val);
+         return label.length>12?label.split(" "):label;
+       }
       }
-    },
-    y:{
+     },
+     y:{
       beginAtZero:true,
-      suggestedMax:suggestedMax,
+      suggestedMax:Math.ceil(max*1.25),
       ticks:{stepSize:Math.ceil(max/5)||1}
+     }
     }
-   }
   }
  });
 }
@@ -375,14 +365,14 @@ function renderList(data){
  rexList.innerHTML=html;
 }
 
-/* ✅ PDF */
+/* PDF */
 async function exportPDF(){
  const { jsPDF } = window.jspdf;
 
- let canvas = await html2canvas(document.getElementById("rexList"),{scale:2});
- let img = canvas.toDataURL("image/png");
+ let canvas=await html2canvas(document.getElementById("rexList"),{scale:2});
+ let img=canvas.toDataURL("image/png");
 
- let pdf = new jsPDF("p","mm","a4");
+ let pdf=new jsPDF("p","mm","a4");
 
  let w=210;
  let h=canvas.height*w/canvas.width;
