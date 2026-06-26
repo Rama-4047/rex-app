@@ -12,6 +12,7 @@ body{
   padding:20px;
 }
 
+/* Container */
 .main{
   background:white;
   border-radius:12px;
@@ -35,24 +36,27 @@ button{
 
 textarea{width:100%;margin-top:5px;}
 
-/* KPI */
+/* ✅ KPI (REDUCED SIZE) */
 .kpiContainer{
   display:flex;
   justify-content:center;
-  gap:20px;
+  gap:15px;
+  margin-bottom:15px;
 }
 .kpi{
-  width:200px;
+  width:170px;
   padding:12px;
   color:white;
   text-align:center;
-  border-radius:10px;
+  border-radius:8px;
+  font-weight:bold;
+  box-shadow:0 4px 10px rgba(0,0,0,0.2);
 }
 .kpi1{background:#3b82f6;}
 .kpi2{background:#10b981;}
 .kpi3{background:#f59e0b;}
 
-/* Categories */
+/* ✅ MODERN CATEGORY PILLS */
 .summaryHeader{
   display:flex;
   flex-wrap:wrap;
@@ -62,15 +66,32 @@ textarea{width:100%;margin-top:5px;}
 .catCard{
   background:#1e3a8a;
   color:white;
-  padding:10px;
-  border-radius:8px;
+  padding:8px 14px;
+  border-radius:25px;
   cursor:pointer;
+  text-align:center;
+  box-shadow:0 3px 8px rgba(0,0,0,0.2);
+  transition:0.3s;
 }
-.activeCat{background:#059669 !important;}
+.catCard:hover{
+  transform:scale(1.08);
+  background:#2563eb;
+}
+.activeCat{
+  background:#059669 !important;
+  transform:scale(1.1);
+}
 
-/* Chart */
-.chartWrapper{display:flex;justify-content:center;}
-.chartBox{width:80%;height:350px;}
+/* ✅ CENTERED CHART */
+.chartWrapper{
+  display:flex;
+  justify-content:center;
+  margin-top:15px;
+}
+.chartBox{
+  width:80%;
+  height:350px;
+}
 
 /* Cards */
 .card{
@@ -100,12 +121,12 @@ textarea{width:100%;margin-top:5px;}
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 <!-- Chart -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+https://cdn.jsdelivr.net/npm/chart.js>
+https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels
 
 <!-- PDF -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.jsscript>
+https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.jsscript>
 
 </head>
 
@@ -176,7 +197,6 @@ firebase.initializeApp({
  authDomain:"rex-multi-user-file.firebaseapp.com",
  projectId:"rex-multi-user-file"
 });
-
 const db=firebase.firestore();
 
 /* NAV */
@@ -188,10 +208,10 @@ function showCreate(){
 function showSummary(){
  createPage.style.display="none";
  summaryPage.style.display="block";
- summaryPage.innerHTML="<h3 style='text-align:center'>⏳ Loading...</h3>";
+ summaryPage.innerHTML="<h3 style='text-align:center'>⏳ Loading Dashboard...</h3>";
 }
 
-/* SAVE */
+/* IMAGE */
 let beforeData="",afterData="";
 
 before.onchange=e=>{
@@ -199,20 +219,20 @@ before.onchange=e=>{
  r.onload=x=>{beforeData=x.target.result;bImg.src=beforeData;}
  r.readAsDataURL(e.target.files[0]);
 };
-
 after.onchange=e=>{
  let r=new FileReader();
  r.onload=x=>{afterData=x.target.result;aImg.src=afterData;}
  r.readAsDataURL(e.target.files[0]);
 };
 
+/* SAVE */
 function save(){
 
  let id=editId.value;
 
  let data={
   title:title.value,
-  cat:cat.value,
+  cat:(cat.value||"Others").trim(),
   before:beforeData,
   after:afterData,
   beforeDesc:beforeDesc.value,
@@ -220,6 +240,8 @@ function save(){
   impact:impact.value,
   takeaway:takeaway.value
  };
+
+ if(!title.value) return alert("Enter Title");
 
  if(id){
   db.collection("rex").doc(id).update(data);
@@ -240,13 +262,16 @@ db.collection("rex").onSnapshot(snap=>{
  snap.forEach(doc=>{
   let d=doc.data();
   d.id=doc.id;
+
+  let c=(d.cat||"Others").trim();
+
   data.push(d);
-  count[d.cat]=(count[d.cat]||0)+1;
+  count[c]=(count[c]||0)+1;
  });
 
  if(summaryPage.style.display==="block"){
 
- let html=`<h3>📊 Dashboard</h3>
+ let html=`<h3 style="text-align:center">Dashboard</h3>
 
  <div class="kpiContainer">
   <div class="kpi kpi1">Total<br>${data.length}</div>
@@ -258,7 +283,8 @@ db.collection("rex").onSnapshot(snap=>{
 
  for(let c in count){
   html+=`<div class="catCard" onclick="filterCategory('${c}',this)">
-  ${c}<br><b>${count[c]}</b></div>`;
+   ${c}<br><span>${count[c]}</span>
+  </div>`;
  }
 
  html+=`</div>
@@ -288,23 +314,21 @@ function filterCategory(cat,el){
  document.querySelectorAll('.catCard').forEach(x=>x.classList.remove("activeCat"));
  el.classList.add("activeCat");
 
- let filtered=allData.filter(d=>d.cat===cat);
- renderList(filtered);
+ renderList(allData.filter(d=>d.cat===cat));
 }
 
 function showAll(){
+ document.querySelectorAll('.catCard').forEach(x=>x.classList.remove("activeCat"));
  renderList(allData);
 }
 
-/* ✅ CHART */
+/* CHART */
 function createChart(count){
 
- let values=Object.values(count);
- let max=Math.max(...values);
+ let values = Object.values(count);
+ let max=Math.max(...values) || 1;
 
- let ctx=document.getElementById("barChart");
-
- new Chart(ctx,{
+ new Chart(document.getElementById("barChart"),{
   type:'bar',
   data:{
    labels:Object.keys(count),
@@ -313,34 +337,35 @@ function createChart(count){
     backgroundColor:[
      '#3b82f6','#10b981','#f59e0b','#ef4444',
      '#8b5cf6','#14b8a6','#f97316'
-    ]
+    ],
+    borderRadius:8
    }]
   },
   plugins:[ChartDataLabels],
   options:{
+   maintainAspectRatio:false,
    plugins:{
     legend:{display:false},
     datalabels:{anchor:'end',align:'top'}
    },
    scales:{
     y:{
-     beginAtZero:true,
-     suggestedMax:Math.ceil(max*1.2),
-     ticks:{stepSize:Math.ceil(max/5)}
+      beginAtZero:true,
+      suggestedMax:Math.ceil(max*1.2),
+      ticks:{stepSize:Math.ceil(max/5)}
     }
    }
   }
  });
 }
 
-/* ✅ SHOW FULL DATA */
+/* RENDER */
 function renderList(data){
 
  let html="";
 
  data.forEach(d=>{
- html+=`
- <div class="card">
+ html+=`<div class="card">
  <b>${d.title} (${d.cat})</b>
 
  <div class="row">
@@ -368,13 +393,13 @@ function renderList(data){
  rexList.innerHTML=html;
 }
 
-/* ✅ EDIT */
+/* EDIT */
 function edit(id){
  let d=allData.find(x=>x.id===id);
+
  showCreate();
 
  editId.value=id;
-
  title.value=d.title;
  cat.value=d.cat;
 
@@ -390,9 +415,9 @@ function edit(id){
  aImg.src=afterData;
 }
 
-/* ✅ DELETE */
+/* DELETE */
 function del(id){
- if(confirm("Delete?")){
+ if(confirm("Delete this REX?")){
   db.collection("rex").doc(id).delete();
  }
 }
@@ -400,14 +425,16 @@ function del(id){
 /* PDF */
 async function exportPDF(){
  const {jsPDF}=window.jspdf;
- let canvas=await html2canvas(rexList);
+ let canvas=await html2canvas(rexList,{scale:2});
  let img=canvas.toDataURL("image/png");
 
- let pdf=new jsPDF();
- pdf.addImage(img,"PNG",0,0);
- pdf.save("REX.pdf");
-}
+ let pdf=new jsPDF("p","mm","a4");
+ let w=210;
+ let h=canvas.height*w/canvas.width;
 
+ pdf.addImage(img,"PNG",0,0,w,h);
+ pdf.save("REX_Report.pdf");
+}
 </script>
 
 </body>
