@@ -14,7 +14,7 @@ body{
 
 .headerBox{
  background:linear-gradient(90deg,#1e3a8a,#0ea5e9);
- padding:10px;
+ padding:12px;
  color:white;
  display:flex;
  justify-content:space-between;
@@ -24,8 +24,8 @@ body{
 .main{
  background:white;
  padding:20px;
- margin-top:15px;
  border-radius:10px;
+ margin-top:15px;
 }
 
 /* CATEGORY */
@@ -43,7 +43,6 @@ body{
  border-radius:25px;
  cursor:pointer;
  position:relative;
- transition:0.3s;
 }
 
 .timelineCard.active{
@@ -81,24 +80,18 @@ body{
  border-radius:8px;
 }
 
-.row{
- display:flex;
- gap:10px;
-}
+.row{display:flex;gap:10px;}
 
 .box{
- height:150px;
+ height:140px;
  border:1px dashed #aaa;
  display:flex;
- align-items:center;
  justify-content:center;
+ align-items:center;
  cursor:pointer;
 }
 
-.box img{
- max-width:100%;
- max-height:100%;
-}
+.box img{max-width:100%;max-height:100%;}
 
 .sectionTitle{
  font-weight:bold;
@@ -129,27 +122,25 @@ body{
 #imgModal{
  display:none;
  position:fixed;
- top:0;
- left:0;
  width:100%;
  height:100%;
  background:rgba(0,0,0,0.8);
  justify-content:center;
  align-items:center;
 }
-
 #imgModal img{
  max-width:90%;
  max-height:90%;
 }
-
 </style>
 
 <!-- LIBRARIES -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -168,7 +159,7 @@ body{
 <div id="summaryPage" class="main"></div>
 
 <div id="imgModal" onclick="this.style.display='none'">
- <img id="zoomImg">
+<img id="zoomImg">
 </div>
 
 <script>
@@ -177,88 +168,88 @@ firebase.initializeApp({
  apiKey:"AIzaSyCPUL-TGaO2PY7zYC3d1Eyx6J2oHjHWoyE",
  projectId:"rex-multi-user-file"
 });
-
 const db=firebase.firestore();
 
-let allData=[];
-let selectedCategory=null;
-let chartRef=null;
+let allData = [];
+let selectedCategory = null;
+let chartInstance = null;
 
 /* LOAD */
 db.collection("rex").onSnapshot(snap=>{
-
- let count={};
- allData=[];
+ allData = [];
+ let count = {};
 
  snap.forEach(doc=>{
-  let d=doc.data();
-  d.id=doc.id;
+  let d = doc.data();
+  d.id = doc.id;
   allData.push(d);
-  count[d.cat]=(count[d.cat]||0)+1;
+  count[d.cat] = (count[d.cat] || 0) + 1;
  });
 
- renderUI(count);
+ renderDashboard(count);
 });
 
-/* MAIN UI */
-function renderUI(count){
+/* MAIN RENDER */
+function renderDashboard(count){
 
- let html="<h3>Dashboard</h3>";
+ let html = "<h3>Dashboard</h3>";
 
- html+="<div class='summaryHeader'>";
+ /* CATEGORY */
+ html += "<div class='summaryHeader'>";
  Object.keys(count).forEach(c=>{
  html+=`
  <div class="timelineCard ${selectedCategory===c?'active':''}" onclick="selectCategory('${c}')">
-  <div class="cornerCount">${count[c]}</div>
-  ${c}
+   <div class="cornerCount">${count[c]}</div>
+   ${c}
  </div>`;
  });
  html+="</div>";
 
- html+=`
+ /* GRAPH */
+ html += `
  <div class="chartWrapper">
-  <div class="chartBox">
-   <canvas id="barChart"></canvas>
-  </div>
+   <div class="chartBox">
+     <canvas id="barChart"></canvas>
+   </div>
  </div>
 
- <button onclick="clearFilter()">Show All</button>
+ <button onclick="resetFilter()">Show All</button>
  <button onclick="exportPDF()">Export PDF</button>
 
  <div id="rexList"></div>`;
 
- summaryPage.innerHTML=html;
+ summaryPage.innerHTML = html;
 
- buildChart(count);
+ renderChart(count);
  renderList();
 }
 
-/* CATEGORY CLICK */
+/* SELECT */
 function selectCategory(cat){
  selectedCategory = cat;
- renderUI(getCount());
+ renderDashboard(getCounts());
 }
 
-/* CLEAR */
-function clearFilter(){
+/* RESET */
+function resetFilter(){
  selectedCategory = null;
- renderUI(getCount());
+ renderDashboard(getCounts());
 }
 
 /* COUNT */
-function getCount(){
+function getCounts(){
  let count={};
  allData.forEach(d=>{
-  count[d.cat]=(count[d.cat]||0)+1;
+  count[d.cat] = (count[d.cat]||0)+1;
  });
  return count;
 }
 
 /* GRAPH */
-function buildChart(count){
+function renderChart(count){
 
- let labels=Object.keys(count);
- let values=Object.values(count);
+ let labels = Object.keys(count);
+ let values = Object.values(count);
 
  let colorMap={
   "5S":"#f59e0b",
@@ -270,17 +261,21 @@ function buildChart(count){
   "QMS":"#f97316"
  };
 
- let colors=labels.map(l=>{
-  return selectedCategory && l!==selectedCategory ? "#cbd5e1" : colorMap[l];
+ let colors = labels.map(l=>{
+  return selectedCategory && l !== selectedCategory
+    ? "#cbd5e1"
+    : colorMap[l];
  });
 
- chartRef=new Chart(barChart,{
+ if(chartInstance) chartInstance.destroy();
+
+ chartInstance = new Chart(barChart,{
   type:'bar',
   data:{
    labels:labels,
    datasets:[{
-    data:values,
-    backgroundColor:colors
+     data:values,
+     backgroundColor:colors
    }]
   },
   plugins:[ChartDataLabels],
@@ -288,7 +283,7 @@ function buildChart(count){
    plugins:{legend:{display:false}},
    onClick:(e,el)=>{
     if(el.length){
-     let cat=labels[el[0].index];
+     let cat = labels[el[0].index];
      selectCategory(cat);
     }
    }
@@ -303,13 +298,14 @@ function renderList(){
    ? allData.filter(d=>d.cat===selectedCategory)
    : allData;
 
- rexList.innerHTML=list.map(d=>`
+ rexList.innerHTML = list.map(d=>`
  <div class="card">
 
  <b>${d.title}</b>
  <div>Category: ${d.cat}</div>
 
  <div class="row">
+
  <div style="flex:1">
  <div class="sectionTitle">Before</div>
  <div class="box" onclick="zoom('${d.before}')">
@@ -325,6 +321,7 @@ function renderList(){
  </div>
  <div class="descBox">${d.afterDesc||""}</div>
  </div>
+
  </div>
 
  <div class="impactBox">${d.impact||""}</div>
@@ -336,7 +333,7 @@ function renderList(){
 
 /* ZOOM */
 function zoom(src){
- zoomImg.src=src;
+ zoomImg.src = src;
  imgModal.style.display="flex";
 }
 
