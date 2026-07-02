@@ -423,8 +423,21 @@ let colors=labels.map(l=>{
   type:'bar',
   data:{labels,datasets:[{data:values,backgroundColor:colors}]},
   plugins:[ChartDataLabels],
-  options:{
-   plugins:{legend:{display:false}},
+ 
+options:{
+ plugins:{
+  legend:{display:false},
+  datalabels:{
+   color:"#1e3a8a",
+   anchor:"end",
+   align:"top",
+   font:{
+    weight:"bold",
+    size:14
+   }
+  }
+ },
+
    onClick:(e,el)=>{
     if(el.length){
      selectCategory(labels[el[0].index]);
