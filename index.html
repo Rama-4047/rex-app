@@ -330,8 +330,13 @@ ${s}
 
  <div id="rexList"></div>`;
  
+
 function filterSupplier(supplier){
+
  selectedSupplier = supplier || null;
+
+ selectedCategory = null;
+
  renderSummary(getCounts());
 }
 
@@ -354,11 +359,26 @@ function clearFilter(){
  renderSummary(getCounts());
 }
 
+
 function getCounts(){
- let c={};
- allData.forEach(d=>c[d.cat]=(c[d.cat]||0)+1);
+
+ let filteredData = allData;
+
+ if(selectedSupplier){
+  filteredData = filteredData.filter(
+   d => d.supplierName === selectedSupplier
+  );
+ }
+
+ let c = {};
+
+ filteredData.forEach(d => {
+  c[d.cat] = (c[d.cat] || 0) + 1;
+ });
+
  return c;
 }
+
 
 /* GRAPH */
 function renderChart(count){
