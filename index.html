@@ -248,6 +248,7 @@ function clearForm(){
 
 
 /* LOAD */
+
 db.collection("rex").onSnapshot(snap=>{
  allData=[];
  let count={};
@@ -259,9 +260,11 @@ db.collection("rex").onSnapshot(snap=>{
   count[d.cat]=(count[d.cat]||0)+1;
  });
 
-
-if(summaryPage.style.display==="block")
+ if(summaryPage.style.display==="block"){
   renderSummary(getCounts());
+ }
+
+});
 
 
 /* SUMMARY */
@@ -337,16 +340,6 @@ ${s}
  <div id="rexList"></div>`;
  
 
-function filterSupplier(supplier){
-
- selectedSupplier = supplier || null;
-
- selectedCategory = null;
-
- renderSummary(getCounts());
-}
-
-
  summaryPage.innerHTML=html;
 
  renderChart(count);
@@ -365,13 +358,33 @@ function clearFilter(){
  renderSummary(getCounts());
 }
 
+function filterSupplier(supplier){
+
+ selectedSupplier = supplier || null;
+
+ selectedCategory = null;
+
+ renderSummary(getCounts());
+}
+
 
 
 function getCounts(){
+
+ let filteredData = allData;
+
+ if(selectedSupplier){
+  filteredData = filteredData.filter(
+   d => d.supplierName === selectedSupplier
+  );
+ }
+
  let c = {};
- allData.forEach(d=>{
+
+ filteredData.forEach(d=>{
   c[d.cat] = (c[d.cat] || 0) + 1;
  });
+
  return c;
 }
 
