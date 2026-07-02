@@ -102,6 +102,7 @@ textarea{width:100%;}
 <input type="hidden" id="editId">
 
 <input id="title" placeholder="Title"><br><br>
+<input id="supplierName" placeholder="Supplier Name"><br><br>
 
 <select id="cat">
 <option>5S</option>
@@ -192,16 +193,19 @@ after.onchange=e=>{
 /* ✅ SAVE (ADD + UPDATE) */
 async function save(){
 
- let data={
-  title:title.value,
-  cat:cat.value,
-  before:beforeData,
-  after:afterData,
-  beforeDesc:beforeDesc.value,
-  afterDesc:afterDesc.value,
-  impact:impact.value,
-  takeaway:takeaway.value
- };
+
+let data={
+ supplierName:supplierName.value,
+ title:title.value,
+ cat:cat.value,
+ before:beforeData,
+ after:afterData,
+ beforeDesc:beforeDesc.value,
+ afterDesc:afterDesc.value,
+ impact:impact.value,
+ takeaway:takeaway.value
+};
+
 
  if(editId.value){
   await db.collection("rex").doc(editId.value).update(data);
@@ -211,20 +215,25 @@ async function save(){
   alert("Saved ✅");
  }
 
- clearForm();
- showSummary();
-}
 
 function clearForm(){
+
+ supplierName.value="";
  title.value="";
  beforeDesc.value="";
  afterDesc.value="";
  impact.value="";
  takeaway.value="";
- beforeData=""; afterData="";
- bImg.src=""; aImg.src="";
+
+ beforeData="";
+ afterData="";
+
+ bImg.src="";
+ aImg.src="";
+
  editId.value="";
 }
+
 
 /* LOAD */
 db.collection("rex").onSnapshot(snap=>{
@@ -244,7 +253,29 @@ db.collection("rex").onSnapshot(snap=>{
 /* SUMMARY */
 function renderSummary(count){
 
- let html="<h3>Dashboard</h3>";
+ 
+let supplierNameTitle = "";
+
+if(allData.length > 0){
+ supplierNameTitle = allData[0].supplierName || "";
+}
+
+let html = `
+<div style="
+background:white;
+padding:15px;
+border-radius:10px;
+margin-bottom:15px;
+text-align:center;
+font-size:30px;
+font-weight:bold;
+color:#1e3a8a;">
+🏭 ${supplierNameTitle}
+</div>
+
+<h3>REX Dashboard</h3>
+`;
+
 
  html+="<div class='summaryHeader'>";
  Object.keys(count).forEach(c=>{
@@ -326,7 +357,13 @@ function renderList(){
  rexList.innerHTML=list.map(d=>`
  <div class="card">
 
- <b>${d.title}</b>
+ 
+<div style="font-size:18px;font-weight:bold;color:#1e3a8a;">
+🏭 ${d.supplierName || ""}
+</div>
+
+<b>${d.title}</b>
+
  <div>Category: ${d.cat}</div>
 
  <div class="row">
@@ -358,16 +395,21 @@ function renderList(){
 }
 
 /* ✅ EDIT */
+
 function editREX(id){
 
  let d = allData.find(x => x.id === id);
 
+ supplierName.value = d.supplierName || "";
  title.value = d.title;
  cat.value = d.cat;
+
  beforeData = d.before;
  afterData = d.after;
+
  bImg.src = d.before;
  aImg.src = d.after;
+
  beforeDesc.value = d.beforeDesc;
  afterDesc.value = d.afterDesc;
  impact.value = d.impact;
@@ -377,6 +419,7 @@ function editREX(id){
 
  showCreate();
 }
+
 
 /* ✅ DELETE */
 async function deleteREX(id){
