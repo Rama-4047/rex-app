@@ -102,7 +102,6 @@ textarea{width:100%;}
 <input type="hidden" id="editId">
 
 <input id="title" placeholder="Title"><br><br>
-<input id="supplierName" placeholder="Supplier Name"><br><br>
 
 <select id="cat">
 <option>5S</option>
@@ -162,7 +161,6 @@ const db=firebase.firestore();
 let allData=[];
 let selectedCategory=null;
 let chartInstance=null;
-let selectedSupplier = null;
 
 /* NAV */
 function showCreate(){
@@ -192,20 +190,15 @@ after.onchange=e=>{
 };
 
 /* ✅ SAVE (ADD + UPDATE) */
-
 async function save(){
 
  let data={
   title:title.value,
-  supplierName:supplierName.value,
   cat:cat.value,
-
   before:beforeData,
   after:afterData,
-
   beforeDesc:beforeDesc.value,
   afterDesc:afterDesc.value,
-
   impact:impact.value,
   takeaway:takeaway.value
  };
@@ -222,26 +215,16 @@ async function save(){
  showSummary();
 }
 
-
-
 function clearForm(){
-
  title.value="";
- supplierName.value="";
  beforeDesc.value="";
  afterDesc.value="";
  impact.value="";
  takeaway.value="";
-
- beforeData="";
- afterData="";
-
- bImg.src="";
- aImg.src="";
-
+ beforeData=""; afterData="";
+ bImg.src=""; aImg.src="";
  editId.value="";
 }
-
 
 /* LOAD */
 db.collection("rex").onSnapshot(snap=>{
@@ -280,7 +263,7 @@ function renderSummary(count){
  </div>
  </div>
 
- <button onclick="clearAllFilters()">Show All</button>
+ <button onclick="clearFilter()">Show All</button>
  <button onclick="exportPDF()">Export PDF</button>
 
  <div id="rexList"></div>`;
@@ -300,53 +283,11 @@ function clearFilter(){
  selectedCategory=null;
  renderSummary(getCounts());
 }
-
- let filtered = allData;
-
- if(selectedSupplier){
-  filtered = filtered.filter(
-   x => x.supplierName === selectedSupplier
-  );
- }
-
- let c = {};
-
- filtered.forEach(d=>{
-  c[d.cat] = (c[d.cat] || 0) + 1;
- });
-
+function getCounts(){
+ let c={};
+ allData.forEach(d=>c[d.cat]=(c[d.cat]||0)+1);
  return c;
 }
-
-let suppliers =
- [...new Set(allData.map(x=>x.supplierName).filter(Boolean))];
-
-html += `
-<div style="margin:15px 0;">
-<select id="supplierFilter"
-        onchange="selectSupplier(this.value)">
- <option value="">All Suppliers</option>
- ${suppliers.map(s=>`
- <option value="${s}"
- ${selectedSupplier===s?'selected':''}>
- ${s}
- </option>`).join('')}
-</select>
-</div>
-
-function selectSupplier(name){
-
- selectedSupplier = name || null;
-
- renderSummary(getCounts());
-}
-
-function clearAllFilters(){
-
- selectedCategory = null;
- selectedSupplier = null;
-
- r
 
 /* GRAPH */
 function renderChart(count){
@@ -378,37 +319,15 @@ function renderChart(count){
 /* ✅ DISPLAY WITH EDIT + DELETE */
 function renderList(){
 
-
-let list = allData;
-
-if(selectedCategory){
- list = list.filter(
-  d=>d.cat===selectedCategory
- );
-}
-
-if(selectedSupplier){
- list = list.filter(
-  d=>d.supplierName===selectedSupplier
- );
-}
-
+ let list=selectedCategory
+  ? allData.filter(d=>d.cat===selectedCategory)
+  : allData;
 
  rexList.innerHTML=list.map(d=>`
  <div class="card">
 
- 
-<div style="
-font-size:18px;
-font-weight:bold;
-color:#1e3a8a;">
-${d.title} - ${d.supplierName || ''}
-</div>
-
- 
-div>Category: ${d.cat}</div>
-<div>Supplier: ${d.supplierName || ''}</div>
-
+ <b>${d.title}</b>
+ <div>Category: ${d.cat}</div>
 
  <div class="row">
  <div style="flex:1">
@@ -439,31 +358,25 @@ div>Category: ${d.cat}</div>
 }
 
 /* ✅ EDIT */
-
 function editREX(id){
 
  let d = allData.find(x => x.id === id);
 
- title.value = d.title || "";
- supplierName.value = d.supplierName || "";
- cat.value = d.cat || "";
-
- beforeData = d.before || "";
- afterData = d.after || "";
-
- bImg.src = d.before || "";
- aImg.src = d.after || "";
-
- beforeDesc.value = d.beforeDesc || "";
- afterDesc.value = d.afterDesc || "";
- impact.value = d.impact || "";
- takeaway.value = d.takeaway || "";
+ title.value = d.title;
+ cat.value = d.cat;
+ beforeData = d.before;
+ afterData = d.after;
+ bImg.src = d.before;
+ aImg.src = d.after;
+ beforeDesc.value = d.beforeDesc;
+ afterDesc.value = d.afterDesc;
+ impact.value = d.impact;
+ takeaway.value = d.takeaway;
 
  editId.value = id;
 
  showCreate();
 }
-
 
 /* ✅ DELETE */
 async function deleteREX(id){
