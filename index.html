@@ -286,6 +286,25 @@ function getSupplierSummary(){
 }
 
 
+function getSupplierSummary(){
+
+ let summary = {};
+
+ allData.forEach(d=>{
+
+  let supplier = d.supplierName || "Unknown";
+
+  if(!summary[supplier]){
+   summary[supplier] = 0;
+  }
+
+  summary[supplier]++;
+
+ });
+
+ return summary;
+}
+
 /* SUMMARY */
 function renderSummary(count){
 
