@@ -190,32 +190,42 @@ after.onchange=e=>{
  r.readAsDataURL(e.target.files[0]);
 };
 
+
 /* ✅ SAVE (ADD + UPDATE) */
 async function save(){
 
+ let data={
+  supplierName:supplierName.value,
+  title:title.value,
+  cat:cat.value,
+  before:beforeData,
+  after:afterData,
+  beforeDesc:beforeDesc.value,
+  afterDesc:afterDesc.value,
+  impact:impact.value,
+  takeaway:takeaway.value
+ };
 
-let data={
- supplierName:supplierName.value,
- title:title.value,
- cat:cat.value,
- before:beforeData,
- after:afterData,
- beforeDesc:beforeDesc.value,
- afterDesc:afterDesc.value,
- impact:impact.value,
- takeaway:takeaway.value
-};
+ try{
 
+  if(editId.value){
+   await db.collection("rex").doc(editId.value).update(data);
+   alert("Updated ✅");
+  }else{
+   await db.collection("rex").add(data);
+   alert("Saved ✅");
+  }
 
- if(editId.value){
-  await db.collection("rex").doc(editId.value).update(data);
-  alert("Updated ✅");
- }else{
-  await db.collection("rex").add(data);
-  alert("Saved ✅");
+  clearForm();
+  showSummary();
+
+ }catch(err){
+  console.error(err);
+  alert("Error saving record");
  }
+}
 
-
+/* ✅ CLEAR FORM */
 function clearForm(){
 
  supplierName.value="";
@@ -233,6 +243,7 @@ function clearForm(){
 
  editId.value="";
 }
+
 
 
 /* LOAD */
