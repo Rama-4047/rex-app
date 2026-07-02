@@ -162,6 +162,7 @@ const db=firebase.firestore();
 let allData=[];
 let selectedCategory=null;
 let chartInstance=null;
+let selectedSupplier = null;
 
 /* NAV */
 function showCreate(){
@@ -298,6 +299,25 @@ color:#1e3a8a;">
  });
  html+="</div>";
 
+ 
+let suppliers = [...new Set(
+ allData.map(d => d.supplierName).filter(Boolean)
+)];
+
+html += `
+<div style="margin:15px 0;text-align:center;">
+<label><b>Supplier Filter:</b></label>
+<select onchange="filterSupplier(this.value)">
+<option value="">All Suppliers</option>
+${suppliers.map(s => `
+<option value="${s}" ${selectedSupplier===s?'selected':''}>
+${s}
+</option>
+`).join('')}
+</select>
+</div>
+`;
+
  html+=`
  <div class="chartWrapper">
  <div class="chartBox">
@@ -309,6 +329,12 @@ color:#1e3a8a;">
  <button onclick="exportPDF()">Export PDF</button>
 
  <div id="rexList"></div>`;
+ 
+function filterSupplier(supplier){
+ selectedSupplier = supplier || null;
+ renderSummary(getCounts());
+}
+
 
  summaryPage.innerHTML=html;
 
@@ -321,10 +347,13 @@ function selectCategory(cat){
  selectedCategory=cat;
  renderSummary(getCounts());
 }
+
 function clearFilter(){
- selectedCategory=null;
+ selectedCategory = null;
+ selectedSupplier = null;
  renderSummary(getCounts());
 }
+
 function getCounts(){
  let c={};
  allData.forEach(d=>c[d.cat]=(c[d.cat]||0)+1);
@@ -361,9 +390,16 @@ function renderChart(count){
 /* ✅ DISPLAY WITH EDIT + DELETE */
 function renderList(){
 
- let list=selectedCategory
-  ? allData.filter(d=>d.cat===selectedCategory)
-  : allData;
+let list = allData;
+
+if(selectedCategory){
+ list = list.filter(d => d.cat === selectedCategory);
+}
+
+if(selectedSupplier){
+ list = list.filter(d => d.supplierName === selectedSupplier);
+}
+
 
 
 
