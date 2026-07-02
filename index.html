@@ -266,6 +266,25 @@ db.collection("rex").onSnapshot(snap=>{
 
 });
 
+function getSupplierSummary(){
+
+ let summary = {};
+
+ allData.forEach(d => {
+
+  let supplier = d.supplierName || "Unknown";
+
+  if(!summary[supplier]){
+   summary[supplier] = 0;
+  }
+
+  summary[supplier]++;
+
+ });
+
+ return summary;
+}
+
 
 /* SUMMARY */
 function renderSummary(count){
@@ -296,6 +315,39 @@ ${selectedSupplier ? " - " + selectedSupplier : ""}
 
 `;
 
+
+let supplierSummary = getSupplierSummary();
+
+html += `
+<h3 style="color:#1e3a8a;">Supplier Wise REX Summary</h3>
+
+<table style="
+width:100%;
+border-collapse:collapse;
+margin-bottom:15px;
+background:white;">
+<tr style="background:#1e3a8a;color:white;">
+<th style="padding:8px;border:1px solid #ddd;">Supplier Name</th>
+<th style="padding:8px;border:1px solid #ddd;">REX Count</th>
+</tr>
+
+${Object.keys(supplierSummary).map(s=>`
+<tr style="cursor:pointer"
+onclick="filterSupplier('${s}')">
+<td style="padding:8px;border:1px solid #ddd;">
+${s}
+</td>
+<td style="
+padding:8px;
+border:1px solid #ddd;
+text-align:center;">
+${supplierSummary[s]}
+</td>
+</tr>
+`).join('')}
+
+</table>
+`;
 
  html+="<div class='summaryHeader'>";
  Object.keys(count).forEach(c=>{
