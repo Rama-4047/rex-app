@@ -365,17 +365,24 @@ function renderList(){
   ? allData.filter(d=>d.cat===selectedCategory)
   : allData;
 
- rexList.innerHTML=list.map(d=>`
+
+
+rexList.innerHTML=list.map(d=>`
  <div class="card">
 
- 
-<div style="font-size:18px;font-weight:bold;color:#1e3a8a;">
-🏭 ${d.supplierName || ""}
-</div>
+ <div style="
+ font-size:18px;
+ font-weight:bold;
+ color:#1e3a8a;
+ margin-bottom:5px;">
+ Supplier Name: ${d.supplierName || ""}
+ </div>
 
-<b>${d.title}</b>
+ <b>${d.title}</b>
 
  <div>Category: ${d.cat}</div>
+
+
 
  <div class="row">
  <div style="flex:1">
