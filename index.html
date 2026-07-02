@@ -259,8 +259,10 @@ db.collection("rex").onSnapshot(snap=>{
   count[d.cat]=(count[d.cat]||0)+1;
  });
 
- if(summaryPage.style.display==="block") renderSummary(count);
-});
+
+if(summaryPage.style.display==="block")
+  renderSummary(getCounts());
+
 
 /* SUMMARY */
 function renderSummary(count){
@@ -285,7 +287,11 @@ color:#1e3a8a;">
 🏭 ${supplierNameTitle}
 </div>
 
-<h3>REX Dashboard</h3>
+<h3>
+REX Dashboard
+${selectedSupplier ? " - " + selectedSupplier : ""}
+</h3>
+
 `;
 
 
