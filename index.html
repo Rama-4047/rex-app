@@ -410,16 +410,20 @@ function renderChart(count){
 /* ✅ DISPLAY WITH EDIT + DELETE */
 function renderList(){
 
+
 let list = allData;
 
-if(selectedCategory){
- list = list.filter(d => d.cat === selectedCategory);
-}
-
 if(selectedSupplier){
- list = list.filter(d => d.supplierName === selectedSupplier);
+ list = list.filter(
+  d => d.supplierName === selectedSupplier
+ );
 }
 
+if(selectedCategory){
+ list = list.filter(
+  d => d.cat === selectedCategory
+ );
+}
 
 
 
