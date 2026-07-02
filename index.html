@@ -366,24 +366,15 @@ function clearFilter(){
 }
 
 
+
 function getCounts(){
-
- let filteredData = allData;
-
- if(selectedSupplier){
-  filteredData = filteredData.filter(
-   d => d.supplierName === selectedSupplier
-  );
- }
-
  let c = {};
-
- filteredData.forEach(d => {
+ allData.forEach(d=>{
   c[d.cat] = (c[d.cat] || 0) + 1;
  });
-
  return c;
 }
+
 
 
 /* GRAPH */
