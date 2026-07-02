@@ -271,11 +271,10 @@ db.collection("rex").onSnapshot(snap=>{
 function renderSummary(count){
 
  
-let supplierNameTitle = "";
 
-if(allData.length > 0){
- supplierNameTitle = allData[0].supplierName || "";
-}
+let supplierNameTitle =
+ selectedSupplier || "All Suppliers";
+
 
 let html = `
 <div style="
@@ -347,10 +346,18 @@ ${s}
 }
 
 /* FILTER */
+
 function selectCategory(cat){
- selectedCategory=cat;
+
+ if(selectedCategory === cat){
+  selectedCategory = null;
+ }else{
+  selectedCategory = cat;
+ }
+
  renderSummary(getCounts());
 }
+
 
 function clearFilter(){
  selectedCategory = null;
@@ -362,20 +369,25 @@ function filterSupplier(supplier){
 
  selectedSupplier = supplier || null;
 
- selectedCategory = null;
-
  renderSummary(getCounts());
 }
-
 
 
 function getCounts(){
 
  let filteredData = allData;
 
+ // Supplier Filter
  if(selectedSupplier){
   filteredData = filteredData.filter(
    d => d.supplierName === selectedSupplier
+  );
+ }
+
+ // Category Filter
+ if(selectedCategory){
+  filteredData = filteredData.filter(
+   d => d.cat === selectedCategory
   );
  }
 
@@ -434,8 +446,6 @@ if(selectedCategory){
   d => d.cat === selectedCategory
  );
 }
-
-
 
 rexList.innerHTML=list.map(d=>`
  <div class="card">
