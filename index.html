@@ -280,7 +280,7 @@ function renderSummary(count){
  </div>
  </div>
 
- <button onclick="clearFilter()">Show All</button>
+ <button onclick="clearAllFilters()">Show All</button>
  <button onclick="exportPDF()">Export PDF</button>
 
  <div id="rexList"></div>`;
@@ -300,11 +300,53 @@ function clearFilter(){
  selectedCategory=null;
  renderSummary(getCounts());
 }
-function getCounts(){
- let c={};
- allData.forEach(d=>c[d.cat]=(c[d.cat]||0)+1);
+
+ let filtered = allData;
+
+ if(selectedSupplier){
+  filtered = filtered.filter(
+   x => x.supplierName === selectedSupplier
+  );
+ }
+
+ let c = {};
+
+ filtered.forEach(d=>{
+  c[d.cat] = (c[d.cat] || 0) + 1;
+ });
+
  return c;
 }
+
+let suppliers =
+ [...new Set(allData.map(x=>x.supplierName).filter(Boolean))];
+
+html += `
+<div style="margin:15px 0;">
+<select id="supplierFilter"
+        onchange="selectSupplier(this.value)">
+ <option value="">All Suppliers</option>
+ ${suppliers.map(s=>`
+ <option value="${s}"
+ ${selectedSupplier===s?'selected':''}>
+ ${s}
+ </option>`).join('')}
+</select>
+</div>
+
+function selectSupplier(name){
+
+ selectedSupplier = name || null;
+
+ renderSummary(getCounts());
+}
+
+function clearAllFilters(){
+
+ selectedCategory = null;
+ selectedSupplier = null;
+
+ r
 
 /* GRAPH */
 function renderChart(count){
@@ -336,15 +378,37 @@ function renderChart(count){
 /* ✅ DISPLAY WITH EDIT + DELETE */
 function renderList(){
 
- let list=selectedCategory
-  ? allData.filter(d=>d.cat===selectedCategory)
-  : allData;
+
+let list = allData;
+
+if(selectedCategory){
+ list = list.filter(
+  d=>d.cat===selectedCategory
+ );
+}
+
+if(selectedSupplier){
+ list = list.filter(
+  d=>d.supplierName===selectedSupplier
+ );
+}
+
 
  rexList.innerHTML=list.map(d=>`
  <div class="card">
 
- <b>${d.title}</b>
- <div>Category: ${d.cat}</div>
+ 
+<div style="
+font-size:18px;
+font-weight:bold;
+color:#1e3a8a;">
+${d.title} - ${d.supplierName || ''}
+</div>
+
+ 
+div>Category: ${d.cat}</div>
+<div>Supplier: ${d.supplierName || ''}</div>
+
 
  <div class="row">
  <div style="flex:1">
