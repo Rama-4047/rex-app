@@ -102,6 +102,7 @@ textarea{width:100%;}
 <input type="hidden" id="editId">
 
 <input id="title" placeholder="Title"><br><br>
+<input id="supplierName" placeholder="Supplier Name"><br><br>
 
 <select id="cat">
 <option>5S</option>
@@ -161,6 +162,7 @@ const db=firebase.firestore();
 let allData=[];
 let selectedCategory=null;
 let chartInstance=null;
+let selectedSupplier = null;
 
 /* NAV */
 function showCreate(){
@@ -190,15 +192,20 @@ after.onchange=e=>{
 };
 
 /* ✅ SAVE (ADD + UPDATE) */
+
 async function save(){
 
  let data={
   title:title.value,
+  supplierName:supplierName.value,
   cat:cat.value,
+
   before:beforeData,
   after:afterData,
+
   beforeDesc:beforeDesc.value,
   afterDesc:afterDesc.value,
+
   impact:impact.value,
   takeaway:takeaway.value
  };
@@ -215,16 +222,26 @@ async function save(){
  showSummary();
 }
 
+
+
 function clearForm(){
+
  title.value="";
+ supplierName.value="";
  beforeDesc.value="";
  afterDesc.value="";
  impact.value="";
  takeaway.value="";
- beforeData=""; afterData="";
- bImg.src=""; aImg.src="";
+
+ beforeData="";
+ afterData="";
+
+ bImg.src="";
+ aImg.src="";
+
  editId.value="";
 }
+
 
 /* LOAD */
 db.collection("rex").onSnapshot(snap=>{
@@ -358,25 +375,31 @@ function renderList(){
 }
 
 /* ✅ EDIT */
+
 function editREX(id){
 
  let d = allData.find(x => x.id === id);
 
- title.value = d.title;
- cat.value = d.cat;
- beforeData = d.before;
- afterData = d.after;
- bImg.src = d.before;
- aImg.src = d.after;
- beforeDesc.value = d.beforeDesc;
- afterDesc.value = d.afterDesc;
- impact.value = d.impact;
- takeaway.value = d.takeaway;
+ title.value = d.title || "";
+ supplierName.value = d.supplierName || "";
+ cat.value = d.cat || "";
+
+ beforeData = d.before || "";
+ afterData = d.after || "";
+
+ bImg.src = d.before || "";
+ aImg.src = d.after || "";
+
+ beforeDesc.value = d.beforeDesc || "";
+ afterDesc.value = d.afterDesc || "";
+ impact.value = d.impact || "";
+ takeaway.value = d.takeaway || "";
 
  editId.value = id;
 
  showCreate();
 }
+
 
 /* ✅ DELETE */
 async function deleteREX(id){
