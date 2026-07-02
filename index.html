@@ -409,9 +409,13 @@ function renderChart(count){
  let labels=Object.keys(count);
  let values=Object.values(count);
 
- let colors=labels.map(l=>{
-  return selectedCategory && l!==selectedCategory ? "#cbd5e1" : "#2563eb";
- });
+
+let colors=labels.map(l=>{
+  return selectedCategory && l!==selectedCategory
+    ? "#dbeafe"     // light blue
+    : "#60a5fa";    // attractive medium light blue
+});
+
 
  if(chartInstance) chartInstance.destroy();
 
